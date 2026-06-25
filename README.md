@@ -27,6 +27,12 @@ Implement mainstream deep learning models from scratch.
 │   ├── train.py           # Training script (MPS + AMP)
 │   ├── eval.py            # Evaluation script (per-attribute accuracy)
 │   └── resnet18_celeba.pt      # [LFS] Trained model (45 MB)
+├── cnn/                       # Simple CNN for CIFAR-10
+│   ├── __init__.py
+│   ├── data.py            # CIFAR-10 dataloader (torchvision)
+│   ├── model.py           # Plain CNN (Conv×3 + Pool×3 + FC×2)
+│   ├── train.py           # Training script (Adam + CosineAnnealingLR)
+│   └── eval.py            # Test evaluation + confusion matrix
 ├── data/
 │   └── celeba/
 │       ├── img_align_celeba.zip    # [LFS] 200K face images

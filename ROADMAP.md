@@ -7,6 +7,7 @@ Planned models and optimizations in priority order.
 ## ✅ Completed
 
 - [x] **ResNet18** — CelebA face attribute classification (15 attributes, 1K samples, 91.2% val acc)
+- [x] **SimpleCNN** — CIFAR-10 image classification (Conv3+Pool3+FC2, ~620K params, ~80% test acc)
 
 ---
 
