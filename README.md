@@ -42,6 +42,7 @@ Implement mainstream deep learning models from scratch.
 ├── basics/
 │   ├── __init__.py
 │   ├── logistic_regression.py   # Single Linear layer + Softmax (92.3% on MNIST)
+│   ├── linear_regression.py     # California Housing (Normal Equation + GD, R²=0.583)
 │   └── k_means.py               # Unsupervised clustering (pure NumPy)
 ├── .gitattributes                 # LFS: *.zip *.pt
 └── uv.lock

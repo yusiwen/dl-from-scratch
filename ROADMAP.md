@@ -11,6 +11,7 @@ Planned models and optimizations in priority order.
 - [x] **MLP** — MNIST digit classification, pure NumPy (no autograd), 235K params, 97.9% test acc
 - [x] **Logistic Regression** — single Linear layer, MNIST, 92.3% test acc
 - [x] **K-Means** — unsupervised clustering, MNIST, 57.8% purity
+- [x] **Linear Regression** — California Housing (Normal Equation + Gradient Descent, R²=0.583)
 
 ---
 
