@@ -29,7 +29,7 @@ Planned models and optimizations in priority order.
 ## 📋 New Models
 
 ### 1. DCGAN — Image Generation
-- **Dataset**: CelebA (already downloaded, reuse from resnet/)
+- **Dataset**: CelebA (already downloaded at `data/celeba/`)
 - **Architecture**:
   - Generator: latent(100) → FC → 4× deconv layers → 64×64×3 (Tanh)
   - Discriminator: 4× conv layers → FC → 1 (sigmoid)

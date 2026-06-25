@@ -23,9 +23,7 @@ def train():
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
-    zip_path = "resnet/celeba/img_align_celeba.zip"
-    attr_path = "resnet/celeba/list_attr_celeba.txt"
-    full_dataset = CelebADataset(zip_path, attr_path, ATTRIBUTES, num_samples=1000, transform=transform)
+    full_dataset = CelebADataset(ATTRIBUTES, num_samples=1000, transform=transform)
 
     train_dataset, val_dataset = torch.utils.data.random_split(
         full_dataset, [800, 200], generator=torch.Generator().manual_seed(42)

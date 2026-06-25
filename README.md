@@ -26,10 +26,11 @@ Implement mainstream deep learning models from scratch.
 │   ├── model.py           # ResNet18 from scratch
 │   ├── train.py           # Training script (MPS + AMP)
 │   ├── eval.py            # Evaluation script (per-attribute accuracy)
-│   ├── celeba/
-│   │   ├── img_align_celeba.zip    # [LFS] 200K face images
-│   │   └── list_attr_celeba.txt    # 40 binary attributes
 │   └── resnet18_celeba.pt      # [LFS] Trained model (45 MB)
+├── data/
+│   └── celeba/
+│       ├── img_align_celeba.zip    # [LFS] 200K face images
+│       └── list_attr_celeba.txt    # [LFS] 40 binary attributes
 ├── .gitattributes                 # LFS: *.zip *.pt
 └── uv.lock
 ```

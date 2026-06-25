@@ -24,20 +24,20 @@ ATTRIBUTES = [
 
 
 class CelebADataset(Dataset):
-    def __init__(self, zip_path, attr_path, attributes=None, num_samples=1000, transform=None):
-        self.zip_path = zip_path
-        self.attr_path = attr_path
+    def __init__(self, attributes=None, zip_path=None, attr_path=None, num_samples=1000, transform=None):
+        self.zip_path = zip_path or "data/celeba/img_align_celeba.zip"
+        self.attr_path = attr_path or "data/celeba/list_attr_celeba.txt"
         self.attributes = attributes or ATTRIBUTES
         self.transform = transform
         self._zip = None
 
-        with open(attr_path) as f:
+        with open(self.attr_path) as f:
             _ = f.readline()
             header = f.readline().strip().split()
         self.attr_indices = [header.index(attr) for attr in self.attributes]
 
         self.samples = []
-        with open(attr_path) as f:
+        with open(self.attr_path) as f:
             _ = f.readline()
             _ = f.readline()
             for i, line in enumerate(f):
