@@ -7,7 +7,8 @@ Planned models and optimizations in priority order.
 ## ✅ Completed
 
 - [x] **ResNet18** — CelebA face attribute classification (15 attributes, 1K samples, 91.2% val acc)
-- [x] **SimpleCNN** — CIFAR-10 image classification via HF datasets (Conv3+Pool3+FC2, ~620K params, ~80% test acc)
+- [x] **SimpleCNN** — CIFAR-10 image classification via HF datasets (Conv3+Pool3+FC2, ~620K params, ~82% test acc)
+- [x] **MLP** — MNIST digit classification, pure NumPy (no autograd), 235K params, 97.9% test acc
 
 ---
 

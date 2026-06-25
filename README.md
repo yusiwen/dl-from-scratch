@@ -33,6 +33,12 @@ Implement mainstream deep learning models from scratch.
 │   ├── model.py           # Plain CNN (Conv×3 + Pool×3 + FC×2)
 │   ├── train.py           # Training script (Adam + CosineAnnealingLR)
 │   └── eval.py            # Test evaluation + confusion matrix
+├── mlp/
+│   ├── __init__.py
+│   ├── data.py            # MNIST via HF datasets (ylecun/mnist)
+│   ├── model.py           # MLP — pure NumPy (Linear, ReLU, SoftmaxCrossEntropy, SGD)
+│   ├── train.py           # Training script
+│   └── eval.py            # Test evaluation (per-digit accuracy)
 ├── .gitattributes                 # LFS: *.zip *.pt
 └── uv.lock
 ```
@@ -58,6 +64,16 @@ Implement mainstream deep learning models from scratch.
 | Test Accuracy | **82.4%** (30 epochs) |
 | Training | Adam + CosineAnnealingLR |
 
+## MLP
+
+| Item | Value |
+|---|---|
+| Model | MLP (235K params, pure NumPy) |
+| Dataset | MNIST via HF datasets — 60K images |
+| Classes | 10 digits (0-9) |
+| Test Accuracy | **97.9%** (20 epochs) |
+| Framework | NumPy only (hand-written backward pass) |
+
 See [resnet/README.md](resnet/README.md) for details and optimization roadmap.
 
 ## Setup & Run
@@ -74,6 +90,10 @@ uv run python -m resnet.eval
 # Train / Evaluate CNN
 uv run python -m cnn.train
 uv run python -m cnn.eval
+
+# Train / Evaluate MLP (pure NumPy)
+uv run python -m mlp.train
+uv run python -m mlp.eval
 ```
 
 ## Models
@@ -82,3 +102,4 @@ uv run python -m cnn.eval
 |---|---|---|
 | ResNet18 (15 attrs, 1K samples) | `resnet/resnet18_celeba.pt` | 45 MB |
 | SimpleCNN (CIFAR-10) | `cnn/simple_cnn_cifar10.pt` | 2.4 MB |
+| MLP (MNIST, NumPy) | `mlp/mlp_mnist.npz` | 0.9 MB |
