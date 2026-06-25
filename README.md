@@ -1,6 +1,6 @@
 # DL From Scratch
 
-从零手写主流深度学习模型。
+Implement mainstream deep learning models from scratch.
 
 ## Project Structure
 
@@ -10,12 +10,12 @@
 ├── .gitignore
 ├── README.md
 ├── resnet/
-│   ├── README.md          # ResNet 优化方向
+│   ├── README.md          # Optimization roadmap & details
 │   ├── __init__.py
-│   ├── data.py            # CelebA zip 流式读取
-│   ├── model.py           # ResNet18 手写实现
-│   ├── train.py           # 训练脚本 (MPS + AMP)
-│   ├── eval.py            # 验证脚本 (per-attribute accuracy)
+│   ├── data.py            # CelebA zip streaming dataset
+│   ├── model.py           # ResNet18 from scratch
+│   ├── train.py           # Training script (MPS + AMP)
+│   ├── eval.py            # Evaluation script (per-attribute accuracy)
 │   ├── celeba/
 │   │   ├── img_align_celeba.zip    # [LFS] 200K face images
 │   │   └── list_attr_celeba.txt    # 40 binary attributes
