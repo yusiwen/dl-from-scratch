@@ -1,3 +1,13 @@
+---
+language: en
+license: mit
+tags:
+  - deep-learning
+  - resnet
+  - celebA
+  - pytorch
+  - from-scratch
+---
 # DL From Scratch
 
 Implement mainstream deep learning models from scratch.
