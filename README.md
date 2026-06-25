@@ -39,6 +39,10 @@ Implement mainstream deep learning models from scratch.
 │   ├── model.py           # MLP — pure NumPy (Linear, ReLU, SoftmaxCrossEntropy, SGD)
 │   ├── train.py           # Training script
 │   └── eval.py            # Test evaluation (per-digit accuracy)
+├── basics/
+│   ├── __init__.py
+│   ├── logistic_regression.py   # Single Linear layer + Softmax (92.3% on MNIST)
+│   └── k_means.py               # Unsupervised clustering (pure NumPy)
 ├── .gitattributes                 # LFS: *.zip *.pt
 └── uv.lock
 ```
@@ -74,6 +78,13 @@ Implement mainstream deep learning models from scratch.
 | Test Accuracy | **97.9%** (20 epochs) |
 | Framework | NumPy only (hand-written backward pass) |
 
+## Basics
+
+| Algorithm | File | Output |
+|---|---|---|
+| Logistic Regression | `basics/logistic_regression.py` | 92.3% test acc on MNIST |
+| K-Means | `basics/k_means.py` | 57.8% cluster purity (unsupervised) |
+
 See [resnet/README.md](resnet/README.md) for details and optimization roadmap.
 
 ## Setup & Run
@@ -94,6 +105,10 @@ uv run python -m cnn.eval
 # Train / Evaluate MLP (pure NumPy)
 uv run python -m mlp.train
 uv run python -m mlp.eval
+
+# Basics
+uv run python -m basics.logistic_regression
+uv run python -m basics.k_means
 ```
 
 ## Models
