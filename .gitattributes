@@ -1,0 +1,4 @@
+*.zip filter=lfs diff=lfs merge=lfs -text
+*.pt filter=lfs diff=lfs merge=lfs -text
+resnet/celeba/list_attr_celeba.txt filter=lfs diff=lfs merge=lfs -text
+*.npz filter=lfs diff=lfs merge=lfs -text
