@@ -43,6 +43,23 @@ def _apply_transform(batch, transform_fn):
     return batch
 
 
+# Pre-built transform pipelines (module-level for multiprocessing compatibility).
+_TRAIN_TRANSFORM = _build_transform(augment=True)
+_TEST_TRANSFORM = _build_transform(augment=False)
+
+
+def _train_transform_batch(batch):
+    """Train transform: augmentation + normalize. Pickle-safe (module-level function)."""
+    batch["img"] = [_TRAIN_TRANSFORM(img.convert("RGB")) for img in batch["img"]]
+    return batch
+
+
+def _test_transform_batch(batch):
+    """Test transform: normalize only. Pickle-safe (module-level function)."""
+    batch["img"] = [_TEST_TRANSFORM(img.convert("RGB")) for img in batch["img"]]
+    return batch
+
+
 def load_cifar10(batch_size=128, num_workers=2):
     """
     Load CIFAR-10 via HuggingFace datasets library.
@@ -51,16 +68,11 @@ def load_cifar10(batch_size=128, num_workers=2):
     (not individual images on disk). Transforms are applied lazily via
     set_transform, so no pre-processing happens at load time.
     """
-    train_transform = _build_transform(augment=True)
-    test_transform = _build_transform(augment=False)
-
-    # Load splits — downloads Arrow files on first access.
     train_dataset = load_dataset("uoft-cs/cifar10", split="train")
     test_dataset = load_dataset("uoft-cs/cifar10", split="test")
 
-    # set_transform applies the transforms lazily (no pre-processing at load time).
-    train_dataset.set_transform(lambda b: _apply_transform(b, train_transform))
-    test_dataset.set_transform(lambda b: _apply_transform(b, test_transform))
+    train_dataset.set_transform(_train_transform_batch)
+    test_dataset.set_transform(_test_transform_batch)
 
     train_loader = DataLoader(
         train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers

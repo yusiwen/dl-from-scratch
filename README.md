@@ -55,7 +55,7 @@ Implement mainstream deep learning models from scratch.
 | Model | SimpleCNN (620K params) |
 | Dataset | CIFAR-10 via HF datasets — 50K images |
 | Classes | 10 (airplane, automobile, bird, cat, deer, dog, frog, horse, ship, truck) |
-| Test Accuracy | ~80% (30 epochs) |
+| Test Accuracy | **82.4%** (30 epochs) |
 | Training | Adam + CosineAnnealingLR |
 
 See [resnet/README.md](resnet/README.md) for details and optimization roadmap.
