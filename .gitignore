@@ -11,3 +11,7 @@ wheels/
 
 # Local data (now using HF datasets, not tracked in git)
 data/
+
+# Model weights / training artifacts (regenerated on each run)
+*.pt
+*.npz

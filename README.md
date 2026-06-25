@@ -114,8 +114,14 @@ uv run python -m basics.k_means
 
 ## Models
 
-| Model | File | Size |
+Trained weights are **not tracked in git** (`.gitignore`'ed). Each model saves its weights
+locally after training; paths are shown below for reference.
+
+| Model | Local path | Size |
 |---|---|---|
 | ResNet18 (15 attrs, 1K samples) | `resnet/resnet18_celeba.pt` | 45 MB |
 | SimpleCNN (CIFAR-10) | `cnn/simple_cnn_cifar10.pt` | 2.4 MB |
 | MLP (MNIST, NumPy) | `mlp/mlp_mnist.npz` | 0.9 MB |
+| Logistic Regression | `basics/logistic_regression.npz` | 63 KB |
+| K-Means centers | `basics/kmeans_centers.npz` | 32 KB |
+| Linear Regression | `basics/linear_regression.npz` | 2 KB |
