@@ -6,15 +6,29 @@ from resnet.data import CelebADataset, ATTRIBUTES
 
 
 def evaluate():
+    """
+    Evaluate a trained ResNet on the CelebA validation set.
+
+    Produces:
+      - Overall accuracy across all 15 attributes
+      - Per-attribute accuracy (reveals which attributes are easier/harder)
+      - A few sample predictions with ground truth vs. predicted labels
+    """
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print(f"Device: {device}")
 
+    # Load the saved model.
+    # torch.load reads the full model object saved by torch.save(model, ...).
+    # map_location ensures the model is moved to the correct device.
+    # weights_only=False allows loading the full serialized model (not just state_dict).
     model_path = "resnet/resnet18_celeba.pt"
     print(f"Loading model from {model_path}")
     model = torch.load(model_path, map_location=device, weights_only=False)
     model.eval()
     print(f"Model parameters: {sum(p.numel() for p in model.parameters()):,}")
 
+    # The transform must match what was used during training.
+    # Inconsistent transforms would produce incorrect results.
     transform = transforms.Compose([
         transforms.Resize(256),
         transforms.CenterCrop(224),
@@ -24,18 +38,23 @@ def evaluate():
 
     full_dataset = CelebADataset(ATTRIBUTES, num_samples=1000, transform=transform)
 
+    # Use the same seed (42) as training to get the same validation split.
     _, val_dataset = torch.utils.data.random_split(
         full_dataset, [800, 200], generator=torch.Generator().manual_seed(42)
     )
 
     val_loader = DataLoader(val_dataset, batch_size=128, shuffle=False, num_workers=0)
 
+    # --- Inference ---
+    # Collect all predictions and labels for metric computation.
     all_preds = []
     all_labels = []
     with torch.no_grad():
         for images, labels in val_loader:
             images = images.to(device)
             outputs = model(images)
+            # Sigmoid converts logits to probabilities (range 0-1).
+            # Threshold at 0.5: probability > 0.5 means the attribute is present.
             preds = (torch.sigmoid(outputs) > 0.5).float().cpu()
             all_preds.append(preds)
             all_labels.append(labels)
@@ -43,6 +62,7 @@ def evaluate():
     all_preds = torch.cat(all_preds)
     all_labels = torch.cat(all_labels)
 
+    # --- Overall accuracy ---
     correct = (all_preds == all_labels).sum().item()
     total = all_labels.numel()
     overall_acc = correct / total * 100
@@ -59,6 +79,10 @@ def evaluate():
     print(f"  {'-'*20} {'-'*8}")
     print(f"  {'Overall':<20} {overall_acc:>7.1f}%")
 
+    # --- Sample predictions ---
+    # Show 5 examples with their true vs. predicted attribute sets.
+    # This helps qualitatively assess model behavior: is it making
+    # reasonable mistakes (e.g. predicting Young when not) or nonsense ones?
     print()
     print("Sample predictions (filename, true vs predicted):")
     val_indices = val_dataset.indices
