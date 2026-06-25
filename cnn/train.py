@@ -46,8 +46,8 @@ def train():
         train_correct = 0
         train_total = 0
 
-        for images, labels in train_loader:
-            images, labels = images.to(device), labels.to(device)
+        for batch in train_loader:
+            images, labels = batch["img"].to(device), batch["label"].to(device)
 
             optimizer.zero_grad()
             outputs = model(images)               # raw logits: (B, 10)
@@ -71,8 +71,8 @@ def train():
         test_total = 0
 
         with torch.no_grad():
-            for images, labels in test_loader:
-                images, labels = images.to(device), labels.to(device)
+            for batch in test_loader:
+                images, labels = batch["img"].to(device), batch["label"].to(device)
                 outputs = model(images)
                 loss = criterion(outputs, labels)
                 test_loss += loss.item()

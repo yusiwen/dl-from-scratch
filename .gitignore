@@ -8,3 +8,6 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Local data (now using HF datasets, not tracked in git)
+data/

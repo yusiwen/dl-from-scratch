@@ -35,8 +35,8 @@ Implement mainstream deep learning models from scratch.
 │   └── eval.py            # Test evaluation + confusion matrix
 ├── data/
 │   └── celeba/
-│       ├── img_align_celeba.zip    # [LFS] 200K face images
-│       └── list_attr_celeba.txt    # [LFS] 40 binary attributes
+│       ├── img_align_celeba.zip    # (optional, no longer tracked)
+│       └── list_attr_celeba.txt    # (optional, no longer tracked)
 ├── .gitattributes                 # LFS: *.zip *.pt
 └── uv.lock
 ```
@@ -46,7 +46,7 @@ Implement mainstream deep learning models from scratch.
 | Item | Value |
 |---|---|
 | Model | ResNet18 (11.2M params) |
-| Dataset | CelebA — 1,000 images (zip streaming) |
+| Dataset | CelebA via HF datasets — 1,000 images (eurecom-ds/celeba) |
 | Attributes | 15 binary (Smiling, Male, Young, Eyeglasses, etc.) |
 | Split | 800 train / 200 val |
 | Val Accuracy | **91.2%** |

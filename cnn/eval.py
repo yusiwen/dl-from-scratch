@@ -30,8 +30,9 @@ def evaluate():
     all_labels = []
 
     with torch.no_grad():
-        for images, labels in test_loader:
-            images = images.to(device)
+        for batch in test_loader:
+            images = batch["img"].to(device)
+            labels = batch["label"]
             outputs = model(images)
             # softmax converts logits to probabilities (class-wise, sum to 1).
             # argmax picks the class with the highest probability.
