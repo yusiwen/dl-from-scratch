@@ -46,7 +46,10 @@ Implement mainstream deep learning models from scratch.
 │   ├── k_means.py               # Unsupervised clustering (pure NumPy)
 │   ├── svm.py                   # SVM — GD (primal) + SMO (dual, Linear/RBF kernels)
 │   ├── decision_tree.py          # ID3/CART on Iris (ASCII tree, ~93% acc)
-│   └── naive_bayes.py            # Gaussian NB on MNIST (generative classifier)
+│   ├── naive_bayes.py            # Gaussian NB on MNIST (generative classifier)
+│   ├── pca.py                    # SVD-based dimensionality reduction (MNIST 2D visualisation)
+│   ├── knn.py                    # k-Nearest Neighbors (instance-based, MNIST)
+│   └── perceptron.py             # Single neuron (Rosenblatt 1958, step activation)
 ├── .gitattributes                 # LFS: *.zip *.pt
 └── uv.lock
 ```
@@ -92,6 +95,9 @@ Implement mainstream deep learning models from scratch.
 | SVM (GD + SMO) | `basics/svm.py` | MNIST 3v5 | 93.3% (RBF kernel) |
 | Decision Tree | `basics/decision_tree.py` | Iris | 93.3% test acc |
 | Naive Bayes | `basics/naive_bayes.py` | MNIST | 53.0% test acc |
+| PCA | `basics/pca.py` | MNIST | 17.3% variance in 2 components |
+| k-NN | `basics/knn.py` | MNIST | ~87% (k=5, 2000 train) |
+| Perceptron | `basics/perceptron.py` | MNIST 0v1 | 100% (linearly separable) |
 
 ### SVM implementations
 
@@ -128,6 +134,9 @@ uv run python -m basics.linear_regression
 uv run python -m basics.svm
 uv run python -m basics.decision_tree
 uv run python -m basics.naive_bayes
+uv run python -m basics.pca
+uv run python -m basics.knn
+uv run python -m basics.perceptron
 ```
 
 ## Models

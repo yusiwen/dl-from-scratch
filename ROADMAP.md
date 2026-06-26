@@ -15,6 +15,9 @@ Planned models and optimizations in priority order.
 - [x] **SVM** — GD (primal, linear) + SMO (dual, linear/RBF), MNIST 93.3% acc
 - [x] **Decision Tree** — ID3/CART, Iris, 93.3% acc (ASCII tree visualization)
 - [x] **Naive Bayes** — Gaussian NB, MNIST, 53.0% (shows independence assumption gap)
+- [x] **PCA** — SVD-based dimensionality reduction, MNIST 2D visualisation
+- [x] **k-NN** — instance-based, MNIST, ~87% with 2000 samples
+- [x] **Perceptron** — single neuron, MNIST 0v1 100% (linearly separable)
 
 ---
 
