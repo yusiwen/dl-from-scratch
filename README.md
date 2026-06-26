@@ -43,7 +43,8 @@ Implement mainstream deep learning models from scratch.
 │   ├── __init__.py
 │   ├── logistic_regression.py   # Single Linear layer + Softmax (92.3% on MNIST)
 │   ├── linear_regression.py     # California Housing (Normal Equation + GD, R²=0.583)
-│   └── k_means.py               # Unsupervised clustering (pure NumPy)
+│   ├── k_means.py               # Unsupervised clustering (pure NumPy)
+│   └── svm.py                   # SVM — GD (primal) + SMO (dual, Linear/RBF kernels)
 ├── .gitattributes                 # LFS: *.zip *.pt
 └── uv.lock
 ```
@@ -81,10 +82,19 @@ Implement mainstream deep learning models from scratch.
 
 ## Basics
 
-| Algorithm | File | Output |
-|---|---|---|
-| Logistic Regression | `basics/logistic_regression.py` | 92.3% test acc on MNIST |
-| K-Means | `basics/k_means.py` | 57.8% cluster purity (unsupervised) |
+| Algorithm | File | Datasets | Metric |
+|---|---|---|---|
+| Logistic Regression | `basics/logistic_regression.py` | MNIST | 92.3% test accuracy |
+| Linear Regression | `basics/linear_regression.py` | California Housing | R²=0.583 |
+| K-Means | `basics/k_means.py` | MNIST | 57.8% cluster purity |
+| SVM (GD + SMO) | `basics/svm.py` | MNIST 3v5 | 93.3% (RBF kernel) |
+
+### SVM implementations
+
+| Method | Type | Kernel | Notes |
+|---|---|---|---|
+| `SVM_GD` | Primal GD | Linear only | Fast, robust, ~80 lines |
+| `SVM_SMO` | Dual SMO | Linear + RBF | Plato SMO, ~150 lines, supports kernel trick |
 
 See [resnet/README.md](resnet/README.md) for details and optimization roadmap.
 
@@ -110,6 +120,8 @@ uv run python -m mlp.eval
 # Basics
 uv run python -m basics.logistic_regression
 uv run python -m basics.k_means
+uv run python -m basics.linear_regression
+uv run python -m basics.svm
 ```
 
 ## Models
@@ -125,3 +137,4 @@ locally after training; paths are shown below for reference.
 | Logistic Regression | `basics/logistic_regression.npz` | 63 KB |
 | K-Means centers | `basics/kmeans_centers.npz` | 32 KB |
 | Linear Regression | `basics/linear_regression.npz` | 2 KB |
+| SVM | `basics/svm.npz` | 45 KB |
