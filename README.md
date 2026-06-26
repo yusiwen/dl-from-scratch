@@ -44,7 +44,9 @@ Implement mainstream deep learning models from scratch.
 │   ├── logistic_regression.py   # Single Linear layer + Softmax (92.3% on MNIST)
 │   ├── linear_regression.py     # California Housing (Normal Equation + GD, R²=0.583)
 │   ├── k_means.py               # Unsupervised clustering (pure NumPy)
-│   └── svm.py                   # SVM — GD (primal) + SMO (dual, Linear/RBF kernels)
+│   ├── svm.py                   # SVM — GD (primal) + SMO (dual, Linear/RBF kernels)
+│   ├── decision_tree.py          # ID3/CART on Iris (ASCII tree, ~93% acc)
+│   └── naive_bayes.py            # Gaussian NB on MNIST (generative classifier)
 ├── .gitattributes                 # LFS: *.zip *.pt
 └── uv.lock
 ```
@@ -88,6 +90,8 @@ Implement mainstream deep learning models from scratch.
 | Linear Regression | `basics/linear_regression.py` | California Housing | R²=0.583 |
 | K-Means | `basics/k_means.py` | MNIST | 57.8% cluster purity |
 | SVM (GD + SMO) | `basics/svm.py` | MNIST 3v5 | 93.3% (RBF kernel) |
+| Decision Tree | `basics/decision_tree.py` | Iris | 93.3% test acc |
+| Naive Bayes | `basics/naive_bayes.py` | MNIST | 53.0% test acc |
 
 ### SVM implementations
 
@@ -122,6 +126,8 @@ uv run python -m basics.logistic_regression
 uv run python -m basics.k_means
 uv run python -m basics.linear_regression
 uv run python -m basics.svm
+uv run python -m basics.decision_tree
+uv run python -m basics.naive_bayes
 ```
 
 ## Models
@@ -138,3 +144,5 @@ locally after training; paths are shown below for reference.
 | K-Means centers | `basics/kmeans_centers.npz` | 32 KB |
 | Linear Regression | `basics/linear_regression.npz` | 2 KB |
 | SVM | `basics/svm.npz` | 45 KB |
+| Decision Tree | — | N/A (no weights) |
+| Naive Bayes | — | N/A (no weights) |

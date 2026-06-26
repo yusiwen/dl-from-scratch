@@ -13,6 +13,8 @@ Planned models and optimizations in priority order.
 - [x] **K-Means** — unsupervised clustering, MNIST, 57.8% purity
 - [x] **Linear Regression** — California Housing (Normal Equation + Gradient Descent, R²=0.583)
 - [x] **SVM** — GD (primal, linear) + SMO (dual, linear/RBF), MNIST 93.3% acc
+- [x] **Decision Tree** — ID3/CART, Iris, 93.3% acc (ASCII tree visualization)
+- [x] **Naive Bayes** — Gaussian NB, MNIST, 53.0% (shows independence assumption gap)
 
 ---
 
