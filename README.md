@@ -26,7 +26,7 @@ Implement mainstream deep learning models from scratch.
 │   ├── model.py           # ResNet18 from scratch
 │   ├── train.py           # Training script (MPS + AMP)
 │   ├── eval.py            # Evaluation script (per-attribute accuracy)
-│   └── resnet18_celeba.pt      # [LFS] Trained model (45 MB)
+│   └── resnet18_celeba.pt      # (local, not tracked)
 ├── cnn/
 │   ├── __init__.py
 │   ├── data.py            # CIFAR-10 via HF datasets (uoft-cs/cifar10)
@@ -155,3 +155,6 @@ locally after training; paths are shown below for reference.
 | SVM | `basics/svm.npz` | 45 KB |
 | Decision Tree | — | N/A (no weights) |
 | Naive Bayes | — | N/A (no weights) |
+| PCA | — | N/A (data-dependent) |
+| k-NN | — | N/A (no training) |
+| Perceptron | — | N/A (no weights) |
