@@ -94,7 +94,7 @@ Implement mainstream deep learning models from scratch.
 | Method | Type | Kernel | Notes |
 |---|---|---|---|
 | `SVM_GD` | Primal GD | Linear only | Fast, robust, ~80 lines |
-| `SVM_SMO` | Dual SMO | Linear + RBF | Plato SMO, ~150 lines, supports kernel trick |
+| `SVM_SMO` | Dual SMO | Linear + RBF | Platt SMO, ~150 lines, supports kernel trick |
 
 See [resnet/README.md](resnet/README.md) for details and optimization roadmap.
 
