@@ -55,7 +55,6 @@ Implement mainstream deep learning models from scratch.
 │   ├── train.py           # Training loop (pixel-wise CrossEntropy)
 │   └── eval.py            # IoU and pixel accuracy
 ├── cnn/
-├── cnn/
 │   ├── __init__.py
 │   ├── data.py            # CIFAR-10 via HF datasets (uoft-cs/cifar10)
 │   ├── model.py           # Plain CNN (Conv×3 + Pool×3 + FC×2)
