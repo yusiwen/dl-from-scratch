@@ -110,7 +110,7 @@ Implement mainstream deep learning models from scratch.
 | Model | BERT mini (834K params, 4 layers, 4 heads, 128-dim) |
 | Pre-training | MLM on text8 (90M chars, HuggingFace) |
 | Fine-tuning | Sentiment classification on IMDB (HuggingFace) |
-| Test Accuracy | ~100% (character-level shortcuts; semantic understanding lower) |
+| Test Accuracy | ~50% (character-level; word-level would be higher with subword tokenization) |
 | Core components | Self-Attention (semantic aggregation) + MLM (entropy increase noise reduction) |
 
 ## Word2Vec

@@ -52,8 +52,12 @@ def finetune():
     ds_test = load_dataset("stanfordnlp/imdb", split="test")
 
     # Use a subset for training speed.
-    train_texts = ds_train["text"][:5000]
-    train_labels = ds_train["label"][:5000]
+    # Shuffle (IMDB is sorted: neg first, then pos).
+    import random
+    indices = list(range(len(ds_train["text"])))
+    random.shuffle(indices)
+    train_texts = [ds_train[i]["text"] for i in indices[:5000]]
+    train_labels = [ds_train[i]["label"] for i in indices[:5000]]
     test_texts = ds_test["text"][:1000]
     test_labels = ds_test["label"][:1000]
     print(f"  Train: {len(train_texts)}  Test: {len(test_texts)}")
