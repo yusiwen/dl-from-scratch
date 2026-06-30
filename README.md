@@ -40,13 +40,18 @@ Implement mainstream deep learning models from scratch.
 │   ├── train.py           # Training script
 │   └── eval.py            # Test evaluation (per-digit accuracy)
 ├── nlp/
-│   └── bert/
+│   ├── bert/
+│   │   ├── __init__.py
+│   │   ├── tokenizer.py       # Character-level tokenizer
+│   │   ├── model.py           # Transformer Encoder (Multi-Head Self-Attention + MLM)
+│   │   ├── pretrain.py        # MLM pre-training ("entropy increase noise reduction")
+│   │   ├── finetune.py        # Sentiment classification fine-tuning
+│   │   └── eval.py            # Inference + attention visualisation
+│   └── word2vec/
 │       ├── __init__.py
-│       ├── tokenizer.py       # Character-level tokenizer
-│       ├── model.py           # Transformer Encoder (Multi-Head Self-Attention + MLM)
-│       ├── pretrain.py        # MLM pre-training ("entropy increase noise reduction")
-│       ├── finetune.py        # Sentiment classification fine-tuning
-│       └── eval.py            # Inference + attention visualisation
+│       ├── model.py           # CBOW + Skip-gram with Negative Sampling
+│       ├── train.py           # text8 training (HF dataset)
+│       └── eval.py            # Word similarity search
 ├── basics/
 │   ├── __init__.py
 │   ├── logistic_regression.py   # Single Linear layer + Softmax (92.3% on MNIST)
@@ -102,6 +107,17 @@ Implement mainstream deep learning models from scratch.
 | Fine-tuning | Sentiment classification (IMDB-like built-in data) |
 | Test Accuracy | ~62% |
 | Core components | Self-Attention (semantic aggregation) + MLM (entropy increase noise reduction) |
+
+## Word2Vec
+
+| Item | Value |
+|---|---|
+| Model | Word2Vec (50-dim embeddings, 97K vocab) |
+| Architectures | CBOW + Skip-gram with Negative Sampling |
+| Dataset | text8 via HF datasets (~90M chars) |
+| Training | Adam, 5 epochs, k=5 negative samples |
+| Evaluation | Cosine similarity search in embedding space |
+| Key concept | Static word embeddings from distributional semantics |
 
 ## Basics
 
@@ -160,6 +176,10 @@ uv run python -m basics.perceptron
 uv run python -m nlp.bert.pretrain
 uv run python -m nlp.bert.finetune
 uv run python -m nlp.bert.eval
+
+# Word2Vec
+uv run python -m nlp.word2vec.train
+uv run python -m nlp.word2vec.eval
 ```
 
 ## Models
