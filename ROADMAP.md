@@ -18,6 +18,7 @@ Planned models and optimizations in priority order.
 - [x] **PCA** — SVD-based dimensionality reduction, MNIST 2D visualisation
 - [x] **k-NN** — instance-based, MNIST, ~87% with 2000 samples
 - [x] **Perceptron** — single neuron, MNIST 0v1 100% (linearly separable)
+- [x] **BERT** — Transformer Encoder (Self-Attention + MLM), sentiment classification
 
 ---
 

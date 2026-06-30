@@ -39,6 +39,14 @@ Implement mainstream deep learning models from scratch.
 │   ├── model.py           # MLP — pure NumPy (Linear, ReLU, SoftmaxCrossEntropy, SGD)
 │   ├── train.py           # Training script
 │   └── eval.py            # Test evaluation (per-digit accuracy)
+├── nlp/
+│   └── bert/
+│       ├── __init__.py
+│       ├── tokenizer.py       # Character-level tokenizer
+│       ├── model.py           # Transformer Encoder (Multi-Head Self-Attention + MLM)
+│       ├── pretrain.py        # MLM pre-training ("entropy increase noise reduction")
+│       ├── finetune.py        # Sentiment classification fine-tuning
+│       └── eval.py            # Inference + attention visualisation
 ├── basics/
 │   ├── __init__.py
 │   ├── logistic_regression.py   # Single Linear layer + Softmax (92.3% on MNIST)
@@ -84,6 +92,16 @@ Implement mainstream deep learning models from scratch.
 | Classes | 10 digits (0-9) |
 | Test Accuracy | **97.9%** (20 epochs) |
 | Framework | NumPy only (hand-written backward pass) |
+
+## BERT
+
+| Item | Value |
+|---|---|
+| Model | BERT mini (834K params, 4 layers, 4 heads, 128-dim) |
+| Pre-training | MLM (Masked Language Model) on built-in samples |
+| Fine-tuning | Sentiment classification (IMDB-like built-in data) |
+| Test Accuracy | ~62% |
+| Core components | Self-Attention (semantic aggregation) + MLM (entropy increase noise reduction) |
 
 ## Basics
 
@@ -137,6 +155,11 @@ uv run python -m basics.naive_bayes
 uv run python -m basics.pca
 uv run python -m basics.knn
 uv run python -m basics.perceptron
+
+# NLP
+uv run python -m nlp.bert.pretrain
+uv run python -m nlp.bert.finetune
+uv run python -m nlp.bert.eval
 ```
 
 ## Models
