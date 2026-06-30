@@ -24,3 +24,6 @@ runs/
 
 # Generated sample images (from dcgan/generate.py etc.)
 *.png
+
+# Jupyter auto-generated checkpoint backups
+.ipynb_checkpoints/
