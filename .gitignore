@@ -21,3 +21,6 @@ runs/
 
 # Saved config copies (generated alongside checkpoints, for reproducibility)
 *_config.yaml
+
+# Generated sample images (from dcgan/generate.py etc.)
+*.png

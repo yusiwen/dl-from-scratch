@@ -2,7 +2,8 @@ seed: 42
 batch_size: 128
 lr: 0.0002
 beta1: 0.5
-num_epochs: 50
+num_epochs: 20
+save_interval: 10
 latent_dim: 100
 num_workers: 4
 image_size: 64

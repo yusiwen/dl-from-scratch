@@ -46,6 +46,7 @@ def train():
 
     num_epochs = cfg["num_epochs"]
     sample_interval = cfg["sample_interval"]
+    save_interval = cfg.get("save_interval", 0)
     n_critic = cfg.get("n_critic", 1)
 
     for epoch in range(1, num_epochs + 1):
@@ -101,12 +102,18 @@ def train():
             fake = (fake + 1) / 2
             writer.add_images("generated", fake, epoch)
 
+        # ── Save checkpoint ──
+        if save_interval > 0 and epoch % save_interval == 0:
+            ckpt_path = cfg["model_path"].replace(".pt", f"_epoch{epoch}.pt")
+            torch.save({"G": netG.state_dict(), "D": netD.state_dict(), "cfg": cfg, "epoch": epoch}, ckpt_path)
+            print(f"  -> saved checkpoint to {ckpt_path}")
+
         if device.type == "mps":
             torch.mps.empty_cache()
 
     writer.close()
     save_path = cfg["model_path"]
-    torch.save({"G": netG.state_dict(), "D": netD.state_dict(), "cfg": cfg}, save_path)
+    torch.save({"G": netG.state_dict(), "D": netD.state_dict(), "cfg": cfg, "epoch": num_epochs}, save_path)
     save_config(cfg, save_path.replace(".pt", "_config.yaml"))
     print(f"\nModel saved to {save_path}")
 
