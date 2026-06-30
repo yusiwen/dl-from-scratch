@@ -142,6 +142,30 @@ Implement mainstream deep learning models from scratch.
 
 See [resnet/README.md](resnet/README.md) for details and optimization roadmap.
 
+## Core Concepts
+
+Every model in this project was written from scratch to teach a specific
+set of ML/DL concepts. The table below maps each model to the key ideas
+it demonstrates.
+
+| Module | Model | Key concepts |
+|--------|-------|-------------|
+| `basics/` | Logistic Regression | Linear decision boundary, Softmax, Cross-Entropy, closed-form vs gradient descent |
+| `basics/` | Linear Regression | Normal Equation, MSE, R² score, feature standardisation |
+| `basics/` | K-Means | Unsupervised learning, Euclidean distance, iterative centroid refinement, cluster purity |
+| `basics/` | SVM (GD) | Hinge loss, max-margin classification, L2 regularisation, primal gradient descent |
+| `basics/` | SVM (SMO) | Dual formulation, Lagrange multipliers, KKT conditions, kernel trick (RBF) |
+| `basics/` | Decision Tree | Entropy, Information Gain, recursive partitioning, interpretable ASCII tree |
+| `basics/` | Naive Bayes | Bayes' theorem, generative vs discriminative models, Gaussian likelihood, log-space prediction |
+| `basics/` | PCA | Singular Value Decomposition (SVD), eigenvalue, dimensionality reduction, variance explained |
+| `basics/` | k-NN | Instance-based learning, distance metrics, curse of dimensionality, bias-variance tradeoff |
+| `basics/` | Perceptron | Single neuron, step activation, online learning, Perceptron Convergence Theorem |
+| `mlp/` | MLP (NumPy) | **Manual backpropagation**, chain rule, gradient descent without autograd, softmax cross-entropy |
+| `cnn/` | SimpleCNN | Convolution, max-pooling, BatchNorm, Dropout, CosineAnnealing LR schedule |
+| `resnet/` | ResNet18 | **Residual connections (skip connections)**, BatchNorm in deep networks, bottleneck design, AMP |
+| `nlp/bert/` | BERT mini | **Self-Attention** (semantic aggregation), **Masked Language Model** (entropy increase + denoising), LayerNorm, positional encoding |
+| `nlp/word2vec/` | Word2Vec | **Embedding lookup tables**, **Negative Sampling**, CBOW vs Skip-gram, subsampling frequent words, cosine similarity |
+
 ## Setup & Run
 
 ```bash
