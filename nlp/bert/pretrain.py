@@ -7,7 +7,7 @@ BERT pre-training via Masked Language Model (MLM).
   3. MLM head predicts original tokens (denoising / noise reduction).
   4. Loss = cross-entropy on masked positions only.
 
-Uses a small built-in sample dataset so no network download is required.
+Dataset: text8 from HuggingFace (~90M characters of cleaned Wikipedia).
 """
 
 import math
@@ -15,29 +15,10 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
+from datasets import load_dataset
 
 from nlp.bert.tokenizer import CharTokenizer
 from nlp.bert.model import BERTForMLM
-
-
-# Small sample texts (no external download needed).
-SAMPLE_TEXTS = [
-    "the cat sat on the mat and looked at the dog",
-    "i love watching movies especially science fiction films",
-    "the weather today is sunny and warm perfect for a walk",
-    "machine learning is transforming how we process language",
-    "the restaurant served delicious food with excellent service",
-    "i cannot believe how terrible this product turned out to be",
-    "the book was fascinating from the first page to the last",
-    "my experience with customer support was frustrating and slow",
-    "the concert last night was absolutely amazing and energetic",
-    "this is the worst purchase i have ever made complete waste",
-    "the team worked together to deliver an outstanding project",
-    "i am extremely satisfied with the quality of this service",
-    "the movie had great special effects but a confusing plot",
-    "our vacation was wonderful the hotel was beautiful and clean",
-    "the software keeps crashing and losing all my unsaved work",
-] * 20  # 300 texts total
 
 
 class TextDataset(Dataset):
@@ -67,7 +48,6 @@ class TextDataset(Dataset):
                     tokens[i] = self.tokenizer.mask_id
                 elif rand < 0.9:
                     tokens[i] = torch.randint(5, self.tokenizer.vocab_size, (1,)).item()
-                # else: unchanged (10%)
             else:
                 labels[i] = -100
 
@@ -86,10 +66,21 @@ def pretrain():
 
     tokenizer = CharTokenizer()
     print(f"Vocabulary size: {tokenizer.vocab_size}")
-    print(f"Sample texts: {len(SAMPLE_TEXTS)}")
 
-    dataset = TextDataset(SAMPLE_TEXTS, tokenizer, max_len=128)
-    loader = DataLoader(dataset, batch_size=16, shuffle=True, num_workers=0)
+    # Load text8 from HuggingFace.
+    print("Loading text8 dataset...")
+    ds = load_dataset("afmck/text8", split="train")
+    raw = ds[0]["text"]  # One giant string (~90M chars).
+
+    # Split into manageable chunks (each ≈ 1000 chars).
+    chunk_size = 1000
+    chunks = [raw[i:i + chunk_size] for i in range(0, len(raw), chunk_size)]
+    # Use a subset for training speed.
+    chunks = chunks[:5000]
+    print(f"  Total chunks: {len(chunks)}")
+
+    dataset = TextDataset(chunks, tokenizer, max_len=128)
+    loader = DataLoader(dataset, batch_size=32, shuffle=True, num_workers=0)
 
     model = BERTForMLM(
         vocab_size=tokenizer.vocab_size,
@@ -100,7 +91,7 @@ def pretrain():
     criterion = nn.CrossEntropyLoss(ignore_index=-100)
     optimizer = optim.AdamW(model.parameters(), lr=1e-4)
 
-    num_epochs = 20
+    num_epochs = 10
     for epoch in range(1, num_epochs + 1):
         model.train()
         total_loss = 0.0
@@ -125,7 +116,6 @@ def pretrain():
         print(f"Epoch [{epoch:2d}/{num_epochs}]  Loss: {avg_loss:.4f}  "
               f"PPL: {perplexity:.2f}")
 
-    # Save for fine-tuning.
     torch.save(model.state_dict(), "nlp/bert/bert_mlm.pt")
     print(f"\nWeights saved to nlp/bert/bert_mlm.pt")
 
