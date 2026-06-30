@@ -19,14 +19,21 @@ Implement mainstream deep learning models from scratch.
 ├── pyproject.toml
 ├── .gitignore
 ├── README.md
-├── resnet/
-│   ├── README.md          # Optimization roadmap & details
+├── resnet18/
+│   ├── README.md          # Original ResNet18 implementation
 │   ├── __init__.py
 │   ├── data.py            # CelebA via HF datasets (eurecom-ds/celeba)
 │   ├── model.py           # ResNet18 from scratch
 │   ├── train.py           # Training script (MPS + AMP)
 │   ├── eval.py            # Evaluation script (per-attribute accuracy)
 │   └── resnet18_celeba.pt      # (local, not tracked)
+├── resnet34/
+│   ├── __init__.py
+│   ├── data.py            # Full CelebA (40 attrs, 200K), data augmentation
+│   ├── model.py           # ResNet34 via resnet18.model.ResNet
+│   ├── train.py           # SGD+Momentum + CosineAnnealingLR + grad accum + early stopping
+│   └── eval.py            # Per-attribute ROC AUC, F1, test split
+├── cnn/
 ├── cnn/
 │   ├── __init__.py
 │   ├── data.py            # CIFAR-10 via HF datasets (uoft-cs/cifar10)
@@ -83,12 +90,12 @@ Implement mainstream deep learning models from scratch.
 tensorboard --logdir runs
 
 # Edit hyperparameters in YAML instead of code
-vim resnet/config.yaml
+vim resnet18/config.yaml
 # then train as usual:
-uv run python -m resnet.train
+uv run python -m resnet18.train
 ```
 
-## ResNet
+## ResNet18
 
 | Item | Value |
 |---|---|
@@ -98,6 +105,16 @@ uv run python -m resnet.train
 | Split | 800 train / 200 val |
 | Val Accuracy | **91.2%** |
 | Training | MPS (Mac M4) + AMP |
+
+## ResNet34
+
+| Item | Value |
+|---|---|
+| Model | ResNet34 (~21M params, [3,4,6,3] blocks) |
+| Dataset | CelebA via HF datasets — full 200K |
+| Attributes | All 40 binary attributes |
+| Optimizer | SGD + Momentum (0.9, weight_decay=1e-4) |
+| Training | CosineAnnealingLR + Gradient Accumulation + Early Stopping + Loss Weighting |
 
 ## CNN
 
@@ -181,7 +198,7 @@ uv run python -m resnet.train
 | `SVM_GD` | Primal GD | Linear only | Fast, robust, ~80 lines |
 | `SVM_SMO` | Dual SMO | Linear + RBF | Platt SMO, ~150 lines, supports kernel trick |
 
-See [resnet/README.md](resnet/README.md) for details and optimization roadmap.
+See [resnet18/README.md](resnet18/README.md) for details.
 
 ## Core Concepts
 
@@ -203,7 +220,8 @@ it demonstrates.
 | `basics/` | Perceptron | Single neuron, step activation, online learning, Perceptron Convergence Theorem |
 | `mlp/` | MLP (NumPy) | **Manual backpropagation**, chain rule, gradient descent without autograd, softmax cross-entropy |
 | `cnn/` | SimpleCNN | Convolution, max-pooling, BatchNorm, Dropout, CosineAnnealing LR schedule |
-| `resnet/` | ResNet18 | **Residual connections (skip connections)**, BatchNorm in deep networks, bottleneck design, AMP |
+| `resnet18/` | ResNet18 | **Residual connections (skip connections)**, BatchNorm in deep networks, bottleneck design, AMP |
+| `resnet34/` | ResNet34 | SGD+Momentum, CosineAnnealingLR, gradient accumulation, early stopping, ROC AUC, F1 |
 | `nlp/bert/` | BERT mini | **Self-Attention** (semantic aggregation), **Masked Language Model** (entropy increase + denoising), LayerNorm, positional encoding |
 | `nlp/word2vec/` | Word2Vec | **Embedding lookup tables**, **Negative Sampling**, CBOW vs Skip-gram, subsampling frequent words, cosine similarity |
 | `nlp/lstm/` | LSTM | **Input/forget/output gates**, **cell state**, gradient flow through gating, sequential processing vs parallel attention |
@@ -216,9 +234,13 @@ uv sync
 ```
 
 ```bash
-# Train / Evaluate ResNet
-uv run python -m resnet.train
-uv run python -m resnet.eval
+# Train / Evaluate ResNet18
+uv run python -m resnet18.train
+uv run python -m resnet18.eval
+
+# Train / Evaluate ResNet34
+uv run python -m resnet34.train
+uv run python -m resnet34.eval
 
 # Train / Evaluate CNN
 uv run python -m cnn.train
@@ -264,7 +286,8 @@ locally after training; paths are shown below for reference.
 
 | Model | Local path | Size |
 |---|---|---|
-| ResNet18 (15 attrs, 1K samples) | `resnet/resnet18_celeba.pt` | 45 MB |
+| ResNet18 (15 attrs, 1K samples) | `resnet18/resnet18_celeba.pt` | 45 MB |
+| ResNet34 (40 attrs, 200K samples) | `resnet34/resnet34_celeba.pt` | ~80 MB |
 | SimpleCNN (CIFAR-10) | `cnn/simple_cnn_cifar10.pt` | 2.4 MB |
 | MLP (MNIST, NumPy) | `mlp/mlp_mnist.npz` | 0.9 MB |
 | Logistic Regression | `basics/logistic_regression.npz` | 63 KB |

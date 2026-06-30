@@ -5,14 +5,14 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
 
-from resnet.data import CelebADataset, ATTRIBUTES
-from resnet.model import resnet18
+from resnet18.data import CelebADataset, ATTRIBUTES
+from resnet18.model import resnet18
 from utils.config import load_config, save_config
 from utils.seed import set_seed
 
 
 def train():
-    cfg = load_config("resnet/config.yaml")
+    cfg = load_config("resnet18/config.yaml")
     set_seed(cfg["seed"])
 
     # --- Device setup ---
@@ -132,9 +132,9 @@ def train():
 
     writer.close()
     print("\nTraining complete!")
-    torch.save(model, "resnet/resnet18_celeba.pt")
-    save_config(cfg, "resnet/resnet18_celeba_config.yaml")
-    print("Model saved to resnet/resnet18_celeba.pt")
+    torch.save(model, "resnet18/resnet18_celeba.pt")
+    save_config(cfg, "resnet18/resnet18_celeba_config.yaml")
+    print("Model saved to resnet18/resnet18_celeba.pt")
 
 
 if __name__ == "__main__":

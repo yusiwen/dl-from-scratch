@@ -2,33 +2,22 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-from resnet.data import CelebADataset, ATTRIBUTES
+from resnet18.data import CelebADataset, ATTRIBUTES
+from utils.config import load_config
 
 
 def evaluate():
-    """
-    Evaluate a trained ResNet on the CelebA validation set.
+    cfg = load_config("resnet18/config.yaml")
 
-    Produces:
-      - Overall accuracy across all 15 attributes
-      - Per-attribute accuracy (reveals which attributes are easier/harder)
-      - A few sample predictions with ground truth vs. predicted labels
-    """
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print(f"Device: {device}")
 
-    # Load the saved model.
-    # torch.load reads the full model object saved by torch.save(model, ...).
-    # map_location ensures the model is moved to the correct device.
-    # weights_only=False allows loading the full serialized model (not just state_dict).
-    model_path = "resnet/resnet18_celeba.pt"
+    model_path = cfg["model_path"]
     print(f"Loading model from {model_path}")
     model = torch.load(model_path, map_location=device, weights_only=False)
     model.eval()
     print(f"Model parameters: {sum(p.numel() for p in model.parameters()):,}")
 
-    # The transform must match what was used during training.
-    # Inconsistent transforms would produce incorrect results.
     transform = transforms.Compose([
         transforms.Resize(256),
         transforms.CenterCrop(224),
@@ -36,11 +25,11 @@ def evaluate():
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
-    full_dataset = CelebADataset(ATTRIBUTES, num_samples=1000, transform=transform)
+    full_dataset = CelebADataset(ATTRIBUTES, num_samples=cfg["num_samples"], transform=transform)
 
-    # Use the same seed (42) as training to get the same validation split.
     _, val_dataset = torch.utils.data.random_split(
-        full_dataset, [800, 200], generator=torch.Generator().manual_seed(42)
+        full_dataset, [cfg["train_split"], cfg["val_split"]],
+        generator=torch.Generator().manual_seed(cfg["seed"]),
     )
 
     val_loader = DataLoader(val_dataset, batch_size=128, shuffle=False, num_workers=0)

@@ -7,6 +7,7 @@ Planned models and optimizations in priority order.
 ## ✅ Completed
 
 - [x] **ResNet18** — CelebA face attribute classification (15 attributes, 1K samples, 91.2% val acc)
+- [x] **ResNet34** — Full CelebA (40 attrs, 200K), SGD+Momentum, CosineAnnealingLR, grad accum, early stopping
 - [x] **SimpleCNN** — CIFAR-10 image classification via HF datasets (Conv3+Pool3+FC2, ~620K params, ~82% test acc)
 - [x] **MLP** — MNIST digit classification, pure NumPy (no autograd), 235K params, 97.9% test acc
 - [x] **Logistic Regression** — single Linear layer, MNIST, 92.3% test acc
@@ -22,22 +23,7 @@ Planned models and optimizations in priority order.
 - [x] **Word2Vec** — CBOW + Skip-gram with Negative Sampling, text8 embeddings
 - [x] **LSTM** — hand-written gates (input/forget/output/cell), IMDB sentiment
 - [x] **GPT** — Decoder-only Transformer with Causal Attention + KV Cache, text8 generation
-
----
-
-## 🔜 ResNet — Further Optimizations
-
-- [ ] **Architecture**: Upgrade to ResNet34 ([3, 4, 6, 3] blocks, ~21M params)
-- [ ] **Optimizer**: Replace Adam with SGD + Momentum (0.9, weight_decay=1e-4)
-- [ ] **Full labels**: Train on all 40 CelebA attributes instead of 15
-- [ ] **Full dataset**: Scale from 1K to 200K samples (multi-worker dataloader, prefetch, batch tuning)
-- [ ] **LR scheduler**: CosineAnnealingLR or StepLR
-- [ ] **Data augmentation**: RandomHorizontalFlip, ColorJitter, RandomRotation
-- [ ] **Early stopping**: Save best model by val loss, stop on plateau
-- [ ] **Gradient accumulation**: Simulate larger effective batch size
-- [ ] **Loss weighting**: `pos_weight` in BCEWithLogitsLoss for imbalanced attributes
-- [ ] **Metrics**: Per-attribute ROC AUC, F1 score
-- [ ] **Test evaluation**: Standard CelebA test split evaluation
+- [x] **Infrastructure** — Config system (YAML), TensorBoard logging, reproducibility (seed + config saving)
 
 ---
 
@@ -61,15 +47,11 @@ Planned models and optimizations in priority order.
 - **Architecture**: patch embedding → positional encoding → N× Transformer encoder (MHSA + FFN) → CLS head
 - **Key learnings**: self-attention for vision, patch embedding, no convolutions
 
-### 4. GPT-style Decoder-Only Transformer — Text Generation
-- **Dataset**: `wikitext-2-raw-v1` or `tiny_shakespeare` on HF
-- **Architecture**: token embedding → positional encoding → N× causal decoder block (masked self-attn + FFN) → LM head
-- **Key learnings**: causal attention mask, tokenization (BPE / char-level), autoregressive generation loop
-
 ---
 
-## 🛠 Infrastructure
+## 🛠 Future Directions
 
-- [ ] **Experiment logging**: TensorBoard / WandB for loss curves, image samples, attribute accuracy
-- [ ] **Config system**: YAML / Hydra for hyperparameter management
-- [ ] **Reproducibility**: Lock all training seeds, save config alongside checkpoints
+- More advanced ResNet variants (ResNet50 with Bottleneck blocks)
+- Multi-GPU / distributed training support
+- Experiment tracking comparison (WandB integration)
+- Hyperparameter search (grid / random / Bayesian)
