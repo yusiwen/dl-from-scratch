@@ -21,6 +21,7 @@ Planned models and optimizations in priority order.
 - [x] **BERT** — Transformer Encoder (Self-Attention + MLM), sentiment classification
 - [x] **Word2Vec** — CBOW + Skip-gram with Negative Sampling, text8 embeddings
 - [x] **LSTM** — hand-written gates (input/forget/output/cell), IMDB sentiment
+- [x] **GPT** — Decoder-only Transformer with Causal Attention + KV Cache, text8 generation
 
 ---
 
