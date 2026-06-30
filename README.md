@@ -33,6 +33,27 @@ Implement mainstream deep learning models from scratch.
 │   ├── model.py           # ResNet34 via resnet18.model.ResNet
 │   ├── train.py           # SGD+Momentum + CosineAnnealingLR + grad accum + early stopping
 │   └── eval.py            # Per-attribute ROC AUC, F1, test split
+├── dcgan/
+│   ├── __init__.py
+│   ├── config.yaml        # DCGAN hyperparameters
+│   ├── model.py           # Generator + Discriminator
+│   ├── data.py            # CelebA images (64×64, no labels)
+│   ├── train.py           # Adversarial training loop (G/D alternating)
+│   └── generate.py        # Generate sample grid from trained model
+├── vit/
+│   ├── __init__.py
+│   ├── config.yaml        # ViT hyperparameters (patch_size, d_model, n_layers, etc.)
+│   ├── model.py           # ViT: PatchEmbed → Transformer encoder (reused from BERT) → CLS head
+│   ├── data.py            # CIFAR-10 via HF datasets
+│   ├── train.py           # Training loop
+│   └── eval.py            # Per-class accuracy on test split
+├── unet/
+│   ├── __init__.py
+│   ├── config.yaml        # UNet hyperparameters
+│   ├── model.py           # U-Net: encoder–decoder with skip connections
+│   ├── data.py            # Oxford-IIIT Pet (image + mask) with augmentation
+│   ├── train.py           # Training loop (pixel-wise CrossEntropy)
+│   └── eval.py            # IoU and pixel accuracy
 ├── cnn/
 ├── cnn/
 │   ├── __init__.py
@@ -115,6 +136,35 @@ uv run python -m resnet18.train
 | Attributes | All 40 binary attributes |
 | Optimizer | SGD + Momentum (0.9, weight_decay=1e-4) |
 | Training | CosineAnnealingLR + Gradient Accumulation + Early Stopping + Loss Weighting |
+
+## DCGAN
+
+| Item | Value |
+|---|---|
+| Model | Generator (3.5M params) + Discriminator (2.8M params) |
+| Dataset | CelebA via HF datasets — 10K images (64×64) |
+| Architecture | Transposed conv G / Conv D, BN, LeakyReLU |
+| Optimizer | Adam(lr=2e-4, β₁=0.5) — separate for G and D |
+| Training | BCELoss, label smoothing, fixed noise grid for monitoring |
+
+## ViT
+
+| Item | Value |
+|---|---|
+| Model | Vision Transformer (807K params, 4 layers, 4 heads, 128-dim) |
+| Dataset | CIFAR-10 via HF datasets — 50K train / 10K test |
+| Architecture | PatchEmbed(4×4) → [CLS] → Transformer Encoder (from BERT) → CLS head |
+| Key concept | Self-attention for vision, no convolutions, patch embeddings |
+
+## UNet
+
+| Item | Value |
+|---|---|
+| Model | U-Net (31M params, 5 encoder/decoder stages) |
+| Dataset | Oxford-IIIT Pet via HF datasets — image + segmentation mask |
+| Architecture | Encoder: Conv+MaxPool × 4, Decoder: UpConv+skip × 4, output: pixel-wise logits |
+| Loss | CrossEntropy (ignore_index=0 for unlabeled) |
+| Metrics | Pixel accuracy, mean IoU |
 
 ## CNN
 
@@ -222,6 +272,9 @@ it demonstrates.
 | `cnn/` | SimpleCNN | Convolution, max-pooling, BatchNorm, Dropout, CosineAnnealing LR schedule |
 | `resnet18/` | ResNet18 | **Residual connections (skip connections)**, BatchNorm in deep networks, bottleneck design, AMP |
 | `resnet34/` | ResNet34 | SGD+Momentum, CosineAnnealingLR, gradient accumulation, early stopping, ROC AUC, F1 |
+| `dcgan/` | DCGAN | Transposed convolution, adversarial training, generator/discriminator dynamics |
+| `vit/` | Vision Transformer (ViT) | Patch embedding, self-attention for vision, Transformer without convolutions |
+| `unet/` | U-Net | Encoder-decoder, skip connections, pixel-wise classification, IoU metric |
 | `nlp/bert/` | BERT mini | **Self-Attention** (semantic aggregation), **Masked Language Model** (entropy increase + denoising), LayerNorm, positional encoding |
 | `nlp/word2vec/` | Word2Vec | **Embedding lookup tables**, **Negative Sampling**, CBOW vs Skip-gram, subsampling frequent words, cosine similarity |
 | `nlp/lstm/` | LSTM | **Input/forget/output gates**, **cell state**, gradient flow through gating, sequential processing vs parallel attention |
@@ -241,6 +294,18 @@ uv run python -m resnet18.eval
 # Train / Evaluate ResNet34
 uv run python -m resnet34.train
 uv run python -m resnet34.eval
+
+# Train / Generate DCGAN
+uv run python -m dcgan.train
+uv run python -m dcgan.generate
+
+# Train / Evaluate ViT
+uv run python -m vit.train
+uv run python -m vit.eval
+
+# Train / Evaluate UNet
+uv run python -m unet.train
+uv run python -m unet.eval
 
 # Train / Evaluate CNN
 uv run python -m cnn.train
@@ -288,6 +353,9 @@ locally after training; paths are shown below for reference.
 |---|---|---|
 | ResNet18 (15 attrs, 1K samples) | `resnet18/resnet18_celeba.pt` | 45 MB |
 | ResNet34 (40 attrs, 200K samples) | `resnet34/resnet34_celeba.pt` | ~80 MB |
+| DCGAN (CelebA, 64×64) | `dcgan/dcgan_celeba.pt` | ~23 MB (G+D) |
+| ViT (CIFAR-10, 32×32) | `vit/vit_cifar10.pt` | 3.2 MB |
+| UNet (Oxford-Pet, 128×128) | `unet/unet_oxford_pet.pt` | 119 MB |
 | SimpleCNN (CIFAR-10) | `cnn/simple_cnn_cifar10.pt` | 2.4 MB |
 | MLP (MNIST, NumPy) | `mlp/mlp_mnist.npz` | 0.9 MB |
 | Logistic Regression | `basics/logistic_regression.npz` | 63 KB |

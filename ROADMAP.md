@@ -24,28 +24,9 @@ Planned models and optimizations in priority order.
 - [x] **LSTM** — hand-written gates (input/forget/output/cell), IMDB sentiment
 - [x] **GPT** — Decoder-only Transformer with Causal Attention + KV Cache, text8 generation
 - [x] **Infrastructure** — Config system (YAML), TensorBoard logging, reproducibility (seed + config saving)
-
----
-
-## 📋 New Models
-
-### 1. DCGAN — Image Generation
-- **Dataset**: CelebA (already downloaded at `data/celeba/`)
-- **Architecture**:
-  - Generator: latent(100) → FC → 4× deconv layers → 64×64×3 (Tanh)
-  - Discriminator: 4× conv layers → FC → 1 (sigmoid)
-- **Training**: Adam(2e-4, 0.5), BCELoss, no BN in first conv
-- **Key learnings**: transposed convolution, adversarial training, GAN training dynamics
-
-### 2. UNet — Semantic Segmentation
-- **Dataset**: `tchevrou/oxford-iiit-pet` on HF
-- **Architecture**: encoder (down conv) → decoder (up conv) with skip connections
-- **Key learnings**: pixel-level classification, upsampling (transposed conv / interpolation), skip connections
-
-### 3. Vision Transformer (ViT) — Image Classification
-- **Dataset**: CIFAR-10 / CIFAR-100 on HF
-- **Architecture**: patch embedding → positional encoding → N× Transformer encoder (MHSA + FFN) → CLS head
-- **Key learnings**: self-attention for vision, patch embedding, no convolutions
+- [x] **DCGAN** — Image generation with Generator (3.5M) + Discriminator (2.8M), CelebA 64×64
+- [x] **Vision Transformer (ViT)** — Patch embedding + Transformer encoder (from BERT) for CIFAR-10
+- [x] **UNet** — Encoder-decoder with skip connections for semantic segmentation (Oxford-IIIT Pet)
 
 ---
 

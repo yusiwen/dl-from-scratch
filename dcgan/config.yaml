@@ -1,0 +1,13 @@
+seed: 42
+batch_size: 128
+lr: 0.0002
+beta1: 0.5
+num_epochs: 50
+latent_dim: 100
+num_workers: 4
+image_size: 64
+num_samples: 10000
+n_critic: 1
+sample_interval: 5
+label_smoothing: true
+model_path: dcgan/dcgan_celeba.pt

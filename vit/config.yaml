@@ -1,0 +1,13 @@
+seed: 42
+batch_size: 128
+lr: 0.001
+num_epochs: 50
+num_workers: 4
+d_model: 128
+n_heads: 4
+n_layers: 4
+d_ff: 512
+patch_size: 4
+dropout: 0.1
+num_classes: 10
+model_path: vit/vit_cifar10.pt
