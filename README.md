@@ -47,11 +47,16 @@ Implement mainstream deep learning models from scratch.
 │   │   ├── pretrain.py        # MLM pre-training ("entropy increase noise reduction")
 │   │   ├── finetune.py        # Sentiment classification fine-tuning
 │   │   └── eval.py            # Inference + attention visualisation
-│   └── word2vec/
+│   ├── word2vec/
+│   │   ├── __init__.py
+│   │   ├── model.py           # CBOW + Skip-gram with Negative Sampling
+│   │   ├── train.py           # text8 training (HF dataset)
+│   │   └── eval.py            # Word similarity search
+│   └── lstm/
 │       ├── __init__.py
-│       ├── model.py           # CBOW + Skip-gram with Negative Sampling
-│       ├── train.py           # text8 training (HF dataset)
-│       └── eval.py            # Word similarity search
+│       ├── model.py           # LSTM from scratch (hand-written gates)
+│       ├── train.py           # IMDB sentiment classification
+│       └── eval.py            # Prediction examples
 ├── basics/
 │   ├── __init__.py
 │   ├── logistic_regression.py   # Single Linear layer + Softmax (92.3% on MNIST)
@@ -119,6 +124,16 @@ Implement mainstream deep learning models from scratch.
 | Evaluation | Cosine similarity search in embedding space |
 | Key concept | Static word embeddings from distributional semantics |
 
+## LSTM
+
+| Item | Value |
+|---|---|
+| Model | LSTM (145K params, hand-written gates) |
+| Dataset | IMDB via HuggingFace (9K train / 1K test) |
+| Architecture | Embedding(128) → LSTM(128→128) → FC(128→2) |
+| Test Accuracy | ~50-60% (character-level, harder than word-level) |
+| Key concepts | **Input/forget/output gates**, **cell state**, gradient flow through gating |
+
 ## Basics
 
 | Algorithm | File | Datasets | Metric |
@@ -165,6 +180,7 @@ it demonstrates.
 | `resnet/` | ResNet18 | **Residual connections (skip connections)**, BatchNorm in deep networks, bottleneck design, AMP |
 | `nlp/bert/` | BERT mini | **Self-Attention** (semantic aggregation), **Masked Language Model** (entropy increase + denoising), LayerNorm, positional encoding |
 | `nlp/word2vec/` | Word2Vec | **Embedding lookup tables**, **Negative Sampling**, CBOW vs Skip-gram, subsampling frequent words, cosine similarity |
+| `nlp/lstm/` | LSTM | **Input/forget/output gates**, **cell state**, gradient flow through gating, sequential processing vs parallel attention |
 
 ## Setup & Run
 
@@ -204,6 +220,10 @@ uv run python -m nlp.bert.eval
 # Word2Vec
 uv run python -m nlp.word2vec.train
 uv run python -m nlp.word2vec.eval
+
+# LSTM
+uv run python -m nlp.lstm.train
+uv run python -m nlp.lstm.eval
 ```
 
 ## Models

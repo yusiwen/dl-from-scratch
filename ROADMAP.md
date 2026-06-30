@@ -20,6 +20,7 @@ Planned models and optimizations in priority order.
 - [x] **Perceptron** — single neuron, MNIST 0v1 100% (linearly separable)
 - [x] **BERT** — Transformer Encoder (Self-Attention + MLM), sentiment classification
 - [x] **Word2Vec** — CBOW + Skip-gram with Negative Sampling, text8 embeddings
+- [x] **LSTM** — hand-written gates (input/forget/output/cell), IMDB sentiment
 
 ---
 
