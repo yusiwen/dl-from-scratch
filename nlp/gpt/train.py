@@ -5,8 +5,9 @@ Training objective: predict the next token given all previous tokens.
 Every position in the sequence is a training example — a single batch
 of 32 sequences × 128 tokens generates 32 × 127 = 4064 predictions.
 
-This is "self-supervised" learning: the data provides its own labels
-(token[t] is the label for token[t-1]). No human annotation needed.
+Uses word-level tokenization: each word is one token (instead of each
+character). This drastically reduces sequence length and helps the model
+learn semantic patterns more effectively.
 
 Dataset: text8 from HuggingFace (same as Word2Vec, already cached).
 """
@@ -18,7 +19,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 from datasets import load_dataset
 
-from nlp.bert.tokenizer import CharTokenizer
+from nlp.gpt.tokenizer import WordTokenizer
 from nlp.gpt.model import GPT
 
 
@@ -52,42 +53,50 @@ def train():
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print(f"Device: {device}")
 
-    tokenizer = CharTokenizer()
-    print(f"Vocabulary size: {tokenizer.vocab_size}")
-
     # Load text8.
     print("Loading text8 dataset...")
     ds = load_dataset("afmck/text8", split="train")
     raw = ds[0]["text"]
-    chunk_size = 200
-    chunks = [raw[i:i + chunk_size] for i in range(0, len(raw), chunk_size)]
-    chunks = chunks[:5000]
-    print(f"  Total chunks: {len(chunks)}")
 
-    dataset = TextDataset(chunks, tokenizer, max_len=128)
+    # Split into word-level chunks (text8 has no punctuation, so split by word count).
+    words = raw.lower().split()
+    chunk_words = 32
+    raw_chunks = [" ".join(words[i:i + chunk_words]) for i in range(0, len(words), chunk_words)]
+    print(f"  Total chunks: {len(raw_chunks):,} ({len(words):,} words)")
+
+    # Build word-level vocabulary.
+    print("Building word-level vocabulary from text8...")
+    tokenizer = WordTokenizer(vocab_size=5000)
+    tokenizer.build_vocab(raw_chunks)
+    print(f"  Vocabulary size: {tokenizer.vocab_size}")
+
+    # Filter empty and use a subset for training speed.
+    sentences = [s.strip() for s in raw_chunks if len(s.strip()) > 5]
+    sentences = sentences[:20000]
+    print(f"  Training chunks: {len(sentences):,}")
+
+    dataset = TextDataset(sentences, tokenizer, max_len=64)
     loader = DataLoader(dataset, batch_size=64, shuffle=True, num_workers=0)
 
     model = GPT(
         vocab_size=tokenizer.vocab_size,
-        d_model=128, n_heads=4, n_layers=4, max_len=128,
+        d_model=256, n_heads=4, n_layers=4, max_len=64,
     ).to(device)
     print(f"Model parameters: {model.num_params():,}")
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.AdamW(model.parameters(), lr=1e-3)
 
-    num_epochs = 10
+    num_epochs = 15
     for epoch in range(1, num_epochs + 1):
         model.train()
         total_loss = 0.0
         num_batches = 0
 
         for batch in loader:
-            input_ids = batch["input_ids"].to(device)  # (batch, seq_len)
+            input_ids = batch["input_ids"].to(device)
 
             # Autoregressive target: shift left by 1.
-            # Input: tokens[0..n-1], Target: tokens[1..n]
-            # This way, every position predicts the next token.
             labels = input_ids[:, 1:].contiguous()
             inputs = input_ids[:, :-1].contiguous()
 

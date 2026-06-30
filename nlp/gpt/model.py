@@ -292,7 +292,7 @@ class GPT(nn.Module):
         return logits, present_kv
 
     def generate(self, input_ids, max_new_tokens=100, temperature=1.0,
-                 top_k=40, eos_token=None):
+                 top_k=40, eos_token=None, bad_tokens_ids=None):
         """
         Autoregressive text generation with KV caching.
 
@@ -313,12 +313,19 @@ class GPT(nn.Module):
           temperature: higher = more random (1.0), lower = more deterministic (0.1)
           top_k: only sample from the k most likely tokens
           eos_token: stop generation when this token is generated
+          bad_tokens_ids: list of token IDs to never generate (e.g. [SEP])
 
         Returns: (batch, prompt_len + generated_len) — full sequence
         """
         self.eval()
         device = input_ids.device
         batch_size = input_ids.size(0)
+
+        # Build a mask for forbidden tokens (e.g. [SEP]).
+        bad_tokens_ids = bad_tokens_ids or []
+        bad_mask = torch.zeros(self.lm_head.out_features, dtype=torch.bool, device=device)
+        if bad_tokens_ids:
+            bad_mask[bad_tokens_ids] = True
 
         # KV cache: starts empty. After the first forward pass on the prompt,
         # each layer stores its (K, V) for all prompt tokens.
@@ -340,6 +347,9 @@ class GPT(nn.Module):
 
             # Get logits for the LAST token (the one we just predicted).
             next_logits = logits[:, -1, :] / temperature
+
+            # Block bad tokens (e.g. [SEP]) from being generated.
+            next_logits[:, bad_mask] = float("-inf")
 
             # Top-k filtering: zero out all but the k most likely tokens.
             if top_k > 0:

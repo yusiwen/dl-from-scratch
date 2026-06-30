@@ -45,9 +45,10 @@ Implement mainstream deep learning models from scratch.
 │   ├── lstm/
 │   └── gpt/
 │       ├── __init__.py
+│       ├── tokenizer.py       # Word-level tokenizer (5000 vocab, from text8)
 │       ├── model.py           # Decoder-only Transformer (Causal Attention + KV Cache)
 │       ├── train.py           # Autoregressive LM on text8
-│       └── generate.py        # Text generation (temperature + top-k sampling)
+│       └── generate.py        # Text generation (temperature + top-k + [SEP] blocked)
 ├── basics/
 │   ├── __init__.py
 │   ├── logistic_regression.py   # Single Linear layer + Softmax (92.3% on MNIST)
@@ -129,11 +130,11 @@ Implement mainstream deep learning models from scratch.
 
 | Item | Value |
 |---|---|
-| Model | Decoder-only Transformer (834K params) |
-| Dataset | text8 via HuggingFace (~90M chars) |
-| Training | Autoregressive (predict next token), PPL 6.55 |
-| Generation | Temperature + top-k sampling with **KV Cache** |
-| Key concepts | **Causal Self-Attention**, **KV Cache**, autoregressive generation |
+| Model | Decoder-only Transformer (5.7M params, word-level) |
+| Dataset | text8 via HuggingFace (15M words, 20K chunks) |
+| Training | Autoregressive (predict next token), PPL 4.63 |
+| Generation | Temperature + top-k sampling with **KV Cache**, [SEP] blocked |
+| Key concepts | **Causal Self-Attention**, **KV Cache**, autoregressive generation, word-level tokenization |
 
 ## Basics
 
@@ -182,7 +183,7 @@ it demonstrates.
 | `nlp/bert/` | BERT mini | **Self-Attention** (semantic aggregation), **Masked Language Model** (entropy increase + denoising), LayerNorm, positional encoding |
 | `nlp/word2vec/` | Word2Vec | **Embedding lookup tables**, **Negative Sampling**, CBOW vs Skip-gram, subsampling frequent words, cosine similarity |
 | `nlp/lstm/` | LSTM | **Input/forget/output gates**, **cell state**, gradient flow through gating, sequential processing vs parallel attention |
-| `nlp/gpt/` | GPT | **Causal Self-Attention**, **KV Cache**, autoregressive generation, temperature + top-k sampling |
+| `nlp/gpt/` | GPT | **Causal Self-Attention**, **KV Cache**, autoregressive generation, word-level tokenizer, temperature + top-k sampling, bad-token blocking |
 
 ## Setup & Run
 
