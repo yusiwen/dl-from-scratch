@@ -1,0 +1,5 @@
+seed: 42
+lr: 0.1
+num_epochs: 2000
+test_ratio: 0.2
+batch_size: null

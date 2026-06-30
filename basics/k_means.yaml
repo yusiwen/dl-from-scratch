@@ -1,0 +1,4 @@
+seed: 42
+k: 10
+max_iters: 50
+tol: 0.0001

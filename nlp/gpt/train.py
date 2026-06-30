@@ -17,20 +17,16 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
+from torch.utils.tensorboard import SummaryWriter
 from datasets import load_dataset
 
 from nlp.gpt.tokenizer import WordTokenizer
 from nlp.gpt.model import GPT
+from utils.config import load_config, save_config
+from utils.seed import set_seed
 
 
 class TextDataset(Dataset):
-    """
-    Wraps text chunks into fixed-length sequences for autoregressive training.
-
-    Each sample: tokens of length `max_len`.
-    Labels: tokens shifted left by 1 (predict token[i+1] from token[i]).
-    """
-
     def __init__(self, texts, tokenizer, max_len=128):
         self.tokenizer = tokenizer
         self.max_len = max_len
@@ -50,44 +46,46 @@ class TextDataset(Dataset):
 
 
 def train():
+    cfg = load_config("nlp/gpt/config.yaml")
+    set_seed(cfg["seed"])
+
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print(f"Device: {device}")
 
-    # Load text8.
     print("Loading text8 dataset...")
     ds = load_dataset("afmck/text8", split="train")
     raw = ds[0]["text"]
 
-    # Split into word-level chunks (text8 has no punctuation, so split by word count).
     words = raw.lower().split()
-    chunk_words = 32
+    chunk_words = cfg["chunk_words"]
     raw_chunks = [" ".join(words[i:i + chunk_words]) for i in range(0, len(words), chunk_words)]
     print(f"  Total chunks: {len(raw_chunks):,} ({len(words):,} words)")
 
-    # Build word-level vocabulary.
     print("Building word-level vocabulary from text8...")
-    tokenizer = WordTokenizer(vocab_size=5000)
+    tokenizer = WordTokenizer(vocab_size=cfg["vocab_size"])
     tokenizer.build_vocab(raw_chunks)
     print(f"  Vocabulary size: {tokenizer.vocab_size}")
 
-    # Filter empty and use a subset for training speed.
     sentences = [s.strip() for s in raw_chunks if len(s.strip()) > 5]
-    sentences = sentences[:20000]
+    sentences = sentences[:cfg["max_chunks"]]
     print(f"  Training chunks: {len(sentences):,}")
 
-    dataset = TextDataset(sentences, tokenizer, max_len=64)
-    loader = DataLoader(dataset, batch_size=64, shuffle=True, num_workers=0)
+    dataset = TextDataset(sentences, tokenizer, max_len=cfg["max_len"])
+    loader = DataLoader(dataset, batch_size=cfg["batch_size"], shuffle=True, num_workers=0)
 
     model = GPT(
         vocab_size=tokenizer.vocab_size,
-        d_model=256, n_heads=4, n_layers=4, max_len=64,
+        d_model=cfg["d_model"], n_heads=cfg["n_heads"],
+        n_layers=cfg["n_layers"], max_len=cfg["max_len"],
     ).to(device)
     print(f"Model parameters: {model.num_params():,}")
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.AdamW(model.parameters(), lr=1e-3)
+    optimizer = optim.AdamW(model.parameters(), lr=cfg["lr"])
 
-    num_epochs = 15
+    num_epochs = cfg["num_epochs"]
+    writer = SummaryWriter(log_dir="runs/gpt")
+
     for epoch in range(1, num_epochs + 1):
         model.train()
         total_loss = 0.0
@@ -96,7 +94,6 @@ def train():
         for batch in loader:
             input_ids = batch["input_ids"].to(device)
 
-            # Autoregressive target: shift left by 1.
             labels = input_ids[:, 1:].contiguous()
             inputs = input_ids[:, :-1].contiguous()
 
@@ -104,7 +101,7 @@ def train():
             logits, _ = model(inputs)
             loss = criterion(logits.view(-1, logits.size(-1)), labels.view(-1))
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), cfg["grad_clip"])
             optimizer.step()
 
             total_loss += loss.item()
@@ -112,11 +109,18 @@ def train():
 
         avg_loss = total_loss / num_batches
         perplexity = math.exp(avg_loss)
+
+        writer.add_scalar("train/loss", avg_loss, epoch)
+        writer.add_scalar("train/perplexity", perplexity, epoch)
+
         print(f"Epoch [{epoch:2d}/{num_epochs}]  Loss: {avg_loss:.4f}  "
               f"PPL: {perplexity:.2f}")
 
-    torch.save(model, "nlp/gpt/gpt_text8.pt")
-    print(f"\nModel saved to nlp/gpt/gpt_text8.pt")
+    writer.close()
+    save_path = "nlp/gpt/gpt_text8.pt"
+    torch.save(model, save_path)
+    save_config(cfg, save_path.replace(".pt", "_config.yaml"))
+    print(f"\nModel saved to {save_path}")
 
 
 if __name__ == "__main__":

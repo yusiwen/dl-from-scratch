@@ -18,6 +18,8 @@ Dataset: gvlassis/california_housing
 
 import numpy as np
 from datasets import load_dataset
+from utils.config import load_config, save_config
+from utils.seed import set_seed
 
 
 def load_data(test_ratio=0.2):
@@ -39,7 +41,6 @@ def load_data(test_ratio=0.2):
         y[i] = row["MedHouseVal"]
 
     # Shuffle.
-    np.random.seed(42)
     indices = np.random.permutation(n)
     X, y = X[indices], y[indices]
 
@@ -142,9 +143,10 @@ def gradient_descent(X, y, lr=0.1, epochs=2000, batch_size=None):
 
 
 def train():
-    np.random.seed(42)
+    cfg = load_config("basics/linear_regression.yaml")
+    set_seed(cfg["seed"])
 
-    X_train, y_train, X_test, y_test, features = load_data(test_ratio=0.2)
+    X_train, y_train, X_test, y_test, features = load_data(test_ratio=cfg["test_ratio"])
     X_train_s, X_test_s, mean, std = standardize(X_train, X_test)
     X_train_b = add_bias_term(X_train_s)
     X_test_b = add_bias_term(X_test_s)
@@ -164,12 +166,15 @@ def train():
     print(f"Normal Equation:   MSE = {mse_ne:.3f}, R² = {r2_ne:.3f}")
 
     # --- Gradient Descent ---
-    theta_gd, loss_hist = gradient_descent(X_train_b, y_train, lr=0.1, epochs=2000)
+    theta_gd, loss_hist = gradient_descent(
+        X_train_b, y_train, lr=cfg["lr"], epochs=cfg["num_epochs"],
+        batch_size=cfg.get("batch_size"),
+    )
     y_pred_gd = predict(X_test_b, theta_gd)
     mse_gd = mse(y_test, y_pred_gd)
     r2_gd = r2_score(y_test, y_pred_gd)
     print(f"Gradient Descent:  MSE = {mse_gd:.3f}, R² = {r2_gd:.3f}  "
-          f"(epochs=2000, lr=0.1)")
+          f"(epochs={cfg['num_epochs']}, lr={cfg['lr']})")
 
     # --- Compare parameters ---
     diff = np.abs(theta_ne - theta_gd).max()
@@ -190,8 +195,9 @@ def train():
     print()
 
     # --- Save weights ---
-    np.savez("basics/linear_regression.npz",
-             theta=theta_ne, feature_names=features)
+    save_path = "basics/linear_regression.npz"
+    np.savez(save_path, theta=theta_ne, feature_names=features)
+    save_config(cfg, save_path.replace(".npz", "_config.yaml"))
     print("Weights saved to basics/linear_regression.npz")
 
 

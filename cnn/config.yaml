@@ -1,0 +1,6 @@
+seed: 42
+batch_size: 128
+lr: 0.001
+num_epochs: 30
+num_workers: 2
+T_max: 30

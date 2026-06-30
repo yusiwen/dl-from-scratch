@@ -19,6 +19,8 @@ Expected purity: ~50-60% (unsupervised, no label information used).
 
 import numpy as np
 from datasets import load_dataset
+from utils.config import load_config, save_config
+from utils.seed import set_seed
 
 
 def load_mnist_flat():
@@ -136,13 +138,14 @@ def visualize_centers(centers):
 
 
 def train():
-    np.random.seed(42)
+    cfg = load_config("basics/k_means.yaml")
+    set_seed(cfg["seed"])
     print("Loading MNIST (60K images)...")
     images, labels = load_mnist_flat()
     print(f"Data shape: {images.shape}")
 
-    k = 10
-    centers, assignments = kmeans(images, k=k, max_iters=50)
+    k = cfg["k"]
+    centers, assignments = kmeans(images, k=k, max_iters=cfg["max_iters"], tol=cfg["tol"])
     purity = purity_score(assignments, labels, k=k)
     print(f"\nCluster purity: {purity:.2%}")
 
@@ -155,8 +158,10 @@ def train():
         majority_label = np.bincount(labels[mask]).argmax()
         print(f"{i:<10} {majority_label:<15} {size:>6}")
 
-    np.savez("basics/kmeans_centers.npz", centers=centers)
-    print(f"\nCenters saved to basics/kmeans_centers.npz")
+    save_path = "basics/kmeans_centers.npz"
+    np.savez(save_path, centers=centers)
+    save_config(cfg, save_path.replace(".npz", "_config.yaml"))
+    print(f"\nCenters saved to {save_path}")
 
     visualize_centers(centers)
 

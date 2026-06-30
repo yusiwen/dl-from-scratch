@@ -2,45 +2,39 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import CosineAnnealingLR
+from torch.utils.tensorboard import SummaryWriter
 
 from cnn.data import load_cifar10, CIFAR10_CLASSES
 from cnn.model import SimpleCNN
+from utils.config import load_config, save_config
+from utils.seed import set_seed
 
 
 def train():
+    cfg = load_config("cnn/config.yaml")
+    set_seed(cfg["seed"])
+
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print(f"Device: {device}")
 
     torch.set_num_threads(4)
 
-    train_loader, test_loader = load_cifar10(batch_size=128, num_workers=2)
+    train_loader, test_loader = load_cifar10(
+        batch_size=cfg["batch_size"], num_workers=cfg["num_workers"],
+    )
 
     model = SimpleCNN(num_classes=len(CIFAR10_CLASSES)).to(device)
     total_params = sum(p.numel() for p in model.parameters())
     print(f"Model parameters: {total_params:,}")
 
-    # CrossEntropyLoss combines LogSoftmax + Negative Log-Likelihood Loss.
-    # Why not use softmax + NLLLoss separately? CrossEntropyLoss integrates
-    # softmax numerically: it uses the log-sum-exp trick internally to avoid
-    # floating-point underflow/overflow when the input logits have large magnitudes.
     criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=cfg["lr"])
+    scheduler = CosineAnnealingLR(optimizer, T_max=cfg["T_max"])
 
-    # Adam: adaptive learning rate method that keeps a running average of
-    # both gradients and squared gradients. It works well out-of-the-box
-    # with minimal tuning compared to SGD.
-    optimizer = optim.Adam(model.parameters(), lr=1e-3)
-
-    # CosineAnnealingLR: smoothly decreases the learning rate from the initial
-    # value to near-zero following a half-cosine curve over T_max epochs.
-    # Why cosine decay? Early in training, a higher LR helps escape poor local minima;
-    # later, a lower LR allows fine-grained convergence. Cosine annealing provides
-    # this transition without manual step boundaries.
-    scheduler = CosineAnnealingLR(optimizer, T_max=30)
-
-    num_epochs = 30
+    num_epochs = cfg["num_epochs"]
+    writer = SummaryWriter(log_dir="runs/cnn")
 
     for epoch in range(1, num_epochs + 1):
-        # --- Training ---
         model.train()
         train_loss = 0.0
         train_correct = 0
@@ -50,21 +44,19 @@ def train():
             images, labels = batch["img"].to(device), batch["label"].to(device)
 
             optimizer.zero_grad()
-            outputs = model(images)               # raw logits: (B, 10)
-            loss = criterion(outputs, labels)      # CrossEntropyLoss applies softmax internally
+            outputs = model(images)
+            loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
 
             train_loss += loss.item()
-            _, predicted = torch.max(outputs, 1)   # index of the max logit = predicted class
+            _, predicted = torch.max(outputs, 1)
             train_correct += (predicted == labels).sum().item()
             train_total += labels.size(0)
 
-        # Step the LR scheduler after each epoch
         lr = scheduler.get_last_lr()[0]
         scheduler.step()
 
-        # --- Evaluation (every epoch for monitoring) ---
         model.eval()
         test_loss = 0.0
         test_correct = 0
@@ -85,6 +77,12 @@ def train():
         train_acc = train_correct / train_total * 100
         test_acc = test_correct / test_total * 100
 
+        writer.add_scalar("train/loss", avg_train_loss, epoch)
+        writer.add_scalar("train/acc", train_acc, epoch)
+        writer.add_scalar("test/loss", avg_test_loss, epoch)
+        writer.add_scalar("test/acc", test_acc, epoch)
+        writer.add_scalar("lr", lr, epoch)
+
         print(
             f"Epoch [{epoch:2d}/{num_epochs}]  "
             f"Train Loss: {avg_train_loss:.4f}  Acc: {train_acc:.2f}%  |  "
@@ -92,8 +90,10 @@ def train():
             f"LR: {lr:.2e}"
         )
 
+    writer.close()
     print("\nTraining complete!")
     torch.save(model, "cnn/simple_cnn_cifar10.pt")
+    save_config(cfg, "cnn/simple_cnn_cifar10_config.yaml")
     print("Model saved to cnn/simple_cnn_cifar10.pt")
 
 

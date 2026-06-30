@@ -1,0 +1,8 @@
+seed: 42
+gd_lam: 0.01
+gd_lr: 0.1
+gd_epochs: 1000
+smo_C: 10.0
+smo_kernel: linear
+smo_max_passes: 10
+mnist_max_samples: 500

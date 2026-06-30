@@ -1,0 +1,14 @@
+seed: 42
+layer_dims:
+  - 784
+  - 256
+  - 128
+  - 10
+batch_size: 64
+lr: 0.1
+num_epochs: 20
+lr_decay_epochs:
+  - 5
+  - 10
+  - 15
+lr_decay_factor: 0.1

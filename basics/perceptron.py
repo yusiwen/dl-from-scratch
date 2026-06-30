@@ -18,6 +18,8 @@ linearly separable subset of MNIST (0 vs 1).
 """
 
 import numpy as np
+from utils.config import load_config
+from utils.seed import set_seed
 
 
 class Perceptron:
@@ -98,7 +100,7 @@ def load_mnist_01(max_samples=500):
     return X[idx], y[idx]
 
 
-def demo_2d():
+def demo_2d(cfg):
     """Perceptron on 2D linearly separable data."""
     print("Perceptron — 2D synthetic data")
     print("=" * 35)
@@ -107,8 +109,8 @@ def demo_2d():
     X_tr, y_tr = X[:split], y[:split]
     X_te, y_te = X[split:], y[split:]
 
-    model = Perceptron(lr=1.0)
-    model.fit(X_tr, y_tr, epochs=100)
+    model = Perceptron(lr=cfg["lr"])
+    model.fit(X_tr, y_tr, epochs=cfg["epochs_2d"])
     status = f"converged at epoch {model.converged_at}" if model.converged_at else "did not converge"
     print(f"  {status}")
     print(f"  Test acc: {model.score(X_te, y_te):.1%}")
@@ -116,7 +118,7 @@ def demo_2d():
     print()
 
 
-def demo_mnist():
+def demo_mnist(cfg):
     """Perceptron on MNIST 0 vs 1."""
     print("Perceptron — MNIST (0 vs 1)")
     print("=" * 35)
@@ -125,8 +127,8 @@ def demo_mnist():
     X_tr, y_tr = X[:split], y[:split]
     X_te, y_te = X[split:], y[split:]
 
-    model = Perceptron(lr=1.0)
-    model.fit(X_tr, y_tr, epochs=50)
+    model = Perceptron(lr=cfg["lr"])
+    model.fit(X_tr, y_tr, epochs=cfg["epochs_mnist"])
     status = f"converged at epoch {model.converged_at}" if model.converged_at else "did not converge"
     print(f"  {status}")
     print(f"  Test acc: {model.score(X_te, y_te):.1%}")
@@ -135,8 +137,10 @@ def demo_mnist():
 
 
 def demo():
-    demo_2d()
-    demo_mnist()
+    cfg = load_config("basics/perceptron.yaml")
+    set_seed(cfg["seed"])
+    demo_2d(cfg)
+    demo_mnist(cfg)
 
 
 if __name__ == "__main__":

@@ -23,6 +23,7 @@ in natural images, so NB underestimates the probability of typical patterns.
 
 import numpy as np
 from datasets import load_dataset
+from utils.seed import set_seed
 
 
 def load_mnist_flat():
@@ -99,7 +100,7 @@ class GaussianNB:
 
 
 def demo():
-    np.random.seed(42)
+    set_seed(42)
     print("Loading MNIST...")
     (X_tr, y_tr), (X_te, y_te) = load_mnist_flat()
     print(f"  Train: {X_tr.shape}  Test: {X_te.shape}")

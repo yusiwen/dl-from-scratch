@@ -16,6 +16,8 @@ weights, no learning rate, and no backprop — they just partition the data.
 """
 
 import numpy as np
+from utils.config import load_config
+from utils.seed import set_seed
 
 
 # ─────────────────────────────────────────────────────────
@@ -241,7 +243,8 @@ def print_tree(tree, feature_names=None, indent=""):
 # ─────────────────────────────────────────────────────────
 
 def demo():
-    np.random.seed(42)
+    cfg = load_config("basics/decision_tree.yaml")
+    set_seed(cfg["seed"])
     X, y = IRIS_DATA, IRIS_LABELS
 
     # Shuffle and split 80/20.
@@ -258,7 +261,7 @@ def demo():
     print(f"Train: {split}  Test: {len(y_te)}")
     print()
 
-    tree = build_tree(X_tr, y_tr, max_depth=4, min_samples=3)
+    tree = build_tree(X_tr, y_tr, max_depth=cfg["max_depth"], min_samples=cfg["min_samples"])
 
     print("Trained tree:")
     print_tree(tree, IRIS_FEATURE_NAMES)

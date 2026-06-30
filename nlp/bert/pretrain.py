@@ -15,10 +15,13 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
+from torch.utils.tensorboard import SummaryWriter
 from datasets import load_dataset
 
 from nlp.bert.tokenizer import CharTokenizer
 from nlp.bert.model import BERTForMLM
+from utils.config import load_config, save_config
+from utils.seed import set_seed
 
 
 class TextDataset(Dataset):
@@ -61,37 +64,40 @@ class TextDataset(Dataset):
 
 
 def pretrain():
+    cfg = load_config("nlp/bert/config.yaml")
+    set_seed(cfg["seed"])
+
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print(f"Device: {device}")
 
     tokenizer = CharTokenizer()
     print(f"Vocabulary size: {tokenizer.vocab_size}")
 
-    # Load text8 from HuggingFace.
     print("Loading text8 dataset...")
     ds = load_dataset("afmck/text8", split="train")
-    raw = ds[0]["text"]  # One giant string (~90M chars).
+    raw = ds[0]["text"]
 
-    # Split into manageable chunks (each ≈ 1000 chars).
-    chunk_size = 1000
+    chunk_size = cfg["chunk_size"]
     chunks = [raw[i:i + chunk_size] for i in range(0, len(raw), chunk_size)]
-    # Use a subset for training speed.
-    chunks = chunks[:5000]
+    chunks = chunks[:cfg["max_chunks"]]
     print(f"  Total chunks: {len(chunks)}")
 
-    dataset = TextDataset(chunks, tokenizer, max_len=128)
-    loader = DataLoader(dataset, batch_size=32, shuffle=True, num_workers=0)
+    dataset = TextDataset(chunks, tokenizer, max_len=cfg["max_len"], mask_prob=cfg["mask_prob"])
+    loader = DataLoader(dataset, batch_size=cfg["batch_size"], shuffle=True, num_workers=0)
 
     model = BERTForMLM(
         vocab_size=tokenizer.vocab_size,
-        d_model=128, n_heads=4, n_layers=4, max_len=128,
+        d_model=cfg["d_model"], n_heads=cfg["n_heads"],
+        n_layers=cfg["n_layers"], max_len=cfg["max_len"],
     ).to(device)
     print(f"Model parameters: {model.num_params():,}")
 
     criterion = nn.CrossEntropyLoss(ignore_index=-100)
-    optimizer = optim.AdamW(model.parameters(), lr=1e-4)
+    optimizer = optim.AdamW(model.parameters(), lr=cfg["lr"])
 
-    num_epochs = 10
+    num_epochs = cfg["num_epochs"]
+    writer = SummaryWriter(log_dir="runs/bert")
+
     for epoch in range(1, num_epochs + 1):
         model.train()
         total_loss = 0.0
@@ -113,11 +119,18 @@ def pretrain():
 
         avg_loss = total_loss / num_batches
         perplexity = math.exp(avg_loss)
+
+        writer.add_scalar("train/loss", avg_loss, epoch)
+        writer.add_scalar("train/perplexity", perplexity, epoch)
+
         print(f"Epoch [{epoch:2d}/{num_epochs}]  Loss: {avg_loss:.4f}  "
               f"PPL: {perplexity:.2f}")
 
-    torch.save(model.state_dict(), "nlp/bert/bert_mlm.pt")
-    print(f"\nWeights saved to nlp/bert/bert_mlm.pt")
+    writer.close()
+    save_path = "nlp/bert/bert_mlm.pt"
+    torch.save(model.state_dict(), save_path)
+    save_config(cfg, save_path.replace(".pt", "_config.yaml"))
+    print(f"\nWeights saved to {save_path}")
 
 
 if __name__ == "__main__":

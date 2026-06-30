@@ -25,6 +25,8 @@ Points with α_i > 0 are *support vectors* — they alone define the boundary.
 
 import numpy as np
 from datasets import load_dataset
+from utils.config import load_config, save_config
+from utils.seed import set_seed
 
 
 # ─────────────────────────────────────────────────────────
@@ -337,7 +339,7 @@ def _load_mnist_binary(digit_a=3, digit_b=5, max_samples=500):
     return X[idx], y[idx]
 
 
-def demo_2d():
+def demo_2d(cfg):
     """Compare GD, SMO-linear, and SMO-RBF on 2D moon-shaped data."""
     print("\n" + "=" * 60)
     print("SVM Demo 1: 2D synthetic moons (n=200)")
@@ -357,29 +359,29 @@ def demo_2d():
     print(f"  RBF γ=1/feat = {gamma_rbf:.2f}\n")
 
     print("── Primal GD (linear) ──")
-    gd = SVM_GD(lam=0.01, lr=0.1, epochs=1000)
+    gd = SVM_GD(lam=cfg["gd_lam"], lr=cfg["gd_lr"], epochs=cfg["gd_epochs"])
     gd.fit(X_tr, y_tr)
     print(f"  Test acc: {gd.score(X_te, y_te):.1%}\n")
 
     print("── SMO (linear, C=10) ──")
-    smo_lin = SVM_SMO(C=10.0, kernel='linear', max_passes=10)
+    smo_lin = SVM_SMO(C=cfg["smo_C"], kernel=cfg["smo_kernel"], max_passes=cfg["smo_max_passes"])
     smo_lin.fit(X_tr, y_tr)
     print(f"  Test acc: {smo_lin.score(X_te, y_te):.1%}\n")
 
     print(f"── SMO (RBF, C=10, γ={gamma_rbf:.2f}) ──")
-    smo_rbf = SVM_SMO(C=10.0, kernel='rbf', gamma=gamma_rbf, max_passes=10)
+    smo_rbf = SVM_SMO(C=cfg["smo_C"], kernel='rbf', gamma=gamma_rbf, max_passes=cfg["smo_max_passes"])
     smo_rbf.fit(X_tr, y_tr)
     print(f"  Test acc: {smo_rbf.score(X_te, y_te):.1%}")
 
 
-def demo_mnist():
+def demo_mnist(cfg):
     """Compare GD, SMO-linear, and SMO-RBF on MNIST digits 3 vs 5."""
     print("\n" + "=" * 60)
     print("SVM Demo 2: MNIST (3 vs 5, max 500 samples)")
     print("=" * 60)
 
-    X, y = _load_mnist_binary(3, 5, 500)
-    split = 350
+    X, y = _load_mnist_binary(3, 5, cfg["mnist_max_samples"])
+    split = int(len(y) * 0.7)
 
     mean = X[:split].mean(axis=0)
     std = X[:split].std(axis=0) + 1e-8
@@ -393,24 +395,26 @@ def demo_mnist():
     print(f"  RBF γ=1/feat = {gamma_rbf:.4f}\n")
 
     print("── Primal GD (linear) ──")
-    gd = SVM_GD(lam=0.01, lr=0.1, epochs=500)
+    gd = SVM_GD(lam=cfg["gd_lam"], lr=cfg["gd_lr"], epochs=cfg["gd_epochs"])
     gd.fit(X_tr, y_tr)
     print(f"  Test acc: {gd.score(X_te, y_te):.1%}\n")
 
     print("── SMO (linear, C=10) ──")
-    smo_lin = SVM_SMO(C=10.0, kernel='linear', max_passes=10)
+    smo_lin = SVM_SMO(C=cfg["smo_C"], kernel=cfg["smo_kernel"], max_passes=cfg["smo_max_passes"])
     smo_lin.fit(X_tr, y_tr)
     print(f"  Test acc: {smo_lin.score(X_te, y_te):.1%}\n")
 
     print(f"── SMO (RBF, C=10, γ={gamma_rbf:.4f}) ──")
-    smo_rbf = SVM_SMO(C=10.0, kernel='rbf', gamma=gamma_rbf, max_passes=10)
+    smo_rbf = SVM_SMO(C=cfg["smo_C"], kernel='rbf', gamma=gamma_rbf, max_passes=cfg["smo_max_passes"])
     smo_rbf.fit(X_tr, y_tr)
     print(f"  Test acc: {smo_rbf.score(X_te, y_te):.1%}")
 
 
 def main():
-    demo_2d()
-    demo_mnist()
+    cfg = load_config("basics/svm.yaml")
+    set_seed(cfg["seed"])
+    demo_2d(cfg)
+    demo_mnist(cfg)
 
 
 if __name__ == "__main__":

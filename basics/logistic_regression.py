@@ -16,6 +16,8 @@ Expected accuracy: ~92%  (vs MLP's 97.9% — the ~6% gap comes from non-linearit
 
 import numpy as np
 from mlp.data import load_mnist, MNIST_CLASSES
+from utils.config import load_config, save_config
+from utils.seed import set_seed
 
 
 class Linear:
@@ -73,14 +75,16 @@ class SoftmaxCrossEntropy:
 
 
 def train():
-    np.random.seed(42)
-    train_loader, test_loader = load_mnist(batch_size=64)
+    cfg = load_config("basics/logistic_regression.yaml")
+    set_seed(cfg["seed"])
+
+    train_loader, test_loader = load_mnist(batch_size=cfg["batch_size"])
 
     model = Linear(784, 10)
     loss_fn = SoftmaxCrossEntropy()
-    lr = 0.1
+    lr = cfg["lr"]
 
-    num_epochs = 20
+    num_epochs = cfg["num_epochs"]
     print(f"Logistic Regression on MNIST ({784} -> 10, no hidden layers)")
     print(f"Parameters: {model.W.size + model.b.size:,}")
     print()
@@ -112,8 +116,10 @@ def train():
               f"Test Acc: {accuracy:.2f}%")
 
     # Save weights.
-    np.savez("basics/logistic_regression.npz", W=model.W, b=model.b)
-    print(f"\nWeights saved to basics/logistic_regression.npz")
+    save_path = "basics/logistic_regression.npz"
+    np.savez(save_path, W=model.W, b=model.b)
+    save_config(cfg, save_path.replace(".npz", "_config.yaml"))
+    print(f"\nWeights saved to {save_path}")
     print(f"  W shape: {model.W.shape}, b shape: {model.b.shape}")
 
     # Per-class accuracy.

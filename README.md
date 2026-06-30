@@ -39,6 +39,10 @@ Implement mainstream deep learning models from scratch.
 │   ├── model.py           # MLP — pure NumPy (Linear, ReLU, SoftmaxCrossEntropy, SGD)
 │   ├── train.py           # Training script
 │   └── eval.py            # Test evaluation (per-digit accuracy)
+├── utils/
+│   ├── __init__.py
+│   ├── config.py             # YAML config loading/saving (load_config / save_config)
+│   └── seed.py               # set_seed() — lock torch + numpy + random + cudnn
 ├── nlp/
 │   ├── bert/
 │   ├── word2vec/
@@ -62,6 +66,26 @@ Implement mainstream deep learning models from scratch.
 │   └── perceptron.py             # Single neuron (Rosenblatt 1958, step activation)
 ├── .gitattributes                 # LFS: *.zip *.pt
 └── uv.lock
+```
+
+## Infrastructure
+
+| Feature | Description |
+|---|---|
+| **Config system** | Each model directory has a `config.yaml` with its hyperparameters (seed, lr, batch_size, epochs, etc.). Edit the YAML to change training params without touching code. |
+| **TensorBoard** | Every PyTorch training script logs loss/accuracy per epoch to `runs/{model_name}/`. Run `tensorboard --logdir runs` to visualize all experiments. |
+| **Reproducibility** | `utils/seed.py` provides `set_seed()` that locks `torch` + `numpy` + `random` + `cudnn`. Called at the start of every train script. Config is saved alongside model weights (`_config.yaml`). |
+
+### Usage
+
+```bash
+# View training curves (all models)
+tensorboard --logdir runs
+
+# Edit hyperparameters in YAML instead of code
+vim resnet/config.yaml
+# then train as usual:
+uv run python -m resnet.train
 ```
 
 ## ResNet

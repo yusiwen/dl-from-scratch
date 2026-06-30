@@ -1,0 +1,9 @@
+seed: 42
+embed_dim: 50
+window_size: 2
+k_negatives: 5
+batch_size: 128
+lr: 0.01
+num_epochs: 5
+max_pairs: 200000
+min_count: 3

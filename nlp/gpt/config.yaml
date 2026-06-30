@@ -1,0 +1,12 @@
+seed: 42
+vocab_size: 5000
+d_model: 256
+n_heads: 4
+n_layers: 4
+max_len: 64
+batch_size: 64
+lr: 0.001
+num_epochs: 15
+max_chunks: 20000
+chunk_words: 32
+grad_clip: 1.0

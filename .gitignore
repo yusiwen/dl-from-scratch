@@ -15,3 +15,9 @@ data/
 # Model weights / training artifacts (regenerated on each run)
 *.pt
 *.npz
+
+# TensorBoard event logs
+runs/
+
+# Saved config copies (generated alongside checkpoints, for reproducibility)
+*_config.yaml

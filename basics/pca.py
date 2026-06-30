@@ -19,6 +19,7 @@ separate into clusters even in 2D.
 
 import numpy as np
 from datasets import load_dataset
+from utils.seed import set_seed
 
 
 def load_mnist_flat(max_samples=5000):
@@ -97,7 +98,7 @@ def print_ascii_scatter(X_2d, y, size=40):
 
 
 def demo():
-    np.random.seed(42)
+    set_seed(42)
     print("Loading MNIST (5000 samples)...")
     X, y = load_mnist_flat(5000)
     print(f"  Data shape: {X.shape}")

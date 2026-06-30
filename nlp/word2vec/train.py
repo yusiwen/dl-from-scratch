@@ -11,10 +11,13 @@ import numpy as np
 import torch
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
+from torch.utils.tensorboard import SummaryWriter
 from collections import Counter
 from datasets import load_dataset
 
 from nlp.word2vec.model import Word2Vec
+from utils.config import load_config, save_config
+from utils.seed import set_seed
 
 
 def load_texts():
@@ -203,85 +206,95 @@ def train_epoch(model, loader, noise_sampler, optimizer, k=5, mode="skipgram"):
 
 
 def train():
+    cfg = load_config("nlp/word2vec/config.yaml")
+    set_seed(cfg["seed"])
+
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print(f"Device: {device}")
 
-    # Load and build vocabulary.
     print("Loading PTB dataset...")
     texts = load_texts()
     print(f"  {len(texts)} sentences")
 
-    word_to_id, id_to_word, vocab = build_vocab(texts, min_count=3)
+    word_to_id, id_to_word, vocab = build_vocab(texts, min_count=cfg["min_count"])
     vocab_size = len(word_to_id)
     print(f"  Vocabulary size: {vocab_size}")
 
-    # Subsample frequent words.
     print("Subsampling frequent words...")
     tokenized = subsample(texts, word_to_id)
     print(f"  After subsampling: {sum(len(s) for s in tokenized)} tokens")
 
-    # Generate training pairs.
     print("Generating training pairs...")
-    cbow_pairs, skipgram_pairs = generate_training_pairs(tokenized, window_size=2)
+    cbow_pairs, skipgram_pairs = generate_training_pairs(tokenized, window_size=cfg["window_size"])
     print(f"  CBOW pairs: {len(cbow_pairs):,}")
     print(f"  Skip-gram pairs: {len(skipgram_pairs):,}")
 
-    # Use a subset for speed.
-    max_pairs = 200000
+    max_pairs = cfg["max_pairs"]
     cbow_pairs = cbow_pairs[:max_pairs]
     skipgram_pairs = skipgram_pairs[:max_pairs]
 
-    # Build datasets and noise sampler.
-    cbow_dataset = CBOWDataset(cbow_pairs, max_window=2)
+    cbow_dataset = CBOWDataset(cbow_pairs, max_window=cfg["window_size"])
     sg_dataset = SkipGramDataset(skipgram_pairs, vocab_size)
-    cbow_loader = DataLoader(cbow_dataset, batch_size=128, shuffle=True, num_workers=0)
-    sg_loader = DataLoader(sg_dataset, batch_size=128, shuffle=True, num_workers=0)
+    cbow_loader = DataLoader(cbow_dataset, batch_size=cfg["batch_size"], shuffle=True, num_workers=0)
+    sg_loader = DataLoader(sg_dataset, batch_size=cfg["batch_size"], shuffle=True, num_workers=0)
 
     noise_sampler = NoiseSampler(vocab, vocab_size)
+
+    k_neg = cfg["k_negatives"]
+    embed_dim = cfg["embed_dim"]
+    num_epochs = cfg["num_epochs"]
+    lr = cfg["lr"]
+
+    writer = SummaryWriter(log_dir="runs/word2vec")
 
     # --- Skip-gram ---
     print("\n" + "=" * 50)
     print("Skip-gram with Negative Sampling")
     print("=" * 50)
 
-    model_sg = Word2Vec(vocab_size, embed_dim=50)
-    optimizer = optim.Adam(model_sg.parameters(), lr=0.01)
+    model_sg = Word2Vec(vocab_size, embed_dim=embed_dim)
+    optimizer_sg = optim.Adam(model_sg.parameters(), lr=lr)
 
-    for epoch in range(1, 6):
-        loss = train_epoch(model_sg, sg_loader, noise_sampler, optimizer, k=5, mode="skipgram")
+    for epoch in range(1, num_epochs + 1):
+        loss = train_epoch(model_sg, sg_loader, noise_sampler, optimizer_sg, k=k_neg, mode="skipgram")
+        writer.add_scalar("skipgram/loss", loss, epoch)
         print(f"  Epoch {epoch}: loss = {loss:.4f}")
 
-    # Save Skip-gram embeddings.
     emb_sg = model_sg.get_embeddings()
+    save_path_sg = "nlp/word2vec/skipgram.pt"
     torch.save({
         "embeddings": emb_sg,
         "id_to_word": id_to_word,
         "vocab_size": vocab_size,
-        "embed_dim": 50,
-    }, "nlp/word2vec/skipgram.pt")
-    print(f"\n  Skip-gram embeddings saved to nlp/word2vec/skipgram.pt")
+        "embed_dim": embed_dim,
+    }, save_path_sg)
+    save_config(cfg, save_path_sg.replace(".pt", "_config.yaml"))
+    print(f"\n  Skip-gram embeddings saved to {save_path_sg}")
 
     # --- CBOW ---
     print("\n" + "=" * 50)
     print("CBOW with Negative Sampling")
     print("=" * 50)
 
-    model_cbow = Word2Vec(vocab_size, embed_dim=50)
-    optimizer = optim.Adam(model_cbow.parameters(), lr=0.01)
+    model_cbow = Word2Vec(vocab_size, embed_dim=embed_dim)
+    optimizer_cbow = optim.Adam(model_cbow.parameters(), lr=lr)
 
-    for epoch in range(1, 6):
-        loss = train_epoch(model_cbow, cbow_loader, noise_sampler, optimizer, k=5, mode="cbow")
+    for epoch in range(1, num_epochs + 1):
+        loss = train_epoch(model_cbow, cbow_loader, noise_sampler, optimizer_cbow, k=k_neg, mode="cbow")
+        writer.add_scalar("cbow/loss", loss, epoch)
         print(f"  Epoch {epoch}: loss = {loss:.4f}")
 
-    # Save CBOW embeddings.
+    writer.close()
     emb_cbow = model_cbow.get_embeddings()
+    save_path_cbow = "nlp/word2vec/cbow.pt"
     torch.save({
         "embeddings": emb_cbow,
         "id_to_word": id_to_word,
         "vocab_size": vocab_size,
-        "embed_dim": 50,
-    }, "nlp/word2vec/cbow.pt")
-    print(f"\n  CBOW embeddings saved to nlp/word2vec/cbow.pt")
+        "embed_dim": embed_dim,
+    }, save_path_cbow)
+    save_config(cfg, save_path_cbow.replace(".pt", "_config.yaml"))
+    print(f"\n  CBOW embeddings saved to {save_path_cbow}")
 
     print("\nTraining complete!")
 
