@@ -88,12 +88,20 @@ Implement mainstream deep learning models from scratch.
 │   ├── bert/
 │   ├── word2vec/
 │   ├── lstm/
-│   └── gpt/
+│   ├── gpt/
+│   └── seq2seq/
 │       ├── __init__.py
 │       ├── tokenizer.py       # Word-level tokenizer (5000 vocab, from text8)
 │       ├── model.py           # Decoder-only Transformer (Causal Attention + KV Cache)
 │       ├── train.py           # Autoregressive LM on text8
 │       └── generate.py        # Text generation (temperature + top-k + [SEP] blocked)
+│   └── seq2seq/
+│       ├── __init__.py
+│       ├── config.yaml        # Transformer hyperparameters
+│       ├── model.py           # Encoder (from BERT) + Decoder (cross-attention) → Seq2Seq
+│       ├── data.py            # Multi30k EN→DE, word-level tokenizer
+│       ├── train.py           # Teacher forcing training
+│       └── generate.py        # Greedy decoding translation demo
 ├── basics/
 │   ├── __init__.py
 │   ├── logistic_regression.py   # Single Linear layer + Softmax (92.3% on MNIST)
@@ -169,6 +177,15 @@ uv run python -m resnet18.train
 | Architecture | Conv Encoder → μ,logσ² → reparameterize → Deconv Decoder → Sigmoid |
 | Loss | Reconstruction (BCE) + KL divergence |
 | Training | Adam(lr=2e-4), 50 epoch |
+
+## Seq2Seq Transformer
+
+| Item | Value |
+|---|---|
+| Model | Encoder-Decoder Transformer (1M params) |
+| Dataset | Multi30k EN→DE — 29K train / 1K test |
+| Architecture | Encoder (from BERT) + Decoder (causal + cross-attention) |
+| Training | Teacher forcing, weight-tying, Adam(lr=1e-4) |
 
 ## DCGAN
 
@@ -307,6 +324,7 @@ it demonstrates.
 | `resnet34/` | ResNet34 | SGD+Momentum, CosineAnnealingLR, gradient accumulation, early stopping, ROC AUC, F1 |
 | `resnet50/` | ResNet50 | Bottleneck block (1×1→3×3→1×1), deeper residual networks |
 | `vae/` | VAE | Reparameterization trick, KL divergence, latent space interpolation |
+| `nlp/seq2seq/` | Seq2Seq Transformer | Encoder-decoder, cross-attention, teacher forcing, weight-tying |
 | `dcgan/` | DCGAN | Transposed convolution, adversarial training, generator/discriminator dynamics |
 | `vit/` | Vision Transformer (ViT) | Patch embedding, self-attention for vision, Transformer without convolutions |
 | `unet/` | U-Net | Encoder-decoder, skip connections, pixel-wise classification, IoU metric |
@@ -337,6 +355,10 @@ uv run python -m resnet50.eval
 # Train / Generate VAE
 uv run python -m vae.train
 uv run python -m vae.generate
+
+# Train / Translate Seq2Seq
+uv run python -m nlp.seq2seq.train
+uv run python -m nlp.seq2seq.generate
 
 # Train / Generate DCGAN
 uv run python -m dcgan.train
@@ -398,6 +420,7 @@ locally after training; paths are shown below for reference.
 | ResNet34 (40 attrs, 200K samples) | `resnet34/resnet34_celeba.pt` | ~80 MB |
 | ResNet50 (40 attrs, 200K samples) | `resnet50/resnet50_celeba.pt` | ~90 MB |
 | VAE (CelebA, 64×64) | `vae/vae_celeba.pt` | 10 MB |
+| Seq2Seq Transformer (Multi30k) | `nlp/seq2seq/seq2seq_multi30k.pt` | 4 MB |
 | DCGAN (CelebA, 64×64) | `dcgan/dcgan_celeba.pt` | ~23 MB (G+D) |
 | ViT (CIFAR-10, 32×32) | `vit/vit_cifar10.pt` | 3.2 MB |
 | UNet (Oxford-Pet, 128×128) | `unet/unet_oxford_pet.pt` | 119 MB |
