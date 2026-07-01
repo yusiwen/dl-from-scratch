@@ -47,6 +47,13 @@ Implement mainstream deep learning models from scratch.
 │   ├── data.py            # CelebA images (64×64)
 │   ├── train.py           # VAE training (recon + KL loss)
 │   └── generate.py        # Sample generation + latent interpolation
+├── ddpm/
+│   ├── __init__.py
+│   ├── config.yaml        # DDPM hyperparameters (T=1000, noise schedule, etc.)
+│   ├── model.py           # UNet + timestep embedding + DDPM forward/sample
+│   ├── data.py            # CIFAR-10 via HF datasets
+│   ├── train.py           # Noise prediction training
+│   └── generate.py        # Reverse diffusion sampling
 ├── dcgan/
 │   ├── __init__.py
 │   ├── config.yaml        # DCGAN hyperparameters
@@ -187,6 +194,16 @@ uv run python -m resnet18.train
 | Architecture | Encoder (from BERT) + Decoder (causal + cross-attention) |
 | Training | Teacher forcing, weight-tying, Adam(lr=1e-4) |
 
+## DDPM
+
+| Item | Value |
+|---|---|
+| Model | Denoising Diffusion (16.1M params) |
+| Dataset | CIFAR-10 via HF datasets — 50K images (32×32) |
+| Architecture | UNet + timestep embedding + sinusoid positional encoding |
+| Training | Noise prediction (MSE), T=1000, linear β schedule |
+| Sampling | Reverse diffusion (x_T → x_0), 1000 steps |
+
 ## DCGAN
 
 | Item | Value |
@@ -325,6 +342,7 @@ it demonstrates.
 | `resnet50/` | ResNet50 | Bottleneck block (1×1→3×3→1×1), deeper residual networks |
 | `vae/` | VAE | Reparameterization trick, KL divergence, latent space interpolation |
 | `nlp/seq2seq/` | Seq2Seq Transformer | Encoder-decoder, cross-attention, teacher forcing, weight-tying |
+| `ddpm/` | DDPM | Denoising Diffusion, UNet + timestep embedding, noise prediction |
 | `dcgan/` | DCGAN | Transposed convolution, adversarial training, generator/discriminator dynamics |
 | `vit/` | Vision Transformer (ViT) | Patch embedding, self-attention for vision, Transformer without convolutions |
 | `unet/` | U-Net | Encoder-decoder, skip connections, pixel-wise classification, IoU metric |
@@ -359,6 +377,10 @@ uv run python -m vae.generate
 # Train / Translate Seq2Seq
 uv run python -m nlp.seq2seq.train
 uv run python -m nlp.seq2seq.generate
+
+# Train / Generate DDPM
+uv run python -m ddpm.train
+uv run python -m ddpm.generate
 
 # Train / Generate DCGAN
 uv run python -m dcgan.train
@@ -421,6 +443,7 @@ locally after training; paths are shown below for reference.
 | ResNet50 (40 attrs, 200K samples) | `resnet50/resnet50_celeba.pt` | ~90 MB |
 | VAE (CelebA, 64×64) | `vae/vae_celeba.pt` | 10 MB |
 | Seq2Seq Transformer (Multi30k) | `nlp/seq2seq/seq2seq_multi30k.pt` | 4 MB |
+| DDPM (CIFAR-10, 32×32) | `ddpm/ddpm_cifar10.pt` | 62 MB |
 | DCGAN (CelebA, 64×64) | `dcgan/dcgan_celeba.pt` | ~23 MB (G+D) |
 | ViT (CIFAR-10, 32×32) | `vit/vit_cifar10.pt` | 3.2 MB |
 | UNet (Oxford-Pet, 128×128) | `unet/unet_oxford_pet.pt` | 119 MB |
