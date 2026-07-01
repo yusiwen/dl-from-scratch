@@ -61,7 +61,7 @@ from nlp.word2vec.train import (
 )
 from nlp.word2vec.model import Word2Vec
 
-device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+device = get_device()
 print(f"Device: {device}")
 """)
 
@@ -113,6 +113,7 @@ for epoch in range(1, NUM_EPOCHS + 1):
 
 code("""\
 import matplotlib.pyplot as plt
+from utils.device import get_device
 plt.plot(sg_loss_hist, marker='o')
 plt.xlabel("Epoch"); plt.ylabel("Loss"); plt.title("Skip-gram Training Loss"); plt.grid(True)
 plt.show()

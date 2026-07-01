@@ -61,7 +61,7 @@ from datasets import load_dataset
 
 from dcgan.model import Generator, Discriminator
 
-device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+device = get_device()
 print(f"Device: {device}")
 """)
 
@@ -168,6 +168,7 @@ md("""## 生成样本
 code("""\
 import matplotlib.pyplot as plt
 import torchvision.utils as vutils
+from utils.device import get_device
 
 with torch.no_grad():
     fake = netG(fixed_noise).cpu()

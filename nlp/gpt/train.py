@@ -24,6 +24,7 @@ from nlp.gpt.tokenizer import WordTokenizer
 from nlp.gpt.model import GPT
 from utils.config import load_config, save_config
 from utils.seed import set_seed
+from utils.device import get_device
 
 
 class TextDataset(Dataset):
@@ -49,7 +50,7 @@ def train():
     cfg = load_config("nlp/gpt/config.yaml")
     set_seed(cfg["seed"])
 
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = get_device()
     print(f"Device: {device}")
 
     print("Loading text8 dataset...")

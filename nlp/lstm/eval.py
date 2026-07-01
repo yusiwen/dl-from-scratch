@@ -7,6 +7,7 @@ from datasets import load_dataset
 
 from nlp.bert.tokenizer import CharTokenizer
 from nlp.lstm.model import LSTMSentiment
+from utils.device import get_device
 
 
 def predict(text, model, tokenizer, device, max_len=128):
@@ -24,7 +25,7 @@ def predict(text, model, tokenizer, device, max_len=128):
 
 
 def evaluate():
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = get_device()
     print(f"Device: {device}")
 
     tokenizer = CharTokenizer()

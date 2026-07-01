@@ -12,6 +12,7 @@ import torch.nn.functional as F
 
 from nlp.bert.tokenizer import CharTokenizer
 from nlp.bert.model import BERTForClassification
+from utils.device import get_device
 
 
 def predict(text, model, tokenizer, device):
@@ -84,7 +85,7 @@ def load_model(device):
 
 
 def demo():
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = get_device()
     print(f"Device: {device}\n")
 
     model, tokenizer = load_model(device)

@@ -16,6 +16,7 @@ from datasets import load_dataset
 
 from nlp.bert.tokenizer import CharTokenizer
 from nlp.bert.model import BERTForClassification
+from utils.device import get_device
 
 
 class SentimentDataset(Dataset):
@@ -40,7 +41,7 @@ class SentimentDataset(Dataset):
 
 
 def finetune():
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = get_device()
     print(f"Device: {device}")
 
     tokenizer = CharTokenizer()

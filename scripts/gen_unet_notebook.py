@@ -71,7 +71,7 @@ import random
 
 from unet.model import UNet
 
-device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+device = get_device()
 print(f"Device: {device}")
 """)
 
@@ -191,6 +191,7 @@ md("""## 分割效果可视化""")
 code("""\
 import matplotlib.pyplot as plt
 import numpy as np
+from utils.device import get_device
 
 model.eval()
 images, masks = next(iter(test_loader))

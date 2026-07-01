@@ -6,12 +6,13 @@ from PIL import Image
 
 from dcgan.model import Generator
 from utils.config import load_config
+from utils.device import get_device
 
 
 def generate():
     cfg = load_config("dcgan/config.yaml")
 
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = get_device()
     latent_dim = cfg["latent_dim"]
 
     netG = Generator(latent_dim=latent_dim).to(device)

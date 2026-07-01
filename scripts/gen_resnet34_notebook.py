@@ -58,7 +58,7 @@ from torchvision import transforms
 from resnet34.data import CelebADataset, CELEBA_ATTR_ORDER, train_transform
 from resnet34.model import resnet34
 
-device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+device = get_device()
 print(f"Device: {device}")
 """)
 
@@ -152,6 +152,7 @@ md("""## Loss 曲线""")
 
 code("""\
 import matplotlib.pyplot as plt
+from utils.device import get_device
 
 plt.figure(figsize=(8, 4))
 plt.plot(train_loss_hist, label='train', marker='o')

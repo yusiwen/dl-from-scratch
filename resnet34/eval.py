@@ -4,12 +4,13 @@ from sklearn.metrics import roc_auc_score, f1_score
 
 from resnet34.data import CelebADataset, CELEBA_ATTR_ORDER, eval_transform
 from utils.config import load_config
+from utils.device import get_device
 
 
 def evaluate():
     cfg = load_config("resnet34/config.yaml")
 
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = get_device()
     print(f"Device: {device}")
 
     model_path = cfg["model_path"]

@@ -5,12 +5,13 @@ from torch.utils.data import DataLoader
 from vit.data import load_cifar10, CIFAR10_CLASSES
 from vit.model import ViT
 from utils.config import load_config
+from utils.device import get_device
 
 
 def evaluate():
     cfg = load_config("vit/config.yaml")
 
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = get_device()
     print(f"Device: {device}")
 
     model_path = cfg["model_path"]

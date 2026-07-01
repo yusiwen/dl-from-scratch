@@ -9,6 +9,7 @@ from resnet34.data import CelebADataset, CELEBA_ATTR_ORDER, train_transform
 from resnet34.model import resnet34
 from utils.config import load_config, save_config
 from utils.seed import set_seed
+from utils.device import get_device
 
 
 def compute_pos_weight(loader, device):
@@ -27,7 +28,7 @@ def train():
     cfg = load_config("resnet34/config.yaml")
     set_seed(cfg["seed"])
 
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = get_device()
     print(f"Device: {device}")
     torch.set_num_threads(4)
 

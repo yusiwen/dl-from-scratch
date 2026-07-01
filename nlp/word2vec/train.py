@@ -18,6 +18,7 @@ from datasets import load_dataset
 from nlp.word2vec.model import Word2Vec
 from utils.config import load_config, save_config
 from utils.seed import set_seed
+from utils.device import get_device
 
 
 def load_texts():
@@ -209,7 +210,7 @@ def train():
     cfg = load_config("nlp/word2vec/config.yaml")
     set_seed(cfg["seed"])
 
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = get_device()
     print(f"Device: {device}")
 
     print("Loading PTB dataset...")

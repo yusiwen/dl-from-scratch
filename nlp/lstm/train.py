@@ -16,6 +16,7 @@ from nlp.bert.tokenizer import CharTokenizer
 from nlp.lstm.model import LSTMSentiment
 from utils.config import load_config, save_config
 from utils.seed import set_seed
+from utils.device import get_device
 
 
 class SentimentDataset(Dataset):
@@ -42,7 +43,7 @@ def train():
     cfg = load_config("nlp/lstm/config.yaml")
     set_seed(cfg["seed"])
 
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = get_device()
     print(f"Device: {device}")
 
     tokenizer = CharTokenizer()

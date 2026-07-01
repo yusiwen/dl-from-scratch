@@ -4,6 +4,7 @@ import numpy as np
 
 from cnn.data import load_cifar10, CIFAR10_CLASSES
 from cnn.model import SimpleCNN
+from utils.device import get_device
 
 
 def evaluate():
@@ -15,7 +16,7 @@ def evaluate():
       - Per-class accuracy (useful for identifying weak classes)
       - Confusion matrix (visualizes which classes are commonly confused)
     """
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = get_device()
     print(f"Device: {device}")
 
     model_path = "cnn/simple_cnn_cifar10.pt"

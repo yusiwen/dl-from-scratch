@@ -7,13 +7,14 @@ from vit.data import load_cifar10, CIFAR10_CLASSES
 from vit.model import ViT
 from utils.config import load_config, save_config
 from utils.seed import set_seed
+from utils.device import get_device
 
 
 def train():
     cfg = load_config("vit/config.yaml")
     set_seed(cfg["seed"])
 
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = get_device()
     print(f"Device: {device}")
     torch.set_num_threads(4)
 

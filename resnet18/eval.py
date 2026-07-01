@@ -4,12 +4,13 @@ from torchvision import transforms
 
 from resnet18.data import CelebADataset, ATTRIBUTES
 from utils.config import load_config
+from utils.device import get_device
 
 
 def evaluate():
     cfg = load_config("resnet18/config.yaml")
 
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = get_device()
     print(f"Device: {device}")
 
     model_path = cfg["model_path"]

@@ -12,6 +12,7 @@ Demonstrates autoregressive generation with:
 import torch
 from nlp.gpt.tokenizer import WordTokenizer
 from nlp.gpt.model import GPT
+from utils.device import get_device
 
 
 def generate_text(model, tokenizer, prompt, max_new_tokens=50,
@@ -35,7 +36,7 @@ def generate_text(model, tokenizer, prompt, max_new_tokens=50,
 
 
 def evaluate():
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = get_device()
     print(f"Device: {device}\n")
 
     model = torch.load("nlp/gpt/gpt_text8.pt", map_location="cpu", weights_only=False)

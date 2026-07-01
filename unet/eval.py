@@ -6,6 +6,7 @@ import numpy as np
 from unet.data import PetDataset
 from unet.model import UNet
 from utils.config import load_config
+from utils.device import get_device
 
 
 def compute_iou(preds, targets, num_classes=3, ignore_index=0):
@@ -24,7 +25,7 @@ def compute_iou(preds, targets, num_classes=3, ignore_index=0):
 def evaluate():
     cfg = load_config("unet/config.yaml")
 
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = get_device()
     print(f"Device: {device}")
 
     model = UNet(in_channels=3, num_classes=cfg["num_classes"])

@@ -9,6 +9,7 @@ from resnet18.data import CelebADataset, ATTRIBUTES
 from resnet18.model import resnet18
 from utils.config import load_config, save_config
 from utils.seed import set_seed
+from utils.device import get_device
 
 
 def train():
@@ -16,7 +17,7 @@ def train():
     set_seed(cfg["seed"])
 
     # --- Device setup ---
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = get_device()
     print(f"Using device: {device}")
     if device.type == "mps":
         print(f"  MPS is available on M4 (48GB, capped at ~24GB usage)")

@@ -85,7 +85,7 @@ from datasets import load_dataset
 from nlp.gpt.tokenizer import WordTokenizer
 from nlp.gpt.model import GPT
 
-device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+device = get_device()
 print(f"Device: {device}")
 """)
 
@@ -194,6 +194,7 @@ md("""\
 
 code("""\
 import matplotlib.pyplot as plt
+from utils.device import get_device
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
 ax1.plot(loss_history, marker='o')
