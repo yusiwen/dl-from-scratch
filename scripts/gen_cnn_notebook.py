@@ -67,6 +67,7 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from datasets import load_dataset
+from utils.device import get_device
 
 device = get_device()
 print(f"Device: {device}")

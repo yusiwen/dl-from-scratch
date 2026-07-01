@@ -65,6 +65,7 @@ from datasets import load_dataset
 
 from nlp.bert.tokenizer import CharTokenizer
 from nlp.bert.model import BERTForMLM
+from utils.device import get_device
 
 device = get_device()
 print(f"Device: {device}")

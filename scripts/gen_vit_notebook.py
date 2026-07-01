@@ -65,6 +65,7 @@ from torchvision import transforms
 from datasets import load_dataset
 
 from vit.model import ViT
+from utils.device import get_device
 
 device = get_device()
 print(f"Device: {device}")

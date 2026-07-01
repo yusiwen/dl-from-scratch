@@ -84,6 +84,7 @@ from datasets import load_dataset
 
 from nlp.gpt.tokenizer import WordTokenizer
 from nlp.gpt.model import GPT
+from utils.device import get_device
 
 device = get_device()
 print(f"Device: {device}")

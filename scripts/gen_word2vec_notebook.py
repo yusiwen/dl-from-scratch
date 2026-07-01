@@ -60,6 +60,7 @@ from nlp.word2vec.train import (
     NoiseSampler, CBOWDataset, SkipGramDataset, train_epoch,
 )
 from nlp.word2vec.model import Word2Vec
+from utils.device import get_device
 
 device = get_device()
 print(f"Device: {device}")

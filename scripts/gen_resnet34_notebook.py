@@ -57,6 +57,7 @@ from torchvision import transforms
 
 from resnet34.data import CelebADataset, CELEBA_ATTR_ORDER, train_transform
 from resnet34.model import resnet34
+from utils.device import get_device
 
 device = get_device()
 print(f"Device: {device}")

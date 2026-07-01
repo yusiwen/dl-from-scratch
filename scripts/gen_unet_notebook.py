@@ -70,6 +70,7 @@ from datasets import load_dataset
 import random
 
 from unet.model import UNet
+from utils.device import get_device
 
 device = get_device()
 print(f"Device: {device}")

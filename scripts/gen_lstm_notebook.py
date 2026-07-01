@@ -70,6 +70,7 @@ from datasets import load_dataset
 
 from nlp.bert.tokenizer import CharTokenizer
 from nlp.lstm.model import LSTMSentiment
+from utils.device import get_device
 
 device = get_device()
 print(f"Device: {device}")
