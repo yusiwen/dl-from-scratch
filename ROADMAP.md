@@ -4,74 +4,95 @@
 
 ## ✅ Completed
 
-**Basics (9):** Logistic Regression, Linear Regression, K-Means, SVM (GD + SMO), Decision Tree, Naive Bayes, PCA, k-NN, Perceptron
+**Models (22):**
+- Basics (9): Logistic Regression, Linear Regression, K-Means, SVM (GD + SMO), Decision Tree, Naive Bayes, PCA, k-NN, Perceptron
+- Deep Learning (7): MLP (pure NumPy), SimpleCNN, ResNet18, ResNet34, BERT, Word2Vec (CBOW + Skip-gram), LSTM (hand-written gates), GPT (Causal Attention + KV Cache)
+- Image Generation (1): DCGAN — CelebA 64×64
+- Vision Transformer (1): ViT — CIFAR-10
+- Segmentation (1): UNet — Oxford-IIIT Pet
 
-**Deep Learning (7):** MLP (pure NumPy), SimpleCNN, ResNet18, ResNet34, BERT, Word2Vec (CBOW + Skip-gram), LSTM (hand-written gates), GPT (Causal Attention + KV Cache)
+**Infrastructure:**
+- Config system (YAML)
+- TensorBoard logging
+- Reproducibility (seed + config saving)
+- Device auto-detection (`utils.device.get_device`: CUDA → MPS → CPU)
 
-**Image Generation (1):** DCGAN — Generator (3.5M) + Discriminator (2.8M), CelebA 64×64
-
-**Vision Transformer (1):** ViT — Patch embedding + Transformer encoder (from BERT), CIFAR-10
-
-**Segmentation (1):** UNet — Encoder-decoder with skip connections, Oxford-IIIT Pet
-
-**Infrastructure (3):** Config system (YAML), TensorBoard logging, reproducibility (seed + config saving)
-
-**Total: 22 items**
+**Jupyter Notebooks (15):**
+- P0: GPT, ViT, DCGAN, UNet
+- P1: CNN, BERT, ResNet18, ResNet34
+- P2: basics/ (9)
+- P3: Word2Vec, LSTM
 
 ---
 
-## 🔜 Next
+## 🔜 Pending
 
 | Priority | Direction | Status |
 |---|---|---|
-| **P0** | **Train & validate** — Run ResNet34, ViT, UNet, DCGAN to get real metrics; fill into README tables | ❌ not started |
-| **P1** | **Demo scripts** — Add CV inference demos: `vit/demo.py`, `unet/demo.py` | ❌ not started |
-| **P2** | **Benchmark** — CNN vs ViT on CIFAR-10: accuracy / params / convergence speed | ❌ not started |
-| **P3** | **ResNet50** — Bottleneck block (3-layer), different from BasicBlock | ❌ not started |
-| **P4** | **Multi-GPU / WandB / hyperparameter search** | ❌ not started |
-
-### P0 训练耗时估算（M4 Max）
-
-| 模型 | 数据量 | 参数量 | 每 epoch 步数 | 每 epoch 耗时 | Epochs | 总耗时 |
-|---|---|---|---|---|---|---|
-| ResNet34 | 162K × 224² | 21M | ~2,500 | ~10-15 min | 100 | 17-25 h |
-| ViT | 50K × 32² | 807K | ~400 | ~30 sec | 50 | ~25 min |
-| UNet | 3.7K × 128² | 31M | ~230 | ~1 min | 50 | ~45 min |
-| DCGAN | 10K × 64² | G:3.5M+D:2.8M | ~80 | ~15 sec | 50 | ~12 min |
-
-> ResNet34 建议先跑 10 epoch（~2h）看 loss 趋势；其余三个模型半小时内可跑完，可直接全量。
+| **P0** | **Train & validate** — Run all models on NVIDIA GPU to get real metrics | waiting on GPU |
+| **P1** | **ResNet50** — Bottleneck block (1×1→3×3→1×1) | ❌ not started |
+| **P2** | **VAE** — Variational Autoencoder with reparameterization trick | ❌ not started |
+| **P3** | **Seq2Seq Transformer** — Encoder-Decoder with cross-attention | ❌ not started |
+| **P4** | **DDPM Diffusion** — Denoising Diffusion Probabilistic Models | ❌ not started |
 
 ---
 
-## 📓 Jupyter Notebooks
+## 📋 Candidate New Models
 
-每个模型配备交互式 notebook，包含背景、原理、数学、训练与验证。
+### 1. ResNet50 — Bottleneck Block
 
-### 模板结构
+New concept: **Bottleneck block** — 1×1 conv to reduce→3×3→1×1 to expand (unlike BasicBlock's two 3×3). Enables much deeper networks (50/101/152 layers).
 
-1. **背景与动机** — 解决什么问题，历史
-2. **数学原理** — 核心公式 + 直观解释
-3. **架构图** — mermaid / ASCII 图
-4. **代码实现** — 逐块讲解（import 已有 `.py` 模块）
-5. **交互式训练** — 可调超参，小规模快速跑通
-6. **可视化** — loss 曲线、生成样本、注意力图等
-7. **思考题** — 引导深入理解
-
-### 存放位置
-
-每个模型目录下 `<model_name>.ipynb`，如 `dcgan/dcgan.ipynb`。
-
-### 优先级
-
-| 优先级 | 模型 | 理由 |
+| Dataset | Params | New code |
 |---|---|---|
-| **P0** | GPT, ViT, DCGAN, UNet | 最复杂，教育价值最高 |
-| **P1** | ResNet18, ResNet34, CNN, BERT | 核心模型，读者最想交互调参 |
-| **P2** | basics/ (9 个) | 简单但数量多，简版模板 |
-| **P3** | Word2Vec, LSTM | 已有较好 docstring |
+| CelebA (existing) | ~23M | ~20 lines (`Bottleneck` class) |
 
-### 策略
+Training time: ~30-40 min per 10 epoch (162K × 224², M4 Max)
 
-- 直接 `import` 现有 `.py` 模块，不重复造轮子
-- 训练默认用小规模（几 epoch），读者可改参跑全量
-- **新模型加入时必须配套 notebook**，否则视为未完成
+### 2. VAE — Variational Autoencoder
+
+New concepts: **Reparameterization trick**, **KL divergence**, **latent space interpolation**.
+
+- Generator: decoder (deconv), same as DCGAN
+- Encoder: conv layers → μ, logσ²
+- Loss: reconstruction (MSE/BCE) + KL( N(μ,σ²) ∥ N(0,1) )
+
+| Dataset | Params | New modules |
+|---|---|---|
+| CelebA (existing, reuse `dcgan/data.py`) | ~4M | `vaen/model.py` + `vaen/train.py` |
+
+Training time: ~20 min (10K × 64², 50 epoch, M4 Max)
+
+### 3. Seq2Seq Transformer — Encoder-Decoder
+
+New concepts: **Cross-attention**, **Beam Search**, **full Transformer stack** (reuses BERT's EncoderBlock + GPT's DecoderBlock).
+
+| Dataset | Params | New modules |
+|---|---|---|
+| Multi30k (I18N EN→FR/DE) | ~5M | `nlp/seq2seq/` (4 files) |
+
+Training time: ~30 min (30K pairs, 30 epoch, M4 Max)
+
+### 4. DDPM — Denoising Diffusion
+
+New concepts: **Forward noise schedule**, **reverse denoising UNet**, **timestep embedding**, **cosine schedule**, **DDIM sampling**.
+
+| Dataset | Params | New modules |
+|---|---|---|
+| CIFAR-10 (existing) | ~35M (UNet backbone) | `diffusion/` (5 files) |
+
+Training time: ~2-3 h (50K × 32², 100 epoch, M4 Max)
+
+---
+
+## ⏱ Training Time Summary (M4 Max, for notebook references)
+
+| Model | Data | Params | Epochs | Total time | Notes |
+|---|---|---|---|---|---|
+| ResNet50 | 162K × 224² | ~23M | 100 | 5-7 h | bottleneck, ~1.5× ResNet34 |
+| VAE | 10K × 64² | ~4M | 50 | ~20 min | CelebA, reuses dcgan/data.py |
+| Seq2Seq | 30K pairs | ~5M | 30 | ~30 min | Multi30k, reuses Transformer blocks |
+| DDPM | 50K × 32² | ~35M | 100 | 2-3 h | CIFAR-10, UNet backbone |
+
+> Full training of ResNet50 / DDPM on M4 Max is feasible but slow.
+> Recommendation: implement & debug on small subset (2-5 epoch), then run full on NVIDIA GPU.
