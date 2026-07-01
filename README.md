@@ -33,6 +33,13 @@ Implement mainstream deep learning models from scratch.
 │   ├── model.py           # ResNet34 via resnet18.model.ResNet
 │   ├── train.py           # SGD+Momentum + CosineAnnealingLR + grad accum + early stopping
 │   └── eval.py            # Per-attribute ROC AUC, F1, test split
+├── resnet50/
+│   ├── __init__.py
+│   ├── config.yaml        # ResNet50 hyperparameters
+│   ├── model.py           # Bottleneck block (1×1→3×3→1×1) → resnet50()
+│   ├── data.py            # Reuses resnet34.data (CelebA)
+│   ├── train.py           # Reuses resnet34 training pattern
+│   └── eval.py            # Per-attribute ROC AUC, F1
 ├── dcgan/
 │   ├── __init__.py
 │   ├── config.yaml        # DCGAN hyperparameters
@@ -130,11 +137,21 @@ uv run python -m resnet18.train
 
 | Item | Value |
 |---|---|
-| Model | ResNet34 (~21M params, [3,4,6,3] blocks) |
+| Model | ResNet34 (~21M params, [3,4,6,3] BasicBlock) |
 | Dataset | CelebA via HF datasets — full 200K |
 | Attributes | All 40 binary attributes |
 | Optimizer | SGD + Momentum (0.9, weight_decay=1e-4) |
 | Training | CosineAnnealingLR + Gradient Accumulation + Early Stopping + Loss Weighting |
+
+## ResNet50
+
+| Item | Value |
+|---|---|
+| Model | ResNet50 (~23.6M params, [3,4,6,3] Bottleneck) |
+| Dataset | CelebA via HF datasets — full 200K |
+| Attributes | All 40 binary attributes |
+| Optimizer | SGD + Momentum (0.9, weight_decay=1e-4) |
+| Architecture | Bottleneck block: 1×1 → 3×3 → 1×1 (contrast with BasicBlock's two 3×3) |
 
 ## DCGAN
 
@@ -271,6 +288,7 @@ it demonstrates.
 | `cnn/` | SimpleCNN | Convolution, max-pooling, BatchNorm, Dropout, CosineAnnealing LR schedule |
 | `resnet18/` | ResNet18 | **Residual connections (skip connections)**, BatchNorm in deep networks, bottleneck design, AMP |
 | `resnet34/` | ResNet34 | SGD+Momentum, CosineAnnealingLR, gradient accumulation, early stopping, ROC AUC, F1 |
+| `resnet50/` | ResNet50 | Bottleneck block (1×1→3×3→1×1), deeper residual networks |
 | `dcgan/` | DCGAN | Transposed convolution, adversarial training, generator/discriminator dynamics |
 | `vit/` | Vision Transformer (ViT) | Patch embedding, self-attention for vision, Transformer without convolutions |
 | `unet/` | U-Net | Encoder-decoder, skip connections, pixel-wise classification, IoU metric |
@@ -293,6 +311,10 @@ uv run python -m resnet18.eval
 # Train / Evaluate ResNet34
 uv run python -m resnet34.train
 uv run python -m resnet34.eval
+
+# Train / Evaluate ResNet50
+uv run python -m resnet50.train
+uv run python -m resnet50.eval
 
 # Train / Generate DCGAN
 uv run python -m dcgan.train
@@ -352,6 +374,7 @@ locally after training; paths are shown below for reference.
 |---|---|---|
 | ResNet18 (15 attrs, 1K samples) | `resnet18/resnet18_celeba.pt` | 45 MB |
 | ResNet34 (40 attrs, 200K samples) | `resnet34/resnet34_celeba.pt` | ~80 MB |
+| ResNet50 (40 attrs, 200K samples) | `resnet50/resnet50_celeba.pt` | ~90 MB |
 | DCGAN (CelebA, 64×64) | `dcgan/dcgan_celeba.pt` | ~23 MB (G+D) |
 | ViT (CIFAR-10, 32×32) | `vit/vit_cifar10.pt` | 3.2 MB |
 | UNet (Oxford-Pet, 128×128) | `unet/unet_oxford_pet.pt` | 119 MB |
