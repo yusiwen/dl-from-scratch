@@ -8,6 +8,7 @@
 - Basics (9): Logistic Regression, Linear Regression, K-Means, SVM (GD + SMO), Decision Tree, Naive Bayes, PCA, k-NN, Perceptron
 - Deep Learning (8): MLP (pure NumPy), SimpleCNN, ResNet18, ResNet34, ResNet50 (Bottleneck), BERT, Word2Vec (CBOW + Skip-gram), LSTM (hand-written gates), GPT (Causal Attention + KV Cache)
 - Image Generation (1): DCGAN — CelebA 64×64
+- Variational AE (1): VAE — Encoder, reparameterization trick, KL divergence, CelebA 64×64
 - Vision Transformer (1): ViT — CIFAR-10
 - Segmentation (1): UNet — Oxford-IIIT Pet
 
@@ -30,7 +31,7 @@
 | Priority | Direction | Status |
 |---|---|---|
 | **P0** | **Train & validate** — Run all models on NVIDIA GPU to get real metrics | waiting on GPU |
-| **P2** | **VAE** — Variational Autoencoder with reparameterization trick | ❌ not started |
+| **P2** | **VAE** — Variational Autoencoder with reparameterization trick | ✅ done |
 | **P3** | **Seq2Seq Transformer** — Encoder-Decoder with cross-attention | ❌ not started |
 | **P4** | **DDPM Diffusion** — Denoising Diffusion Probabilistic Models | ❌ not started |
 
