@@ -79,6 +79,13 @@ Implement mainstream deep learning models from scratch.
 │   ├── loss.py            # YOLO loss + NMS
 │   ├── data.py            # Pascal VOC dataset
 │   └── train.py           # Object detection training
+├── mobilenet/
+│   ├── __init__.py
+│   ├── config.yaml        # MobileNet hyperparameters (width_multiplier)
+│   ├── model.py           # DepthwiseSeparableConv + MobileNet
+│   ├── data.py            # CIFAR-10 via HF datasets
+│   ├── train.py           # Training loop
+│   └── eval.py            # Evaluation + comparison with SimpleCNN
 ├── dcgan/
 │   ├── __init__.py
 │   ├── config.yaml        # DCGAN hyperparameters
@@ -261,6 +268,16 @@ uv run python -m resnet18.train
 | Item | Value |
 |---|---|
 | Model | Simplified YOLO (59M params) |
+
+## MobileNet
+
+| Item | Value |
+|---|---|
+| Model | MobileNetV1 (135K params, width=1.0) |
+| Dataset | CIFAR-10 via HF datasets — 50K train / 10K test |
+| Architecture | DepthwiseSeparableConv (depthwise 3×3 + pointwise 1×1) |
+| Key concept | Depthwise separable convolution, ~8.4× fewer ops than standard conv |
+| Comparison | SimpleCNN 620K params → MobileNet 135K (4.6× smaller) |
 | Dataset | Pascal VOC via HF datasets — 20 classes |
 | Architecture | CNN backbone → FC detection head → 7×7×30 output |
 | Training | YOLO loss (coord + obj + noobj + class), NMS at inference |
@@ -413,6 +430,7 @@ it demonstrates.
 | `gcn/` | GCN | Graph convolution, message passing, semi-supervised node classification |
 | `dqn/` | DQN | Q-Learning, experience replay, target network, ε-greedy |
 | `simclr/` | SimCLR | Contrastive learning, NT-Xent loss, data augmentation |
+| `mobilenet/` | MobileNet | Depthwise separable convolution, efficient CNN, width multiplier |
 | `yolo/` | YOLO | Single-stage object detection, grid-based regression, NMS |
 | `nlp/gpt/` | GPT | **Causal Self-Attention**, **KV Cache**, autoregressive generation, word-level tokenizer, temperature + top-k sampling, bad-token blocking |
 
@@ -454,6 +472,11 @@ uv run python -m dqn.train
 uv run python -m simclr.train
 
 # Train YOLO
+uv run python -m yolo.train
+
+# Train / Evaluate MobileNet
+uv run python -m mobilenet.train
+uv run python -m mobilenet.eval
 uv run python -m yolo.train
 
 # Train / Generate DDPM
@@ -525,6 +548,7 @@ locally after training; paths are shown below for reference.
 | DQN (CartPole) | `dqn/dqn_cartpole.pt` | 0.07 MB |
 | SimCLR (CIFAR-10) | `simclr/simclr_cifar10.pt` | 22 MB |
 | YOLO (Pascal VOC) | `yolo/yolo_voc.pt` | 226 MB |
+| MobileNet (CIFAR-10) | `mobilenet/mobilenet_cifar10.pt` | 0.5 MB |
 | DDPM (CIFAR-10, 32×32) | `ddpm/ddpm_cifar10.pt` | 62 MB |
 | DCGAN (CelebA, 64×64) | `dcgan/dcgan_celeba.pt` | ~23 MB (G+D) |
 | ViT (CIFAR-10, 32×32) | `vit/vit_cifar10.pt` | 3.2 MB |

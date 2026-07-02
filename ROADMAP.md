@@ -15,6 +15,7 @@
 - Reinforcement Learning (1): DQN — CartPole-v1, experience replay
 - Self-Supervised (1): SimCLR — CIFAR-10, NT-Xent contrastive loss
 - Object Detection (1): YOLO — Pascal VOC, grid-based detection
+- Efficient Architectures (1): MobileNet — CIFAR-10, depthwise separable convolution
 
 **Infrastructure:**
 - Config system (YAML), TensorBoard logging, Reproducibility (seed + config saving)
