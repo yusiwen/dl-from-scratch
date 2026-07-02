@@ -4,8 +4,8 @@
 
 ## ✅ Completed
 
-**Models (30):**
-- Basics (9): Logistic Regression, Linear Regression, K-Means, SVM (GD + SMO), Decision Tree, Naive Bayes, PCA, k-NN, Perceptron
+**Models (31):**
+- Basics (10): Logistic Regression, Linear Regression, K-Means, SVM (GD + SMO), Decision Tree, Naive Bayes, PCA, k-NN, Perceptron, t-SNE
 - Deep Learning (11): MLP (pure NumPy), SimpleCNN, ResNet18, ResNet34, ResNet50 (Bottleneck), BERT, Word2Vec (CBOW + Skip-gram), LSTM (hand-written gates), GPT (Causal Attention + KV Cache), Seq2Seq Transformer (cross-attention), DDPM (Denoising Diffusion)
 - Image Generation (1): DCGAN — CelebA 64×64
 - Variational AE (1): VAE — Encoder, reparameterization trick, KL divergence, CelebA 64×64
@@ -21,9 +21,9 @@
 - Config system (YAML), TensorBoard logging, Reproducibility (seed + config saving)
 - Device auto-detection (`utils.device.get_device`: CUDA → MPS → CPU)
 
-**Jupyter Notebooks (19):**
+**Jupyter Notebooks (20):**
 - Original 15: GPT, ViT, DCGAN, UNet, CNN, BERT, ResNet18, ResNet34, basics (9), Word2Vec, LSTM
-- New 4: GCN, DQN, SimCLR, YOLO
+- New 5: GCN, DQN, SimCLR, YOLO, MobileNet
 
 ---
 
