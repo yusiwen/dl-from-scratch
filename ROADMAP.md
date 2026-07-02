@@ -32,5 +32,5 @@
 
 - Train & validate on NVIDIA GPU
 - ~~Demo scripts for CV models (`vit/demo.py`, `unet/demo.py`, `yolo/demo.py`)~~ ✅ done
-- CNN vs ViT benchmark on CIFAR-10
+- ~~CNN vs ViT benchmark on CIFAR-10~~ ✅ script done, training not executed (run `uv run python scripts/benchmark_cnn_vit.py`)`
 - Multi-GPU / WandB / hyperparameter search
