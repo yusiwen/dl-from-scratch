@@ -448,8 +448,9 @@ uv run python -m rl.dqn.train
 # Train SimCLR
 uv run python -m gen.simclr.train
 
-# Train YOLO
+# Train / Demo YOLO
 uv run python -m cv.yolo.train
+uv run python -m cv.yolo.demo --image my_image.jpg --conf 0.3 --iou 0.5
 
 # Train / Generate LoRA (requires nlp/gpt/gpt_text8.pt)
 uv run python -m nlp.lora.train
@@ -468,13 +469,15 @@ uv run python -m gen.ddpm.generate
 uv run python -m gen.dcgan.train
 uv run python -m gen.dcgan.generate
 
-# Train / Evaluate ViT
+# Train / Evaluate / Demo ViT
 uv run python -m cv.vit.train
 uv run python -m cv.vit.eval
+uv run python -m cv.vit.demo --image my_image.jpg
 
-# Train / Evaluate UNet
+# Train / Evaluate / Demo UNet
 uv run python -m cv.unet.train
 uv run python -m cv.unet.eval
+uv run python -m cv.unet.demo --image my_image.jpg
 
 # Train / Evaluate CNN
 uv run python -m cv.simplecnn.train
