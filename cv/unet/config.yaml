@@ -1,0 +1,8 @@
+seed: 42
+batch_size: 16
+lr: 0.001
+num_epochs: 50
+num_workers: 4
+image_size: 128
+num_classes: 3
+model_path: cv/unet/unet_oxford_pet.pt

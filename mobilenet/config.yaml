@@ -1,9 +1,0 @@
-seed: 42
-batch_size: 128
-lr: 0.001
-num_epochs: 50
-num_workers: 4
-T_max: 50
-width_multiplier: 1.0
-num_classes: 10
-model_path: mobilenet/mobilenet_cifar10.pt

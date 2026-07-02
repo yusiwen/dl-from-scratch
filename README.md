@@ -19,82 +19,40 @@ Implement mainstream deep learning models from scratch.
 ├── pyproject.toml
 ├── .gitignore
 ├── README.md
-├── resnet18/
-│   ├── README.md          # Original ResNet18 implementation
-│   ├── __init__.py
-│   ├── data.py            # CelebA via HF datasets (eurecom-ds/celeba)
-│   ├── model.py           # ResNet18 from scratch
-│   ├── train.py           # Training script (MPS + AMP)
-│   ├── eval.py            # Evaluation script (per-attribute accuracy)
-│   └── resnet18_celeba.pt      # (local, not tracked)
-├── resnet34/
-│   ├── __init__.py
-│   ├── data.py            # Full CelebA (40 attrs, 200K), data augmentation
-│   ├── model.py           # ResNet34 via resnet18.model.ResNet
-│   ├── train.py           # SGD+Momentum + CosineAnnealingLR + grad accum + early stopping
-│   └── eval.py            # Per-attribute ROC AUC, F1, test split
-├── resnet50/
-│   ├── __init__.py
-│   ├── config.yaml        # ResNet50 hyperparameters
-│   ├── model.py           # Bottleneck block (1×1→3×3→1×1) → resnet50()
-│   ├── data.py            # Reuses resnet34.data (CelebA)
-│   ├── train.py           # Reuses resnet34 training pattern
-│   └── eval.py            # Per-attribute ROC AUC, F1
-├── vae/
-│   ├── __init__.py
-│   ├── config.yaml        # VAE hyperparameters
-│   ├── model.py           # Encoder → μ,logσ² → reparameterize → Decoder
-│   ├── data.py            # CelebA images (64×64)
-│   ├── train.py           # VAE training (recon + KL loss)
-│   └── generate.py        # Sample generation + latent interpolation
-├── ddpm/
-│   ├── __init__.py
-│   ├── config.yaml        # DDPM hyperparameters
-│   ├── model.py           # UNet + timestep embedding + DDPM forward/sample
-│   ├── data.py            # CIFAR-10 via HF datasets
-│   ├── train.py           # Noise prediction training
-│   └── generate.py        # Reverse diffusion sampling
-├── gcn/
-│   ├── __init__.py
-│   ├── config.yaml        # GCN hyperparameters
-│   ├── model.py           # Graph Convolution layers + 2-layer GCN
-│   ├── data.py            # Cora citation network loader
-│   ├── train.py           # Semi-supervised node classification
-│   └── eval.py            # Test accuracy evaluation
-├── dqn/
-│   ├── __init__.py
-│   ├── config.yaml        # DQN hyperparameters
-│   ├── dqn.py             # DQN, ReplayBuffer, train_episode helpers
-│   └── train.py           # CartPole RL training loop
-├── simclr/
-│   ├── __init__.py
-│   ├── config.yaml        # SimCLR hyperparameters
-│   ├── model.py           # ResNet18 encoder + Projector + NT-Xent loss
-│   ├── data.py            # CIFAR-10 with dual augmentation
-│   └── train.py           # Contrastive learning training
-├── yolo/
-│   ├── __init__.py
-│   ├── config.yaml        # YOLO hyperparameters
-│   ├── model.py           # CNN backbone + detection head
-│   ├── loss.py            # YOLO loss + NMS
-│   ├── data.py            # Pascal VOC dataset
-│   └── train.py           # Object detection training
-│   └── seq2seq/
-│   └── lora/
-│       ├── __init__.py
-│       ├── config.yaml        # LoRA hyperparameters (r, alpha, dropout)
-│       ├── model.py           # LoRALayer + inject_lora for GPT
-│       ├── train.py           # Load GPT → freeze → inject → fine-tune
-│       ├── generate.py        # Generate with LoRA-adapted GPT
-│       └── lora.ipynb         # Notebook
-├── mobilenet/
-│   ├── __init__.py
-│   ├── config.yaml        # MobileNet hyperparameters (width_multiplier)
-│   ├── model.py           # DepthwiseSeparableConv + MobileNet
-│   ├── data.py            # CIFAR-10 via HF datasets
-│   ├── train.py           # Training loop
-│   └── eval.py            # Evaluation + comparison with SimpleCNN
-├── dcgan/
+├── ROADMAP.md
+├── ml/                    # Classical Machine Learning (pure NumPy)
+│   ├── mlp/               # MLP (MNIST, manual backprop)
+│   └── basics/            # 10 standalone models (lin/log reg, SVM, K-Means, PCA, t-SNE, etc.)
+├── cv/                    # Computer Vision
+│   ├── simplecnn/         # SimpleCNN (CIFAR-10, Conv×3+Pool×3+FC×2)
+│   ├── resnet18/          # ResNet18 (CelebA, 15 attrs, skip connections)
+│   ├── resnet34/          # ResNet34 (CelebA, 40 attrs, [3,4,6,3] blocks)
+│   ├── resnet50/          # ResNet50 (Bottleneck block 1×1→3×3→1×1)
+│   ├── mobilenet/         # MobileNet (depthwise separable conv, CIFAR-10)
+│   ├── vit/               # Vision Transformer (patch embed + BERT encoder, CIFAR-10)
+│   ├── unet/              # UNet (Oxford-IIIT Pet segmentation)
+│   └── yolo/              # YOLO (Pascal VOC object detection)
+├── gen/                   # Generative Models
+│   ├── dcgan/             # DCGAN (CelebA, transposed conv)
+│   ├── vae/               # VAE (reparameterization trick, KL divergence)
+│   ├── ddpm/              # DDPM (CIFAR-10, denoising diffusion)
+│   └── simclr/            # SimCLR (CIFAR-10, contrastive learning)
+├── graph/                 # Graph Neural Networks
+│   └── gcn/               # GCN (Cora, spectral graph convolution)
+├── rl/                    # Reinforcement Learning
+│   └── dqn/               # DQN (CartPole, experience replay)
+├── nlp/                   # Natural Language Processing
+│   ├── bert/              # BERT (MLM pretrain + classification finetune)
+│   ├── gpt/               # GPT (decoder-only, causal attention, KV cache)
+│   ├── lstm/              # LSTM (hand-written gates, IMDB sentiment)
+│   ├── word2vec/          # Word2Vec (CBOW + Skip-gram, negative sampling)
+│   ├── seq2seq/           # Seq2Seq Transformer (EN→DE translation)
+│   └── lora/              # LoRA (parameter-efficient GPT fine-tuning)
+├── utils/                 # Shared Infrastructure
+│   ├── config.py          # YAML config loading/saving
+│   ├── seed.py            # Reproducibility seed locking
+│   └── device.py          # CUDA → MPS → CPU auto-detection
+└── scripts/               # Notebook generation scripts
 │   ├── __init__.py
 │   ├── config.yaml        # DCGAN hyperparameters
 │   ├── model.py           # Generator + Discriminator
@@ -179,12 +137,12 @@ Implement mainstream deep learning models from scratch.
 tensorboard --logdir runs
 
 # Edit hyperparameters in YAML instead of code
-vim resnet18/config.yaml
+vim cv/resnet18/config.yaml
 # then train as usual:
-uv run python -m resnet18.train
+uv run python -m cv.resnet18.train
 ```
 
-## ResNet18
+## CV/ResNet18
 
 | Item | Value |
 |---|---|
@@ -195,7 +153,7 @@ uv run python -m resnet18.train
 | Val Accuracy | **91.2%** |
 | Training | MPS (Mac M4) + AMP |
 
-## ResNet34
+## CV/ResNet34
 
 | Item | Value |
 |---|---|
@@ -205,7 +163,7 @@ uv run python -m resnet18.train
 | Optimizer | SGD + Momentum (0.9, weight_decay=1e-4) |
 | Training | CosineAnnealingLR + Gradient Accumulation + Early Stopping + Loss Weighting |
 
-## ResNet50
+## CV/ResNet50
 
 | Item | Value |
 |---|---|
@@ -215,7 +173,7 @@ uv run python -m resnet18.train
 | Optimizer | SGD + Momentum (0.9, weight_decay=1e-4) |
 | Architecture | Bottleneck block: 1×1 → 3×3 → 1×1 (contrast with BasicBlock's two 3×3) |
 
-## VAE
+## GEN/VAE
 
 | Item | Value |
 |---|---|
@@ -225,7 +183,7 @@ uv run python -m resnet18.train
 | Loss | Reconstruction (BCE) + KL divergence |
 | Training | Adam(lr=2e-4), 50 epoch |
 
-## Seq2Seq Transformer
+## NLP/Seq2Seq Transformer
 
 | Item | Value |
 |---|---|
@@ -234,7 +192,7 @@ uv run python -m resnet18.train
 | Architecture | Encoder (from BERT) + Decoder (causal + cross-attention) |
 | Training | Teacher forcing, weight-tying, Adam(lr=1e-4) |
 
-## DDPM
+## GEN/DDPM
 
 | Item | Value |
 |---|---|
@@ -244,7 +202,7 @@ uv run python -m resnet18.train
 | Training | Noise prediction (MSE), T=1000, linear β schedule |
 | Sampling | Reverse diffusion (x_T → x_0), 1000 steps |
 
-## GCN
+## GRAPH/GCN
 
 | Item | Value |
 |---|---|
@@ -253,7 +211,7 @@ uv run python -m resnet18.train
 | Architecture | GraphConv × 2: Â @ H @ W (spectral graph convolution) |
 | Training | Semi-supervised (20 labels/class), CrossEntropyLoss |
 
-## DQN
+## RL/DQN
 
 | Item | Value |
 |---|---|
@@ -262,7 +220,7 @@ uv run python -m resnet18.train
 | Architecture | 3-layer MLP (4→128→128→2) |
 | Training | Experience replay, target network, ε-greedy decay |
 
-## SimCLR
+## GEN/SimCLR
 
 | Item | Value |
 |---|---|
@@ -271,13 +229,13 @@ uv run python -m resnet18.train
 | Architecture | ResNet18 → Projector(512→256→128) → NT-Xent loss |
 | Training | 100 epoch, temperature=0.5, dual random augmentation |
 
-## YOLO
+## CV/YOLO
 
 | Item | Value |
 |---|---|
 | Model | Simplified YOLO (59M params) |
 
-## LoRA
+## NLP/LoRA
 
 | Item | Value |
 |---|---|
@@ -287,7 +245,7 @@ uv run python -m resnet18.train
 | Key concept | Parameter-efficient fine-tuning, 0.58% trainable params |
 | Comparison | Full fine-tune: 5.7M vs LoRA r=8: 32K |
 
-## MobileNet
+## CV/MobileNet
 
 | Item | Value |
 |---|---|
@@ -310,7 +268,7 @@ uv run python -m resnet18.train
 | Optimizer | Adam(lr=2e-4, β₁=0.5) — separate for G and D |
 | Training | BCELoss, label smoothing, fixed noise grid for monitoring |
 
-## ViT
+## CV/ViT
 
 | Item | Value |
 |---|---|
@@ -319,7 +277,7 @@ uv run python -m resnet18.train
 | Architecture | PatchEmbed(4×4) → [CLS] → Transformer Encoder (from BERT) → CLS head |
 | Key concept | Self-attention for vision, no convolutions, patch embeddings |
 
-## UNet
+## CV/UNet
 
 | Item | Value |
 |---|---|
@@ -329,7 +287,7 @@ uv run python -m resnet18.train
 | Loss | CrossEntropy (ignore_index=0 for unlabeled) |
 | Metrics | Pixel accuracy, mean IoU |
 
-## CNN
+## CV/SimpleCNN
 
 | Item | Value |
 |---|---|
@@ -339,7 +297,7 @@ uv run python -m resnet18.train
 | Test Accuracy | **82.4%** (30 epochs) |
 | Training | Adam + CosineAnnealingLR |
 
-## MLP
+## ML/MLP
 
 | Item | Value |
 |---|---|
@@ -394,15 +352,15 @@ uv run python -m resnet18.train
 
 | Algorithm | File | Datasets | Metric |
 |---|---|---|---|
-| Logistic Regression | `basics/logistic_regression.py` | MNIST | 92.3% test accuracy |
-| Linear Regression | `basics/linear_regression.py` | California Housing | R²=0.583 |
-| K-Means | `basics/k_means.py` | MNIST | 57.8% cluster purity |
-| SVM (GD + SMO) | `basics/svm.py` | MNIST 3v5 | 93.3% (RBF kernel) |
-| Decision Tree | `basics/decision_tree.py` | Iris | 93.3% test acc |
-| Naive Bayes | `basics/naive_bayes.py` | MNIST | 53.0% test acc |
-| PCA | `basics/pca.py` | MNIST | 17.3% variance in 2 components |
-| k-NN | `basics/knn.py` | MNIST | ~87% (k=5, 2000 train) |
-| Perceptron | `basics/perceptron.py` | MNIST 0v1 | 100% (linearly separable) |
+| Logistic Regression | `ml/basics/logistic_regression.py` | MNIST | 92.3% test accuracy |
+| Linear Regression | `ml/basics/linear_regression.py` | California Housing | R²=0.583 |
+| K-Means | `ml/basics/k_means.py` | MNIST | 57.8% cluster purity |
+| SVM (GD + SMO) | `ml/basics/svm.py` | MNIST 3v5 | 93.3% (RBF kernel) |
+| Decision Tree | `ml/basics/decision_tree.py` | Iris | 93.3% test acc |
+| Naive Bayes | `ml/basics/naive_bayes.py` | MNIST | 53.0% test acc |
+| PCA | `ml/basics/pca.py` | MNIST | 17.3% variance in 2 components |
+| k-NN | `ml/basics/knn.py` | MNIST | ~87% (k=5, 2000 train) |
+| Perceptron | `ml/basics/perceptron.py` | MNIST 0v1 | 100% (linearly separable) |
 
 ### SVM implementations
 
@@ -432,25 +390,25 @@ it demonstrates.
 | `basics/` | k-NN | Instance-based learning, distance metrics, curse of dimensionality, bias-variance tradeoff |
 | `basics/` | Perceptron | Single neuron, step activation, online learning, Perceptron Convergence Theorem |
 | `mlp/` | MLP (NumPy) | **Manual backpropagation**, chain rule, gradient descent without autograd, softmax cross-entropy |
-| `cnn/` | SimpleCNN | Convolution, max-pooling, BatchNorm, Dropout, CosineAnnealing LR schedule |
-| `resnet18/` | ResNet18 | **Residual connections (skip connections)**, BatchNorm in deep networks, bottleneck design, AMP |
-| `resnet34/` | ResNet34 | SGD+Momentum, CosineAnnealingLR, gradient accumulation, early stopping, ROC AUC, F1 |
-| `resnet50/` | ResNet50 | Bottleneck block (1×1→3×3→1×1), deeper residual networks |
-| `vae/` | VAE | Reparameterization trick, KL divergence, latent space interpolation |
+| `cv/simplecnn/` | SimpleCNN | Convolution, max-pooling, BatchNorm, Dropout, CosineAnnealing LR schedule |
+| `cv/resnet18/` | ResNet18 | **Residual connections (skip connections)**, BatchNorm in deep networks, bottleneck design, AMP |
+| `cv/resnet34/` | ResNet34 | SGD+Momentum, CosineAnnealingLR, gradient accumulation, early stopping, ROC AUC, F1 |
+| `cv/resnet50/` | ResNet50 | Bottleneck block (1×1→3×3→1×1), deeper residual networks |
+| `gen/vae/` | VAE | Reparameterization trick, KL divergence, latent space interpolation |
 | `nlp/seq2seq/` | Seq2Seq Transformer | Encoder-decoder, cross-attention, teacher forcing, weight-tying |
-| `ddpm/` | DDPM | Denoising Diffusion, UNet + timestep embedding, noise prediction |
-| `dcgan/` | DCGAN | Transposed convolution, adversarial training, generator/discriminator dynamics |
-| `vit/` | Vision Transformer (ViT) | Patch embedding, self-attention for vision, Transformer without convolutions |
-| `unet/` | U-Net | Encoder-decoder, skip connections, pixel-wise classification, IoU metric |
+| `gen/ddpm/` | DDPM | Denoising Diffusion, UNet + timestep embedding, noise prediction |
+| `gen/dcgan/` | DCGAN | Transposed convolution, adversarial training, generator/discriminator dynamics |
+| `cv/vit/` | Vision Transformer (ViT) | Patch embedding, self-attention for vision, Transformer without convolutions |
+| `cv/unet/` | U-Net | Encoder-decoder, skip connections, pixel-wise classification, IoU metric |
 | `nlp/bert/` | BERT mini | **Self-Attention** (semantic aggregation), **Masked Language Model** (entropy increase + denoising), LayerNorm, positional encoding |
 | `nlp/word2vec/` | Word2Vec | **Embedding lookup tables**, **Negative Sampling**, CBOW vs Skip-gram, subsampling frequent words, cosine similarity |
 | `nlp/lstm/` | LSTM | **Input/forget/output gates**, **cell state**, gradient flow through gating, sequential processing vs parallel attention |
-| `gcn/` | GCN | Graph convolution, message passing, semi-supervised node classification |
-| `dqn/` | DQN | Q-Learning, experience replay, target network, ε-greedy |
-| `simclr/` | SimCLR | Contrastive learning, NT-Xent loss, data augmentation |
+| `graph/gcn/` | GCN | Graph convolution, message passing, semi-supervised node classification |
+| `rl/dqn/` | DQN | Q-Learning, experience replay, target network, ε-greedy |
+| `gen/simclr/` | SimCLR | Contrastive learning, NT-Xent loss, data augmentation |
 | `nlp/lora/` | LoRA | Low-rank adaptation, parameter-efficient fine-tuning, GPT adapter |
-| `mobilenet/` | MobileNet | Depthwise separable convolution, efficient CNN, width multiplier |
-| `yolo/` | YOLO | Single-stage object detection, grid-based regression, NMS |
+| `cv/mobilenet/` | MobileNet | Depthwise separable convolution, efficient CNN, width multiplier |
+| `cv/yolo/` | YOLO | Single-stage object detection, grid-based regression, NMS |
 | `nlp/gpt/` | GPT | **Causal Self-Attention**, **KV Cache**, autoregressive generation, word-level tokenizer, temperature + top-k sampling, bad-token blocking |
 
 ## Setup & Run
@@ -461,66 +419,66 @@ uv sync
 
 ```bash
 # Train / Evaluate ResNet18
-uv run python -m resnet18.train
-uv run python -m resnet18.eval
+uv run python -m cv.resnet18.train
+uv run python -m cv.resnet18.eval
 
 # Train / Evaluate ResNet34
-uv run python -m resnet34.train
-uv run python -m resnet34.eval
+uv run python -m cv.resnet34.train
+uv run python -m cv.resnet34.eval
 
 # Train / Evaluate ResNet50
-uv run python -m resnet50.train
-uv run python -m resnet50.eval
+uv run python -m cv.resnet50.train
+uv run python -m cv.resnet50.eval
 
 # Train / Generate VAE
-uv run python -m vae.train
-uv run python -m vae.generate
+uv run python -m gen.vae.train
+uv run python -m gen.vae.generate
 
 # Train / Translate Seq2Seq
 uv run python -m nlp.seq2seq.train
 uv run python -m nlp.seq2seq.generate
 
 # Train / Evaluate GCN
-uv run python -m gcn.train
-uv run python -m gcn.eval
+uv run python -m graph.gcn.train
+uv run python -m graph.gcn.eval
 
 # Train DQN
-uv run python -m dqn.train
+uv run python -m rl.dqn.train
 
 # Train SimCLR
-uv run python -m simclr.train
+uv run python -m gen.simclr.train
 
 # Train YOLO
-uv run python -m yolo.train
+uv run python -m cv.yolo.train
 
 # Train / Generate LoRA (requires nlp/gpt/gpt_text8.pt)
 uv run python -m nlp.lora.train
 uv run python -m nlp.lora.generate
 
 # Train / Evaluate MobileNet
-uv run python -m mobilenet.train
-uv run python -m mobilenet.eval
-uv run python -m yolo.train
+uv run python -m cv.mobilenet.train
+uv run python -m cv.mobilenet.eval
+uv run python -m cv.yolo.train
 
 # Train / Generate DDPM
-uv run python -m ddpm.train
-uv run python -m ddpm.generate
+uv run python -m gen.ddpm.train
+uv run python -m gen.ddpm.generate
 
 # Train / Generate DCGAN
-uv run python -m dcgan.train
-uv run python -m dcgan.generate
+uv run python -m gen.dcgan.train
+uv run python -m gen.dcgan.generate
 
 # Train / Evaluate ViT
-uv run python -m vit.train
-uv run python -m vit.eval
+uv run python -m cv.vit.train
+uv run python -m cv.vit.eval
 
 # Train / Evaluate UNet
-uv run python -m unet.train
-uv run python -m unet.eval
+uv run python -m cv.unet.train
+uv run python -m cv.unet.eval
 
 # Train / Evaluate CNN
-uv run python -m cnn.train
-uv run python -m cnn.eval
+uv run python -m cv.simplecnn.train
+uv run python -m cv.simplecnn.eval
 
 # Train / Evaluate MLP (pure NumPy)
 uv run python -m mlp.train
@@ -562,22 +520,22 @@ locally after training; paths are shown below for reference.
 
 | Model | Local path | Size |
 |---|---|---|
-| ResNet18 (15 attrs, 1K samples) | `resnet18/resnet18_celeba.pt` | 45 MB |
-| ResNet34 (40 attrs, 200K samples) | `resnet34/resnet34_celeba.pt` | ~80 MB |
-| ResNet50 (40 attrs, 200K samples) | `resnet50/resnet50_celeba.pt` | ~90 MB |
-| VAE (CelebA, 64×64) | `vae/vae_celeba.pt` | 10 MB |
+| ResNet18 (15 attrs, 1K samples) | `cv/resnet18/resnet18_celeba.pt` | 45 MB |
+| ResNet34 (40 attrs, 200K samples) | `cv/resnet34/resnet34_celeba.pt` | ~80 MB |
+| ResNet50 (40 attrs, 200K samples) | `cv/resnet50/resnet50_celeba.pt` | ~90 MB |
+| VAE (CelebA, 64×64) | `gen/vae/vae_celeba.pt` | 10 MB |
 | Seq2Seq Transformer (Multi30k) | `nlp/seq2seq/seq2seq_multi30k.pt` | 4 MB |
-| GCN (Cora) | `gcn/gcn_cora.pt` | 0.1 MB |
-| DQN (CartPole) | `dqn/dqn_cartpole.pt` | 0.07 MB |
-| SimCLR (CIFAR-10) | `simclr/simclr_cifar10.pt` | 22 MB |
-| YOLO (Pascal VOC) | `yolo/yolo_voc.pt` | 226 MB |
+| GCN (Cora) | `graph/gcn/gcn_cora.pt` | 0.1 MB |
+| DQN (CartPole) | `rl/dqn/dqn_cartpole.pt` | 0.07 MB |
+| SimCLR (CIFAR-10) | `gen/simclr/simclr_cifar10.pt` | 22 MB |
+| YOLO (Pascal VOC) | `cv/yolo/yolo_voc.pt` | 226 MB |
 | LoRA (GPT-adapted, text8) | `nlp/lora/lora_gpt.pt` | 0.2 MB |
-| MobileNet (CIFAR-10) | `mobilenet/mobilenet_cifar10.pt` | 0.5 MB |
-| DDPM (CIFAR-10, 32×32) | `ddpm/ddpm_cifar10.pt` | 62 MB |
-| DCGAN (CelebA, 64×64) | `dcgan/dcgan_celeba.pt` | ~23 MB (G+D) |
-| ViT (CIFAR-10, 32×32) | `vit/vit_cifar10.pt` | 3.2 MB |
-| UNet (Oxford-Pet, 128×128) | `unet/unet_oxford_pet.pt` | 119 MB |
-| SimpleCNN (CIFAR-10) | `cnn/simple_cnn_cifar10.pt` | 2.4 MB |
+| MobileNet (CIFAR-10) | `cv/mobilenet/mobilenet_cifar10.pt` | 0.5 MB |
+| DDPM (CIFAR-10, 32×32) | `gen/ddpm/ddpm_cifar10.pt` | 62 MB |
+| DCGAN (CelebA, 64×64) | `gen/dcgan/dcgan_celeba.pt` | ~23 MB (G+D) |
+| ViT (CIFAR-10, 32×32) | `cv/vit/vit_cifar10.pt` | 3.2 MB |
+| UNet (Oxford-Pet, 128×128) | `cv/unet/unet_oxford_pet.pt` | 119 MB |
+| SimpleCNN (CIFAR-10) | `cv/simplecnn/simple_cnn_cifar10.pt` | 2.4 MB |
 | MLP (MNIST, NumPy) | `mlp/mlp_mnist.npz` | 0.9 MB |
 | Logistic Regression | `basics/logistic_regression.npz` | 63 KB |
 | K-Means centers | `basics/kmeans_centers.npz` | 32 KB |

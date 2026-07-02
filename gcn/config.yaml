@@ -1,7 +1,0 @@
-seed: 42
-lr: 0.01
-weight_decay: 5e-4
-hidden_dim: 16
-num_epochs: 200
-dropout: 0.5
-model_path: gcn/gcn_cora.pt

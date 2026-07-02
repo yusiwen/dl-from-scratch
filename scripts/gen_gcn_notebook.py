@@ -49,8 +49,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from gcn.model import GCN
-from gcn.data import load_cora
+from graph.gcn.model import GCN
+from graph.gcn.data import load_cora
 from utils.config import load_config
 from utils.seed import set_seed
 from utils.device import get_device
@@ -142,6 +142,6 @@ md("""\
 """)
 
 nb.cells = cells
-with open("gcn/gcn.ipynb", "w") as f:
+with open("graph/gcn/gcn.ipynb", "w") as f:
     nbf.write(nb, f)
-print("Generated gcn/gcn.ipynb")
+print("Generated graph/gcn/gcn.ipynb")

@@ -44,7 +44,7 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from datasets import load_dataset
 
-from simclr.model import SimCLR
+from gen.simclr.model import SimCLR
 from utils.config import load_config
 from utils.seed import set_seed
 from utils.device import get_device
@@ -54,7 +54,7 @@ print(f"Device: {device}")
 """)
 
 code("""\
-from simclr.data import SimCLRTransform, load_cifar10_simclr
+from gen.simclr.data import SimCLRTransform, load_cifar10_simclr
 
 loader = load_cifar10_simclr(batch_size=256, num_workers=4)
 print(f"Batches per epoch: {len(loader)}")
@@ -119,6 +119,6 @@ md("""\
 """)
 
 nb.cells = cells
-with open("simclr/simclr.ipynb", "w") as f:
+with open("gen/simclr/simclr.ipynb", "w") as f:
     nbf.write(nb, f)
-print("Generated simclr/simclr.ipynb")
+print("Generated gen/simclr/simclr.ipynb")

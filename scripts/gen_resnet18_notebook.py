@@ -63,8 +63,8 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-from resnet18.data import CelebADataset, ATTRIBUTES
-from resnet18.model import resnet18
+from cv.resnet18.data import CelebADataset, ATTRIBUTES
+from cv.resnet18.model import resnet18
 from utils.device import get_device
 
 device = get_device()
@@ -195,7 +195,7 @@ md("""\
 """)
 
 nb.cells = cells
-out = "resnet18/resnet18.ipynb"
+out = "cv/resnet18/resnet18.ipynb"
 with open(out, "w") as f:
     nbf.write(nb, f)
 print(f"Generated {out}")

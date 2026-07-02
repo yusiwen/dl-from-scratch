@@ -43,7 +43,7 @@ ResNet34: [BasicBlock×3] → [BasicBlock×4] → [BasicBlock×6] → [BasicBloc
 ResNet34 的每个 `BasicBlock` 结构与 ResNet18 完全相同（2× Conv3×3 + BN + ReLU）。
 差异只在于 block 数量。
 
-> 本项目中的 ResNet34 直接从 `resnet18.model` 复用 `ResNet` 类和 `BasicBlock`，
+> 本项目中的 ResNet34 直接从 `cv.resnet18.model` 复用 `ResNet` 类和 `BasicBlock`，
 > 仅通过 `num_blocks` 参数实现架构升级。
 """)
 
@@ -55,8 +55,8 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-from resnet34.data import CelebADataset, CELEBA_ATTR_ORDER, train_transform
-from resnet34.model import resnet34
+from cv.resnet34.data import CelebADataset, CELEBA_ATTR_ORDER, train_transform
+from cv.resnet34.model import resnet34
 from utils.device import get_device
 
 device = get_device()
@@ -173,7 +173,7 @@ md("""\
 """)
 
 nb.cells = cells
-out = "resnet34/resnet34.ipynb"
+out = "cv/resnet34/resnet34.ipynb"
 with open(out, "w") as f:
     nbf.write(nb, f)
 print(f"Generated {out}")

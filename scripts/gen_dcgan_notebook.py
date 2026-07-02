@@ -59,7 +59,7 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from datasets import load_dataset
 
-from dcgan.model import Generator, Discriminator
+from gen.dcgan.model import Generator, Discriminator
 from utils.device import get_device
 
 device = get_device()
@@ -193,7 +193,7 @@ md("""\
 """)
 
 nb.cells = cells
-out = "dcgan/dcgan.ipynb"
+out = "gen/dcgan/dcgan.ipynb"
 with open(out, "w") as f:
     nbf.write(nb, f)
 print(f"Generated {out}")

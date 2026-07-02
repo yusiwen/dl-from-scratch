@@ -52,7 +52,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from dqn.dqn import DQN, ReplayBuffer, train_episode, epsilon_by_episode
+from rl.dqn.dqn import DQN, ReplayBuffer, train_episode, epsilon_by_episode
 from utils.config import load_config
 
 device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
@@ -149,6 +149,6 @@ md("""\
 """)
 
 nb.cells = cells
-with open("dqn/dqn.ipynb", "w") as f:
+with open("rl/dqn/dqn.ipynb", "w") as f:
     nbf.write(nb, f)
-print("Generated dqn/dqn.ipynb")
+print("Generated rl/dqn/dqn.ipynb")

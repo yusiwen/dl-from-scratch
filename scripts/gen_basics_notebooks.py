@@ -11,7 +11,7 @@ MODELS = [
         "formula": r"""$$P(y=c \mid x) = \frac{e^{w_c \cdot x + b_c}}{\sum_{j=1}^{10} e^{w_j \cdot x + b_j}}$$
 
 $$\mathcal{L} = -\frac{1}{N} \sum_{i=1}^N \log P(y_i \mid x_i)$$""",
-        "import_code": "from basics.logistic_regression import train",
+        "import_code": "from ml.basics.logistic_regression import train",
         "run_code": "train()",
         "questions": [
             "Logistic Regression 和 Linear Regression 的区别是什么？（输出 vs 损失函数）",
@@ -26,7 +26,7 @@ $$\mathcal{L} = -\frac{1}{N} \sum_{i=1}^N \log P(y_i \mid x_i)$$""",
         "formula": r"""$$\theta = (X^T X)^{-1} X^T y \quad \text{(Normal Equation)}$$
 
 $$\theta \leftarrow \theta - \alpha \cdot \frac{2}{m} X^T (X\theta - y) \quad \text{(Gradient Descent)}$$""",
-        "import_code": "from basics.linear_regression import train",
+        "import_code": "from ml.basics.linear_regression import train",
         "run_code": "train()",
         "questions": [
             "Normal Equation 和 Gradient Descent 的优缺点？",
@@ -45,7 +45,7 @@ $$\min \frac{1}{n} \sum \max(0, 1 - y_i (w \cdot x_i + b)) + \lambda \|w\|^2$$
 **Dual (kernel trick):**
 
 $$\max \sum \alpha_i - \frac{1}{2} \sum \sum \alpha_i \alpha_j y_i y_j K(x_i, x_j)$$""",
-        "import_code": "from basics.svm import main",
+        "import_code": "from ml.basics.svm import main",
         "run_code": "main()",
         "questions": [
             "RBF kernel 为什么能处理非线性可分数据？",
@@ -64,7 +64,7 @@ $$\max \sum \alpha_i - \frac{1}{2} \sum \sum \alpha_i \alpha_j y_i y_j K(x_i, x_
 $$w \leftarrow w + \eta \cdot y \cdot x$$
 
 $$b \leftarrow b + \eta \cdot y$$""",
-        "import_code": "from basics.perceptron import demo",
+        "import_code": "from ml.basics.perceptron import demo",
         "run_code": "demo()",
         "questions": [
             "Perceptron 为什么只能解决线性可分问题？",
@@ -83,7 +83,7 @@ $$c_i = \arg\min_k \|x_i - \mu_k\|^2$$
 **M-step（更新）：**
 
 $$\mu_k = \frac{1}{|C_k|} \sum_{i \in C_k} x_i$$""",
-        "import_code": "from basics.k_means import train",
+        "import_code": "from ml.basics.k_means import train",
         "run_code": "train()",
         "questions": [
             "K-Means 一定能收敛吗？收敛到全局最优吗？",
@@ -102,7 +102,7 @@ $$H(S) = -\sum p_i \log_2 p_i$$
 **信息增益：**
 
 $$IG = H(S) - \sum \frac{|S_v|}{|S|} H(S_v)$$""",
-        "import_code": "from basics.decision_tree import demo",
+        "import_code": "from ml.basics.decision_tree import demo",
         "run_code": "demo()",
         "questions": [
             "决策树在 Iris 上只用了哪两个特征？为什么？（提示：print_tree 观察）",
@@ -121,7 +121,7 @@ $$P(y \mid x) \propto P(y) \prod_{i=1}^d P(x_i \mid y)$$
 **高斯似然：**
 
 $$P(x_i \mid y) = \frac{1}{\sqrt{2\pi\sigma_{iy}^2}} \exp\left(-\frac{(x_i - \mu_{iy})^2}{2\sigma_{iy}^2}\right)$$""",
-        "import_code": "from basics.naive_bayes import demo",
+        "import_code": "from ml.basics.naive_bayes import demo",
         "run_code": "demo()",
         "questions": [
             "为什么 Logistic Regression（92.3%）远好于 Naive Bayes（53.0%）？",
@@ -138,7 +138,7 @@ $$P(x_i \mid y) = \frac{1}{\sqrt{2\pi\sigma_{iy}^2}} \exp\left(-\frac{(x_i - \mu
 **SVD：** $\tilde{X} = U \Sigma V^T$
 
 **投影到前 k 个主成分：** $X_{\text{proj}} = \tilde{X} \cdot V_{:,:k}$""",
-        "import_code": "from basics.pca import demo",
+        "import_code": "from ml.basics.pca import demo",
         "run_code": "demo()",
         "questions": [
             "PCA 的第一主成分捕获了什么？（在 MNIST 上观察 ASCII 图）",
@@ -157,7 +157,7 @@ $$d(x, y) = \sqrt{\sum_{i=1}^d (x_i - y_i)^2}$$
 **预测（多数投票）：**
 
 $$\hat{y} = \text{majority vote of } k \text{ nearest neighbors}$$""",
-        "import_code": "from basics.knn import demo",
+        "import_code": "from ml.basics.knn import demo",
         "run_code": "demo()",
         "questions": [
             "k=1 和 k=10 的区别是什么？（偏差-方差权衡）",
@@ -189,7 +189,7 @@ for m in MODELS:
     # Background
     md(cells, f"""## 背景
 
-{m['desc']} 本 notebook 演示 {m['title']} 的完整实现，模型代码见 `basics/{m['name']}.py`。
+{m['desc']} 本 notebook 演示 {m['title']} 的完整实现，模型代码见 `ml/basics/{m['name']}.py`。
 """)
 
     # Math
@@ -210,7 +210,7 @@ for m in MODELS:
 """)
 
     nb.cells = cells
-    path = f"basics/{m['name']}.ipynb"
+    path = f"ml/basics/{m['name']}.ipynb"
     with open(path, "w") as f:
         nbf.write(nb, f)
     print(f"Generated {path}")

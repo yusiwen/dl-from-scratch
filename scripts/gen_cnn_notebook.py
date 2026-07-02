@@ -100,7 +100,7 @@ print(f"Train: {len(ds_train):,}  Test: {len(ds_test):,}")
 """)
 
 code("""\
-from cnn.model import SimpleCNN
+from cv.simplecnn.model import SimpleCNN
 
 model = SimpleCNN(num_classes=10).to(device)
 print(f"Parameters: {sum(p.numel() for p in model.parameters()):,}")
@@ -202,7 +202,7 @@ md("""\
 """)
 
 nb.cells = cells
-out = "cnn/cnn.ipynb"
+out = "cv/simplecnn/cnn.ipynb"
 with open(out, "w") as f:
     nbf.write(nb, f)
 print(f"Generated {out}")

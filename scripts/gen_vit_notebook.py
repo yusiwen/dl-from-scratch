@@ -64,7 +64,7 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from datasets import load_dataset
 
-from vit.model import ViT
+from cv.vit.model import ViT
 from utils.device import get_device
 
 device = get_device()
@@ -182,7 +182,7 @@ md("""\
 """)
 
 nb.cells = cells
-out = "vit/vit.ipynb"
+out = "cv/vit/vit.ipynb"
 with open(out, "w") as f:
     nbf.write(nb, f)
 print(f"Generated {out}")

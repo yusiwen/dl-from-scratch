@@ -58,8 +58,8 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from datasets import load_dataset
 
-from yolo.model import YOLO
-from yolo.loss import yolo_loss
+from cv.yolo.model import YOLO
+from cv.yolo.loss import yolo_loss
 from utils.config import load_config
 from utils.seed import set_seed
 from utils.device import get_device
@@ -69,7 +69,7 @@ print(f"Device: {device}")
 """)
 
 code("""\
-from yolo.data import load_voc, VOC_CLASSES
+from cv.yolo.data import load_voc, VOC_CLASSES
 
 train_loader, test_loader = load_voc(
     batch_size=32, image_size=224, S=7, B=2, C=20, num_workers=4,
@@ -130,6 +130,6 @@ md("""\
 """)
 
 nb.cells = cells
-with open("yolo/yolo.ipynb", "w") as f:
+with open("cv/yolo/yolo.ipynb", "w") as f:
     nbf.write(nb, f)
-print("Generated yolo/yolo.ipynb")
+print("Generated cv/yolo/yolo.ipynb")

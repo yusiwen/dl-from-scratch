@@ -69,7 +69,7 @@ from torchvision.transforms import functional as TF
 from datasets import load_dataset
 import random
 
-from unet.model import UNet
+from cv.unet.model import UNet
 from utils.device import get_device
 
 device = get_device()
@@ -227,7 +227,7 @@ md("""\
 """)
 
 nb.cells = cells
-out = "unet/unet.ipynb"
+out = "cv/unet/unet.ipynb"
 with open(out, "w") as f:
     nbf.write(nb, f)
 print(f"Generated {out}")

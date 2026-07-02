@@ -1,0 +1,13 @@
+seed: 42
+batch_size: 64
+lr: 0.1
+momentum: 0.9
+weight_decay: 0.0001
+num_epochs: 100
+num_workers: 4
+pin_memory: true
+amp: true
+gradient_accumulation_steps: 2
+early_stopping_patience: 10
+T_max: 100
+model_path: cv/resnet50/resnet50_celeba.pt

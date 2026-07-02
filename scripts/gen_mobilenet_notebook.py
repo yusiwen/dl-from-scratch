@@ -57,7 +57,7 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from datasets import load_dataset
 
-from mobilenet.model import MobileNet
+from cv.mobilenet.model import MobileNet
 from utils.config import load_config
 from utils.seed import set_seed
 from utils.device import get_device
@@ -67,7 +67,7 @@ print(f"Device: {device}")
 """)
 
 code("""\
-from mobilenet.data import load_cifar10, CIFAR10_CLASSES
+from cv.mobilenet.data import load_cifar10, CIFAR10_CLASSES
 
 train_loader, test_loader = load_cifar10(batch_size=128, num_workers=4)
 print(f"Train batches: {len(train_loader)}, Test batches: {len(test_loader)}")
@@ -80,9 +80,9 @@ for wm in [1.0, 0.5, 0.25]:
     print(f"  width={wm:.2f}: {sum(p.numel() for p in m.parameters()):,} params")
 
 # 与 SimpleCNN 对比
-from cnn.model import SimpleCNN
+from cv.simplecnn.model import SimpleCNN
 cnn = SimpleCNN(num_classes=10)
-cnn_params = sum(p.numel() for p in cnn.parameters())
+cnn_params = sum(p.numel() for p in cv.simplecnn.parameters())
 print(f"  SimpleCNN:  {cnn_params:,} params")
 print(f"  MobileNet × {cnn_params / 135562:.1f} smaller")
 """)
@@ -156,6 +156,6 @@ md("""\
 """)
 
 nb.cells = cells
-with open("mobilenet/mobilenet.ipynb", "w") as f:
+with open("cv/mobilenet/mobilenet.ipynb", "w") as f:
     nbf.write(nb, f)
-print("Generated mobilenet/mobilenet.ipynb")
+print("Generated cv/mobilenet/mobilenet.ipynb")
