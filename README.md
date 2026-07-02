@@ -79,13 +79,14 @@ Implement mainstream deep learning models from scratch.
 │   ├── loss.py            # YOLO loss + NMS
 │   ├── data.py            # Pascal VOC dataset
 │   └── train.py           # Object detection training
-├── lora/
-│   ├── __init__.py
-│   ├── config.yaml        # LoRA hyperparameters (r, alpha, dropout)
-│   ├── model.py           # LoRALayer + inject_lora for GPT
-│   ├── train.py           # Load GPT → freeze → inject → fine-tune
-│   ├── generate.py        # Generate with LoRA-adapted GPT
-│   └── lora.ipynb         # Notebook
+│   └── seq2seq/
+│   └── lora/
+│       ├── __init__.py
+│       ├── config.yaml        # LoRA hyperparameters (r, alpha, dropout)
+│       ├── model.py           # LoRALayer + inject_lora for GPT
+│       ├── train.py           # Load GPT → freeze → inject → fine-tune
+│       ├── generate.py        # Generate with LoRA-adapted GPT
+│       └── lora.ipynb         # Notebook
 ├── mobilenet/
 │   ├── __init__.py
 │   ├── config.yaml        # MobileNet hyperparameters (width_multiplier)
@@ -447,7 +448,7 @@ it demonstrates.
 | `gcn/` | GCN | Graph convolution, message passing, semi-supervised node classification |
 | `dqn/` | DQN | Q-Learning, experience replay, target network, ε-greedy |
 | `simclr/` | SimCLR | Contrastive learning, NT-Xent loss, data augmentation |
-| `lora/` | LoRA | Low-rank adaptation, parameter-efficient fine-tuning, GPT adapter |
+| `nlp/lora/` | LoRA | Low-rank adaptation, parameter-efficient fine-tuning, GPT adapter |
 | `mobilenet/` | MobileNet | Depthwise separable convolution, efficient CNN, width multiplier |
 | `yolo/` | YOLO | Single-stage object detection, grid-based regression, NMS |
 | `nlp/gpt/` | GPT | **Causal Self-Attention**, **KV Cache**, autoregressive generation, word-level tokenizer, temperature + top-k sampling, bad-token blocking |
@@ -493,8 +494,8 @@ uv run python -m simclr.train
 uv run python -m yolo.train
 
 # Train / Generate LoRA (requires nlp/gpt/gpt_text8.pt)
-uv run python -m lora.train
-uv run python -m lora.generate
+uv run python -m nlp.lora.train
+uv run python -m nlp.lora.generate
 
 # Train / Evaluate MobileNet
 uv run python -m mobilenet.train
@@ -570,7 +571,7 @@ locally after training; paths are shown below for reference.
 | DQN (CartPole) | `dqn/dqn_cartpole.pt` | 0.07 MB |
 | SimCLR (CIFAR-10) | `simclr/simclr_cifar10.pt` | 22 MB |
 | YOLO (Pascal VOC) | `yolo/yolo_voc.pt` | 226 MB |
-| LoRA (GPT-adapted, text8) | `lora/lora_gpt.pt` | 0.2 MB |
+| LoRA (GPT-adapted, text8) | `nlp/lora/lora_gpt.pt` | 0.2 MB |
 | MobileNet (CIFAR-10) | `mobilenet/mobilenet_cifar10.pt` | 0.5 MB |
 | DDPM (CIFAR-10, 32×32) | `ddpm/ddpm_cifar10.pt` | 62 MB |
 | DCGAN (CelebA, 64×64) | `dcgan/dcgan_celeba.pt` | ~23 MB (G+D) |

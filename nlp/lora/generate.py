@@ -4,12 +4,12 @@ import torch
 
 from nlp.gpt.model import GPT
 from nlp.gpt.tokenizer import WordTokenizer
-from lora.model import inject_lora, freeze_all_except_lora
+from nlp.lora.model import inject_lora, freeze_all_except_lora
 from utils.config import load_config
 
 
 def generate():
-    cfg = load_config("lora/config.yaml")
+    cfg = load_config("nlp/lora/config.yaml")
 
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 

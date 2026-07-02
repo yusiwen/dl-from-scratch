@@ -56,7 +56,7 @@ from datasets import load_dataset
 
 from nlp.gpt.model import GPT
 from nlp.gpt.tokenizer import WordTokenizer
-from lora.model import LoRALayer, inject_lora, freeze_all_except_lora, lora_params_count
+from nlp.lora.model import LoRALayer, inject_lora, freeze_all_except_lora, lora_params_count
 from utils.config import load_config
 from utils.seed import set_seed
 from utils.device import get_device
@@ -175,6 +175,6 @@ md("""\
 """)
 
 nb.cells = cells
-with open("lora/lora.ipynb", "w") as f:
+with open("nlp/lora/lora.ipynb", "w") as f:
     nbf.write(nb, f)
-print("Generated lora/lora.ipynb")
+print("Generated nlp/lora/lora.ipynb")

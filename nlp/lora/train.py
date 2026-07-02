@@ -10,14 +10,14 @@ from torch.utils.tensorboard import SummaryWriter
 
 from nlp.gpt.tokenizer import WordTokenizer
 from nlp.gpt.model import GPT
-from lora.model import inject_lora, freeze_all_except_lora, lora_params_count
+from nlp.lora.model import inject_lora, freeze_all_except_lora, lora_params_count
 from utils.config import load_config, save_config
 from utils.seed import set_seed
 from utils.device import get_device
 
 
 def train():
-    cfg = load_config("lora/config.yaml")
+    cfg = load_config("nlp/lora/config.yaml")
     set_seed(cfg["seed"])
 
     device = get_device()
