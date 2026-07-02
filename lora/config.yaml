@@ -1,0 +1,11 @@
+seed: 42
+lr: 0.001
+num_epochs: 10
+batch_size: 32
+max_len: 64
+r: 8
+alpha: 16
+dropout: 0.0
+max_chunks: 5000
+checkpoint: nlp/gpt/gpt_text8.pt
+model_path: lora/lora_gpt.pt
