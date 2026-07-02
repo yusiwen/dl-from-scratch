@@ -49,11 +49,36 @@ Implement mainstream deep learning models from scratch.
 │   └── generate.py        # Sample generation + latent interpolation
 ├── ddpm/
 │   ├── __init__.py
-│   ├── config.yaml        # DDPM hyperparameters (T=1000, noise schedule, etc.)
+│   ├── config.yaml        # DDPM hyperparameters
 │   ├── model.py           # UNet + timestep embedding + DDPM forward/sample
 │   ├── data.py            # CIFAR-10 via HF datasets
 │   ├── train.py           # Noise prediction training
 │   └── generate.py        # Reverse diffusion sampling
+├── gcn/
+│   ├── __init__.py
+│   ├── config.yaml        # GCN hyperparameters
+│   ├── model.py           # Graph Convolution layers + 2-layer GCN
+│   ├── data.py            # Cora citation network loader
+│   ├── train.py           # Semi-supervised node classification
+│   └── eval.py            # Test accuracy evaluation
+├── dqn/
+│   ├── __init__.py
+│   ├── config.yaml        # DQN hyperparameters
+│   ├── dqn.py             # DQN, ReplayBuffer, train_episode helpers
+│   └── train.py           # CartPole RL training loop
+├── simclr/
+│   ├── __init__.py
+│   ├── config.yaml        # SimCLR hyperparameters
+│   ├── model.py           # ResNet18 encoder + Projector + NT-Xent loss
+│   ├── data.py            # CIFAR-10 with dual augmentation
+│   └── train.py           # Contrastive learning training
+├── yolo/
+│   ├── __init__.py
+│   ├── config.yaml        # YOLO hyperparameters
+│   ├── model.py           # CNN backbone + detection head
+│   ├── loss.py            # YOLO loss + NMS
+│   ├── data.py            # Pascal VOC dataset
+│   └── train.py           # Object detection training
 ├── dcgan/
 │   ├── __init__.py
 │   ├── config.yaml        # DCGAN hyperparameters
@@ -204,6 +229,42 @@ uv run python -m resnet18.train
 | Training | Noise prediction (MSE), T=1000, linear β schedule |
 | Sampling | Reverse diffusion (x_T → x_0), 1000 steps |
 
+## GCN
+
+| Item | Value |
+|---|---|
+| Model | 2-layer Graph Convolutional Network (23K params) |
+| Dataset | Cora via URL — 2708 nodes, 1433 features, 7 classes |
+| Architecture | GraphConv × 2: Â @ H @ W (spectral graph convolution) |
+| Training | Semi-supervised (20 labels/class), CrossEntropyLoss |
+
+## DQN
+
+| Item | Value |
+|---|---|
+| Model | Deep Q-Network (17K params) |
+| Environment | CartPole-v1 via Gymnasium — 4-dim state, 2 actions |
+| Architecture | 3-layer MLP (4→128→128→2) |
+| Training | Experience replay, target network, ε-greedy decay |
+
+## SimCLR
+
+| Item | Value |
+|---|---|
+| Model | SimCLR (11M params: ResNet18 encoder + MLP projector) |
+| Dataset | CIFAR-10 via HF datasets — self-supervised (no labels) |
+| Architecture | ResNet18 → Projector(512→256→128) → NT-Xent loss |
+| Training | 100 epoch, temperature=0.5, dual random augmentation |
+
+## YOLO
+
+| Item | Value |
+|---|---|
+| Model | Simplified YOLO (59M params) |
+| Dataset | Pascal VOC via HF datasets — 20 classes |
+| Architecture | CNN backbone → FC detection head → 7×7×30 output |
+| Training | YOLO loss (coord + obj + noobj + class), NMS at inference |
+
 ## DCGAN
 
 | Item | Value |
@@ -349,6 +410,10 @@ it demonstrates.
 | `nlp/bert/` | BERT mini | **Self-Attention** (semantic aggregation), **Masked Language Model** (entropy increase + denoising), LayerNorm, positional encoding |
 | `nlp/word2vec/` | Word2Vec | **Embedding lookup tables**, **Negative Sampling**, CBOW vs Skip-gram, subsampling frequent words, cosine similarity |
 | `nlp/lstm/` | LSTM | **Input/forget/output gates**, **cell state**, gradient flow through gating, sequential processing vs parallel attention |
+| `gcn/` | GCN | Graph convolution, message passing, semi-supervised node classification |
+| `dqn/` | DQN | Q-Learning, experience replay, target network, ε-greedy |
+| `simclr/` | SimCLR | Contrastive learning, NT-Xent loss, data augmentation |
+| `yolo/` | YOLO | Single-stage object detection, grid-based regression, NMS |
 | `nlp/gpt/` | GPT | **Causal Self-Attention**, **KV Cache**, autoregressive generation, word-level tokenizer, temperature + top-k sampling, bad-token blocking |
 
 ## Setup & Run
@@ -377,6 +442,19 @@ uv run python -m vae.generate
 # Train / Translate Seq2Seq
 uv run python -m nlp.seq2seq.train
 uv run python -m nlp.seq2seq.generate
+
+# Train / Evaluate GCN
+uv run python -m gcn.train
+uv run python -m gcn.eval
+
+# Train DQN
+uv run python -m dqn.train
+
+# Train SimCLR
+uv run python -m simclr.train
+
+# Train YOLO
+uv run python -m yolo.train
 
 # Train / Generate DDPM
 uv run python -m ddpm.train
@@ -443,6 +521,10 @@ locally after training; paths are shown below for reference.
 | ResNet50 (40 attrs, 200K samples) | `resnet50/resnet50_celeba.pt` | ~90 MB |
 | VAE (CelebA, 64×64) | `vae/vae_celeba.pt` | 10 MB |
 | Seq2Seq Transformer (Multi30k) | `nlp/seq2seq/seq2seq_multi30k.pt` | 4 MB |
+| GCN (Cora) | `gcn/gcn_cora.pt` | 0.1 MB |
+| DQN (CartPole) | `dqn/dqn_cartpole.pt` | 0.07 MB |
+| SimCLR (CIFAR-10) | `simclr/simclr_cifar10.pt` | 22 MB |
+| YOLO (Pascal VOC) | `yolo/yolo_voc.pt` | 226 MB |
 | DDPM (CIFAR-10, 32×32) | `ddpm/ddpm_cifar10.pt` | 62 MB |
 | DCGAN (CelebA, 64×64) | `dcgan/dcgan_celeba.pt` | ~23 MB (G+D) |
 | ViT (CIFAR-10, 32×32) | `vit/vit_cifar10.pt` | 3.2 MB |

@@ -15,6 +15,7 @@ dependencies = [
     "scikit-learn>=1.0",
     "nbformat>=5.0",
     "matplotlib>=3.0",
+    "gymnasium>=0.29",
     "jupyterlab>=4.0",
     "ipykernel>=6.0",
 ]
