@@ -25,5 +25,8 @@ runs/
 # Generated sample images (from dcgan/generate.py etc.)
 *.png
 
+# Hyperparameter search results
+results/
+
 # Jupyter auto-generated checkpoint backups
 .ipynb_checkpoints/
