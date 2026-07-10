@@ -22,7 +22,7 @@ Implement mainstream deep learning models from scratch.
 ├── ROADMAP.md
 ├── ml/                    # Classical Machine Learning (pure NumPy)
 │   ├── mlp/               # MLP (MNIST, manual backprop)
-│   └── basics/            # 10 standalone models (lin/log reg, SVM, K-Means, PCA, t-SNE, etc.)
+│   └── basics/            # 12 standalone models (lin/log reg, SVM, K-Means, PCA, RF, GBDT, etc.)
 ├── cv/                    # Computer Vision
 │   ├── simplecnn/         # SimpleCNN (CIFAR-10, Conv×3+Pool×3+FC×2)
 │   ├── resnet18/          # ResNet18 (CelebA, 15 attrs, skip connections)
@@ -114,6 +114,8 @@ Implement mainstream deep learning models from scratch.
 │   ├── k_means.py               # Unsupervised clustering (pure NumPy)
 │   ├── svm.py                   # SVM — GD (primal) + SMO (dual, Linear/RBF kernels)
 │   ├── decision_tree.py          # ID3/CART on Iris (ASCII tree, ~93% acc)
+│   ├── random_forest.py          # Bagging + random feature subsets, Iris 93.3%
+│   ├── gbdt.py                   # Gradient boosting (MSE reg + binary logloss cls)
 │   ├── naive_bayes.py            # Gaussian NB on MNIST (generative classifier)
 │   ├── pca.py                    # SVD-based dimensionality reduction (MNIST 2D visualisation)
 │   ├── knn.py                    # k-Nearest Neighbors (instance-based, MNIST)
@@ -357,6 +359,8 @@ uv run python -m cv.resnet18.train
 | K-Means | `ml/basics/k_means.py` | MNIST | 57.8% cluster purity |
 | SVM (GD + SMO) | `ml/basics/svm.py` | MNIST 3v5 | 93.3% (RBF kernel) |
 | Decision Tree | `ml/basics/decision_tree.py` | Iris | 93.3% test acc |
+| Random Forest | `ml/basics/random_forest.py` | Iris | 93.3% test acc (50 trees) |
+| GBDT | `ml/basics/gbdt.py` | sin(x) / synthetic 2D | MSE 0.21 / 100% bin cls |
 | Naive Bayes | `ml/basics/naive_bayes.py` | MNIST | 53.0% test acc |
 | PCA | `ml/basics/pca.py` | MNIST | 17.3% variance in 2 components |
 | k-NN | `ml/basics/knn.py` | MNIST | ~87% (k=5, 2000 train) |
@@ -385,6 +389,8 @@ it demonstrates.
 | `basics/` | SVM (GD) | Hinge loss, max-margin classification, L2 regularisation, primal gradient descent |
 | `basics/` | SVM (SMO) | Dual formulation, Lagrange multipliers, KKT conditions, kernel trick (RBF) |
 | `basics/` | Decision Tree | Entropy, Information Gain, recursive partitioning, interpretable ASCII tree |
+| `basics/` | Random Forest | Bagging, bootstrap sampling, feature randomness, ensemble diversity → variance reduction |
+| `basics/` | GBDT | Gradient boosting, stage-wise additive model, pseudo-residuals, learning rate shrinkage |
 | `basics/` | Naive Bayes | Bayes' theorem, generative vs discriminative models, Gaussian likelihood, log-space prediction |
 | `basics/` | PCA | Singular Value Decomposition (SVD), eigenvalue, dimensionality reduction, variance explained |
 | `basics/` | k-NN | Instance-based learning, distance metrics, curse of dimensionality, bias-variance tradeoff |
@@ -493,6 +499,8 @@ uv run python -m basics.k_means
 uv run python -m basics.linear_regression
 uv run python -m basics.svm
 uv run python -m basics.decision_tree
+uv run python -m basics.random_forest
+uv run python -m basics.gbdt
 uv run python -m basics.naive_bayes
 uv run python -m basics.pca
 uv run python -m basics.knn
