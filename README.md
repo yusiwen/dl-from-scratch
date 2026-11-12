@@ -355,12 +355,16 @@ uv run python -m cv.resnet18.train
 | Logistic Regression | `ml/basics/logistic_regression.py` | MNIST | 92.3% test accuracy |
 | Linear Regression | `ml/basics/linear_regression.py` | California Housing | R²=0.583 |
 | K-Means | `ml/basics/k_means.py` | MNIST | purity 57.8%, NMI 0.483, ARI 0.363 (need labels); silhouette 0.056 (label-free) |
+| GMM (EM) | `ml/basics/gmm.py` | MNIST 5K → PCA-50 | purity 54.4%, NMI 0.550, ARI 0.398 (labels); silhouette 0.056 (label-free) |
+| DBSCAN | `ml/basics/dbscan.py` | MNIST 5K → PCA-50 | 23 clusters, 81% noise; on clustered points: purity 99.4%, NMI 0.851, ARI 0.947 |
 | SVM (GD + SMO) | `ml/basics/svm.py` | MNIST 3v5 | 93.3% (RBF kernel) |
 | Decision Tree | `ml/basics/decision_tree.py` | Iris | 93.3% test acc |
 | Naive Bayes | `ml/basics/naive_bayes.py` | MNIST | 53.0% test acc |
 | PCA | `ml/basics/pca.py` | MNIST | 17.3% variance in 2 components |
 | k-NN | `ml/basics/knn.py` | MNIST | ~87% (k=5, 2000 train) |
 | Perceptron | `ml/basics/perceptron.py` | MNIST 0v1 | 100% (linearly separable) |
+
+Run the two new clustering demos with `uv run python -m ml.basics.gmm` and `uv run python -m ml.basics.dbscan`.
 
 ### SVM implementations
 
@@ -382,6 +386,8 @@ it demonstrates.
 | `basics/` | Logistic Regression | Linear decision boundary, Softmax, Cross-Entropy, closed-form vs gradient descent |
 | `basics/` | Linear Regression | Normal Equation, MSE, R² score, feature standardisation |
 | `basics/` | K-Means | Unsupervised learning, Euclidean distance, iterative centroid refinement, silhouette (label-free) vs purity/NMI/ARI (evaluation-only) |
+| `basics/` | GMM (EM) | Soft assignment, log-sum-exp responsibilities, full covariance, BIC/AIC model selection |
+| `basics/` | DBSCAN | Density-based clustering, core/border/noise points, arbitrary shapes, eps sensitivity in high dimensions |
 | `basics/` | SVM (GD) | Hinge loss, max-margin classification, L2 regularisation, primal gradient descent |
 | `basics/` | SVM (SMO) | Dual formulation, Lagrange multipliers, KKT conditions, kernel trick (RBF) |
 | `basics/` | Decision Tree | Entropy, Information Gain, recursive partitioning, interpretable ASCII tree |

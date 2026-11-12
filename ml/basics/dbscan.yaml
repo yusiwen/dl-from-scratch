@@ -1,0 +1,9 @@
+seed: 42
+max_samples: 5000
+pca_components: 50
+# PCA components keep their variance scale (no per-column standardization):
+# standardizing the 50 PCs gives every low-variance direction equal weight and
+# collapses the density structure into a single blob at every eps tested.
+eps: 3.0
+min_samples: 5
+metric_sample_size: 5000
