@@ -18,18 +18,9 @@ separate into clusters even in 2D.
 """
 
 import numpy as np
-from datasets import load_dataset
+
+from utils.data import load_mnist_flat, subset_checksum
 from utils.seed import set_seed
-
-
-def load_mnist_flat(max_samples=5000):
-    """Load MNIST and flatten."""
-    ds = load_dataset("ylecun/mnist", split="train")
-    batch = ds[:max_samples]
-    X = np.stack([np.array(img, dtype=np.float64).reshape(-1) for img in batch["image"]])
-    X /= 255.0
-    y = np.array(batch["label"], dtype=np.int32)
-    return X, y
 
 
 def pca(X, n_components=2):
@@ -101,7 +92,7 @@ def demo():
     set_seed(42)
     print("Loading MNIST (5000 samples)...")
     X, y = load_mnist_flat(5000)
-    print(f"  Data shape: {X.shape}")
+    print(f"  Data shape: {X.shape}, subset sha256: {subset_checksum(X)[:16]}")
 
     global var_explained
     X_proj, components, mean, var_explained = pca(X, n_components=2)

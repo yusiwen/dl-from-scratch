@@ -4,10 +4,11 @@
 
 ## ✅ Completed
 
-**Models (34):**
+**Models (35):**
 - ML/Basics (12): Logistic Regression, Linear Regression, K-Means, SVM (GD + SMO), Decision Tree, Naive Bayes, PCA, k-NN, Perceptron, t-SNE, GMM (EM), DBSCAN
 - Deep Learning (11): MLP (pure NumPy), SimpleCNN, ResNet18, ResNet34, ResNet50 (Bottleneck), BERT, Word2Vec (CBOW + Skip-gram), LSTM (hand-written gates), GPT (Causal Attention + KV Cache), Seq2Seq Transformer (cross-attention), DDPM (Denoising Diffusion)
 - Image Generation (1): DCGAN — CelebA 64×64
+- Autoencoder (1): AE — MNIST, reconstruction-only (PCA → VAE bridge)
 - Variational AE (1): VAE — Encoder, reparameterization trick, KL divergence, CelebA 64×64
 - Vision Transformer (1): ViT — CIFAR-10
 - Segmentation (1): UNet — Oxford-IIIT Pet
