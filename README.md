@@ -39,6 +39,7 @@ Implement mainstream deep learning models from scratch.
 │   └── ddpm/              # DDPM (CIFAR-10, denoising diffusion)
 ├── selfsup/               # Self-Supervised Learning
 │   ├── byol/              # BYOL (CIFAR-10, EMA target, no negatives)
+│   ├── deep_cluster/      # DEC (MNIST, autoencoder + KL clustering)
 │   ├── mae/               # MAE (CIFAR-10, masked image modeling + linear probe)
 │   └── simclr/            # SimCLR (CIFAR-10, contrastive learning + linear probe)
 ├── graph/                 # Graph Neural Networks
@@ -210,6 +211,21 @@ std falls 0.65 → 0.13 and the probe lands far below SimCLR (70.1%). The loss
 drops to ~0.01 within two epochs, which is the classic no-negative collapse
 signature. LARS, larger batches and target centering are the usual fixes; the
 measured numbers are reported as-is rather than tuned to look competitive.
+
+## SELFSUP/DEC
+
+| Item | Value |
+|---|---|
+| Model | Deep Embedded Clustering: MLP autoencoder (471,066 params, latent 10) + 10 trainable centres |
+| Dataset | MNIST via HF datasets — the same 5,000 images as `ml/basics/pca.py` |
+| Training | 20 epochs BCE reconstruction, then 50 epochs BCE + 0.1·KL(P‖Q), centres from K-Means |
+| ARI (same 5,000, k=10) | pixels K-Means **0.334**, AE-latent K-Means **0.259**, DEC **0.257** |
+| Latent linear probe | **84.2%** (80/20 split) |
+
+DEC does not beat K-Means on the autoencoder latent here (0.257 vs 0.259). The
+latent is linearly separable for classification (84%) but its unsupervised
+clusters do not align with digits better than raw pixels do. The measured
+numbers are reported as-is.
 
 ## CV/YOLO
 
@@ -404,6 +420,7 @@ it demonstrates.
 | `selfsup/simclr/` | SimCLR | Contrastive learning, NT-Xent loss, data augmentation, frozen-encoder linear probe + kNN evaluation |
 | `selfsup/mae/` | MAE | Masked image modeling, high mask ratio, asymmetric encoder/decoder, pixel reconstruction, linear probe |
 | `selfsup/byol/` | BYOL | EMA target network, no negative pairs, predictor asymmetry, collapse failure mode |
+| `selfsup/deep_cluster/` | DEC | Joint reconstruction + KL clustering, Student-t soft assignments, target sharpening |
 | `nlp/lora/` | LoRA | Low-rank adaptation, parameter-efficient fine-tuning, GPT adapter |
 | `cv/mobilenet/` | MobileNet | Depthwise separable convolution, efficient CNN, width multiplier |
 | `cv/yolo/` | YOLO | Single-stage object detection, grid-based regression, NMS |
@@ -466,6 +483,9 @@ uv run python -m selfsup.mae.eval
 # Train / Evaluate BYOL (EMA target, no negatives)
 uv run python -m selfsup.byol.train
 uv run python -m selfsup.byol.eval
+
+# Train DEC (deep clustering on MNIST)
+uv run python -m selfsup.deep_cluster.train
 
 # Train YOLO
 uv run python -m cv.yolo.train
