@@ -2,15 +2,15 @@ import torch
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 
-from gen.simclr.model import SimCLR
-from gen.simclr.data import load_cifar10_simclr
+from selfsup.simclr.model import SimCLR
+from selfsup.simclr.data import load_cifar10_simclr
 from utils.config import load_config, save_config
 from utils.seed import set_seed
 from utils.device import get_device
 
 
 def train():
-    cfg = load_config("gen/simclr/config.yaml")
+    cfg = load_config("selfsup/simclr/config.yaml")
     set_seed(cfg["seed"])
 
     device = get_device()

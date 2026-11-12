@@ -35,8 +35,9 @@ Implement mainstream deep learning models from scratch.
 ├── gen/                   # Generative Models
 │   ├── dcgan/             # DCGAN (CelebA, transposed conv)
 │   ├── vae/               # VAE (reparameterization trick, KL divergence)
-│   ├── ddpm/              # DDPM (CIFAR-10, denoising diffusion)
-│   └── simclr/            # SimCLR (CIFAR-10, contrastive learning)
+│   └── ddpm/              # DDPM (CIFAR-10, denoising diffusion)
+├── selfsup/               # Self-Supervised Learning
+│   └── simclr/            # SimCLR (CIFAR-10, contrastive learning + linear probe)
 ├── graph/                 # Graph Neural Networks
 │   └── gcn/               # GCN (Cora, spectral graph convolution)
 ├── rl/                    # Reinforcement Learning
@@ -220,7 +221,7 @@ uv run python -m cv.resnet18.train
 | Architecture | 3-layer MLP (4→128→128→2) |
 | Training | Experience replay, target network, ε-greedy decay |
 
-## GEN/SimCLR
+## SELFSUP/SimCLR
 
 | Item | Value |
 |---|---|
@@ -413,7 +414,7 @@ it demonstrates.
 | `nlp/lstm/` | LSTM | **Input/forget/output gates**, **cell state**, gradient flow through gating, sequential processing vs parallel attention |
 | `graph/gcn/` | GCN | Graph convolution, message passing, semi-supervised node classification |
 | `rl/dqn/` | DQN | Q-Learning, experience replay, target network, ε-greedy |
-| `gen/simclr/` | SimCLR | Contrastive learning, NT-Xent loss, data augmentation, frozen-encoder linear probe + kNN evaluation |
+| `selfsup/simclr/` | SimCLR | Contrastive learning, NT-Xent loss, data augmentation, frozen-encoder linear probe + kNN evaluation |
 | `nlp/lora/` | LoRA | Low-rank adaptation, parameter-efficient fine-tuning, GPT adapter |
 | `cv/mobilenet/` | MobileNet | Depthwise separable convolution, efficient CNN, width multiplier |
 | `cv/yolo/` | YOLO | Single-stage object detection, grid-based regression, NMS |
@@ -454,8 +455,8 @@ uv run python -m graph.gcn.eval
 uv run python -m rl.dqn.train
 
 # Train / Evaluate SimCLR (frozen-encoder linear probe + kNN)
-uv run python -m gen.simclr.train
-uv run python -m gen.simclr.eval
+uv run python -m selfsup.simclr.train
+uv run python -m selfsup.simclr.eval
 
 # Train YOLO
 uv run python -m cv.yolo.train
@@ -576,7 +577,7 @@ locally after training; paths are shown below for reference.
 | Seq2Seq Transformer (Multi30k) | `nlp/seq2seq/seq2seq_multi30k.pt` | 4 MB |
 | GCN (Cora) | `graph/gcn/gcn_cora.pt` | 0.1 MB |
 | DQN (CartPole) | `rl/dqn/dqn_cartpole.pt` | 0.07 MB |
-| SimCLR (CIFAR-10) | `gen/simclr/simclr_cifar10.pt` | 22 MB |
+| SimCLR (CIFAR-10) | `selfsup/simclr/simclr_cifar10.pt` | 44 MB |
 | YOLO (Pascal VOC) | `cv/yolo/yolo_voc.pt` | 226 MB |
 | LoRA (GPT-adapted, text8) | `nlp/lora/lora_gpt.pt` | 0.2 MB |
 | MobileNet (CIFAR-10) | `cv/mobilenet/mobilenet_cifar10.pt` | 0.5 MB |

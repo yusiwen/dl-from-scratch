@@ -22,8 +22,8 @@ import numpy as np
 import torch
 from sklearn.linear_model import LogisticRegression
 
-from gen.simclr.data import load_cifar10_eval
-from gen.simclr.model import SimCLR
+from selfsup.simclr.data import load_cifar10_eval
+from selfsup.simclr.model import SimCLR
 from utils.config import load_config
 from utils.device import get_device
 from utils.seed import set_seed
@@ -72,7 +72,7 @@ def knn_accuracy(train_features, train_labels, test_features, test_labels, k=20,
 
 
 def main():
-    cfg = load_config("gen/simclr/config.yaml")
+    cfg = load_config("selfsup/simclr/config.yaml")
     set_seed(cfg["seed"])
 
     device = get_device()
@@ -82,7 +82,7 @@ def main():
     if not os.path.exists(checkpoint):
         sys.exit(
             f"error: checkpoint not found at {checkpoint}; "
-            f"run `python -m gen.simclr.train` first"
+            f"run `python -m selfsup.simclr.train` first"
         )
 
     model = SimCLR(project_dim=cfg["project_dim"], temperature=cfg["temperature"])
