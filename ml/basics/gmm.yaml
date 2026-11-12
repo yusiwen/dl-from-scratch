@@ -1,0 +1,9 @@
+seed: 42
+max_samples: 5000
+pca_components: 50
+n_clusters: 10
+max_iters: 300
+tol: 0.0001
+reg_covar: 0.000001
+metric_sample_size: 5000
+model_path: ml/basics/gmm_model.npz
