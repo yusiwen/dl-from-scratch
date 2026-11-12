@@ -20,12 +20,12 @@ import time
 
 import numpy as np
 import torch
-from sklearn.linear_model import LogisticRegression
 
 from selfsup.simclr.data import load_cifar10_eval
 from selfsup.simclr.model import SimCLR
 from utils.config import load_config
 from utils.device import get_device
+from utils.probe import knn_accuracy, linear_probe
 from utils.seed import set_seed
 
 
@@ -48,27 +48,6 @@ def extract_features(encoder, loader, device):
         features.append(encoder(images.to(device, non_blocking=True)).cpu())
         targets.append(batch["label"])
     return torch.cat(features).numpy(), torch.cat(targets).numpy()
-
-
-def knn_accuracy(train_features, train_labels, test_features, test_labels, k=20, chunk=1000):
-    """
-    Cosine kNN accuracy without a distance-matrix library.
-
-    Features are L2-normalized, so the dot product is the cosine similarity.
-    Test rows are processed in chunks to bound the (chunk, n_train) buffer.
-    """
-    train = train_features / np.maximum(np.linalg.norm(train_features, axis=1, keepdims=True), 1e-12)
-    test = test_features / np.maximum(np.linalg.norm(test_features, axis=1, keepdims=True), 1e-12)
-    n_classes = int(train_labels.max()) + 1
-
-    correct = 0
-    for start in range(0, len(test), chunk):
-        similarities = test[start:start + chunk] @ train.T
-        neighbours = np.argpartition(-similarities, k, axis=1)[:, :k]
-        for row, neighbour_indices in enumerate(neighbours):
-            votes = np.bincount(train_labels[neighbour_indices], minlength=n_classes)
-            correct += int(votes.argmax() == test_labels[start + row])
-    return correct / len(test)
 
 
 def main():
@@ -101,9 +80,7 @@ def main():
           f"({time.time() - started:.1f}s, encoder frozen)")
 
     started = time.time()
-    probe = LogisticRegression(max_iter=2000)
-    probe.fit(train_x, train_y)
-    probe_accuracy = float((probe.predict(test_x) == test_y).mean())
+    probe_accuracy, _ = linear_probe(train_x, train_y, test_x, test_y)
     print(f"Linear probe: {probe_accuracy:.2%} test top-1 "
           f"({time.time() - started:.1f}s)")
 

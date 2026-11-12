@@ -38,6 +38,7 @@ Implement mainstream deep learning models from scratch.
 │   ├── vae/               # VAE (reparameterization trick, KL divergence)
 │   └── ddpm/              # DDPM (CIFAR-10, denoising diffusion)
 ├── selfsup/               # Self-Supervised Learning
+│   ├── mae/               # MAE (CIFAR-10, masked image modeling + linear probe)
 │   └── simclr/            # SimCLR (CIFAR-10, contrastive learning + linear probe)
 ├── graph/                 # Graph Neural Networks
 │   └── gcn/               # GCN (Cora, spectral graph convolution)
@@ -182,6 +183,16 @@ still wins. The autoencoder is the step that makes the VAE's extra machinery
 | Training | 100 epoch, temperature=0.5, dual random augmentation |
 | Linear probe | **70.1%** test top-1 (frozen 512-d encoder features) |
 | kNN (k=20, cosine) | 67.1% test top-1 (no training) |
+
+## SELFSUP/MAE
+
+| Item | Value |
+|---|---|
+| Model | Masked Autoencoder (921,200 params; ViT-tiny encoder 4 layers / 4 heads / 128-d, 2-layer decoder) |
+| Dataset | CIFAR-10 via HF datasets — 50K images (32×32), 4×4 patches |
+| Training | 75% patch masking, MSE on masked patches only, AdamW(lr=1.5e-4), 100 epoch |
+| Linear probe | **46.8%** test top-1 (frozen 128-d CLS features) |
+| kNN (k=20, cosine) | 37.0% test top-1 |
 
 ## CV/YOLO
 
@@ -374,6 +385,7 @@ it demonstrates.
 | `graph/gcn/` | GCN | Graph convolution, message passing, semi-supervised node classification |
 | `rl/dqn/` | DQN | Q-Learning, experience replay, target network, ε-greedy |
 | `selfsup/simclr/` | SimCLR | Contrastive learning, NT-Xent loss, data augmentation, frozen-encoder linear probe + kNN evaluation |
+| `selfsup/mae/` | MAE | Masked image modeling, high mask ratio, asymmetric encoder/decoder, pixel reconstruction, linear probe |
 | `nlp/lora/` | LoRA | Low-rank adaptation, parameter-efficient fine-tuning, GPT adapter |
 | `cv/mobilenet/` | MobileNet | Depthwise separable convolution, efficient CNN, width multiplier |
 | `cv/yolo/` | YOLO | Single-stage object detection, grid-based regression, NMS |
@@ -428,6 +440,10 @@ uv run python -m rl.dqn.train
 # Train / Evaluate SimCLR (frozen-encoder linear probe + kNN)
 uv run python -m selfsup.simclr.train
 uv run python -m selfsup.simclr.eval
+
+# Train / Evaluate MAE (masked image modeling + linear probe)
+uv run python -m selfsup.mae.train
+uv run python -m selfsup.mae.eval
 
 # Train YOLO
 uv run python -m cv.yolo.train
