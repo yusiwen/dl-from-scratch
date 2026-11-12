@@ -12,3 +12,6 @@ n_critic: 1
 sample_interval: 5
 label_smoothing: true
 model_path: gen/dcgan/dcgan_celeba.pt
+
+# Images used for the FID-style evaluation (Inception features).
+fid_num_samples: 2048
