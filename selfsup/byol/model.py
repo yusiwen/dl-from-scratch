@@ -36,8 +36,11 @@ class MLP(nn.Module):
 
 
 class BYOL(nn.Module):
-    def __init__(self, projector_hidden=256, projector_dim=128, predictor_hidden=256):
+    def __init__(self, projector_hidden=256, projector_dim=128, predictor_hidden=256,
+                 center_momentum=0.9):
         super().__init__()
+        self.center_momentum = center_momentum
+        self.register_buffer("center", torch.zeros(1, projector_dim))
         self.online_encoder = ResNet(BasicBlock, [2, 2, 2, 2])
         self.online_encoder.fc = nn.Identity()
         self.online_projector = MLP(512, projector_hidden, projector_dim)
@@ -71,6 +74,15 @@ class BYOL(nn.Module):
         with torch.no_grad():
             z1 = self.target_projector(self.target_encoder(view1))
             z2 = self.target_projector(self.target_encoder(view2))
+            if self.center_momentum > 0:
+                # Center the targets (DINO-style): a constant target becomes the
+                # zero vector, so the cosine loss cannot be minimised by collapse.
+                batch_center = torch.cat([z1, z2]).mean(dim=0, keepdim=True)
+                self.center.mul_(self.center_momentum).add_(
+                    batch_center, alpha=1.0 - self.center_momentum
+                )
+                z1 = z1 - self.center
+                z2 = z2 - self.center
         return 0.5 * (self._loss(p1, z2) + self._loss(p2, z1))
 
     @torch.no_grad()
@@ -84,7 +96,10 @@ class BYOL(nn.Module):
             ):
                 target_parameter.mul_(decay).add_(online_parameter.detach(), alpha=1.0 - decay)
             for online_buffer, target_buffer in zip(online.buffers(), target.buffers()):
-                target_buffer.copy_(online_buffer)
+                if target_buffer.dtype.is_floating_point:
+                    target_buffer.mul_(decay).add_(online_buffer, alpha=1.0 - decay)
+                else:
+                    target_buffer.copy_(online_buffer)
 
     def num_params(self):
         return sum(p.numel() for p in self.parameters())

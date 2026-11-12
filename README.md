@@ -202,15 +202,16 @@ still wins. The autoencoder is the step that makes the VAE's extra machinery
 |---|---|
 | Model | BYOL (22.7M params: online + EMA-target ResNet18, projector, predictor) |
 | Dataset | CIFAR-10 via HF datasets — 50K images, two augmented views |
-| Training | no negative pairs, EMA target (τ=0.999), AdamW(lr=1e-4), 100 epoch |
-| Linear probe | 28.7% test top-1 (frozen 512-d online-encoder features) |
-| kNN (k=20, cosine) | 28.9% test top-1 |
+| Training | no negative pairs, EMA target (τ=0.999), target centering (0.9), AdamW(lr=1e-4, wd=1e-6), 5-epoch warmup, 100 epoch |
+| Linear probe | **55.2%** test top-1 (frozen 512-d online-encoder features) |
+| kNN (k=20, cosine) | 48.3% test top-1 |
 
-This miniature BYOL **partially collapses** with this recipe: encoder feature
-std falls 0.65 → 0.13 and the probe lands far below SimCLR (70.1%). The loss
-drops to ~0.01 within two epochs, which is the classic no-negative collapse
-signature. LARS, larger batches and target centering are the usual fixes; the
-measured numbers are reported as-is rather than tuned to look competitive.
+The first recipe (no centering, wd=1e-4) partially collapsed: loss fell to
+~0.01 within two epochs, feature std 0.65 → 0.13, probe 28.7%. Target
+centering — subtracting a running mean of the target projections (DINO-style),
+plus EMA-updated BatchNorm buffers and a 5-epoch warmup — removed the
+collapsed minimum: loss at epoch 2 is 1.28, final loss 0.47, feature std 1.38,
+probe 55.2%.
 
 ## SELFSUP/DEC
 
@@ -419,7 +420,7 @@ it demonstrates.
 | `rl/dqn/` | DQN | Q-Learning, experience replay, target network, ε-greedy |
 | `selfsup/simclr/` | SimCLR | Contrastive learning, NT-Xent loss, data augmentation, frozen-encoder linear probe + kNN evaluation |
 | `selfsup/mae/` | MAE | Masked image modeling, high mask ratio, asymmetric encoder/decoder, pixel reconstruction, linear probe |
-| `selfsup/byol/` | BYOL | EMA target network, no negative pairs, predictor asymmetry, collapse failure mode |
+| `selfsup/byol/` | BYOL | EMA target network, no negative pairs, predictor asymmetry, target centering against collapse |
 | `selfsup/deep_cluster/` | DEC | Joint reconstruction + KL clustering, Student-t soft assignments, target sharpening |
 | `nlp/lora/` | LoRA | Low-rank adaptation, parameter-efficient fine-tuning, GPT adapter |
 | `cv/mobilenet/` | MobileNet | Depthwise separable convolution, efficient CNN, width multiplier |

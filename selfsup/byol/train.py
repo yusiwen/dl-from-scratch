@@ -27,6 +27,7 @@ def train():
         projector_hidden=cfg["projector_hidden"],
         projector_dim=cfg["projector_dim"],
         predictor_hidden=cfg["predictor_hidden"],
+        center_momentum=cfg["center_momentum"],
     ).to(device)
     print(f"Parameters: {model.num_params():,} (online + target)")
 
@@ -41,8 +42,13 @@ def train():
     )
     writer = SummaryWriter(log_dir="runs/byol")
     num_epochs = cfg["num_epochs"]
+    warmup_epochs = cfg.get("warmup_epochs", 0)
 
     for epoch in range(1, num_epochs + 1):
+        if warmup_epochs > 0:
+            scale = min(1.0, epoch / warmup_epochs)
+            for group in optimizer.param_groups:
+                group["lr"] = cfg["lr"] * scale
         model.train()
         total_loss = 0.0
         for batch in loader:

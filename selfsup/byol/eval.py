@@ -42,6 +42,7 @@ def main():
         projector_hidden=cfg["projector_hidden"],
         projector_dim=cfg["projector_dim"],
         predictor_hidden=cfg["predictor_hidden"],
+        center_momentum=cfg["center_momentum"],
     ).to(device)
     model.load_state_dict(torch.load(cfg["model_path"], map_location=device, weights_only=True))
     encoder = model.online_encoder
@@ -51,7 +52,9 @@ def main():
     train_loader, test_loader = load_cifar10_eval(num_workers=cfg["num_workers"])
     train_x, train_y = extract_features(encoder, train_loader, device)
     test_x, test_y = extract_features(encoder, test_loader, device)
-    print(f"Features: train {train_x.shape}, test {test_x.shape}")
+    feature_std = float(train_x.std(axis=0).mean())
+    print(f"Features: train {train_x.shape}, test {test_x.shape}, "
+          f"per-dim std {feature_std:.3f}")
 
     started = time.time()
     probe_accuracy, _ = linear_probe(train_x, train_y, test_x, test_y)
@@ -67,6 +70,7 @@ def main():
         "epochs": int(cfg["num_epochs"]),
         "ema_decay": cfg["ema_decay"],
         "feature_dim": int(train_x.shape[1]),
+        "feature_std": round(feature_std, 4),
         "linear_probe": round(probe_accuracy, 6),
         "knn_k": 20,
         "knn": round(knn, 6),
