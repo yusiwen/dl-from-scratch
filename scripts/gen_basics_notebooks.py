@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Batch-generate all 9 basics notebooks."""
+"""Batch-generate all 10 basics notebooks."""
 
 import nbformat as nbf
 
@@ -165,6 +165,29 @@ $$\hat{y} = \text{majority vote of } k \text{ nearest neighbors}$$""",
             'k-NN 为什么是"懒惰学习"？训练阶段做了什么？',
         ],
     },
+    {
+        "name": "tsne",
+        "title": "t-SNE",
+        "desc": "Nonlinear dimensionality reduction on MNIST, run against PCA (KL divergence).",
+        "formula": r"""**High-dimensional affinities (Gaussian kernel, sigma from a perplexity bisection):**
+
+$$p_{j\mid i} = \frac{\exp(-\|x_i - x_j\|^2 / 2\sigma_i^2)}{\sum_{k \neq i} \exp(-\|x_i - x_k\|^2 / 2\sigma_i^2)}$$
+
+**Low-dimensional affinities (Student-t kernel):**
+
+$$q_{ij} = \frac{(1 + \|y_i - y_j\|^2)^{-1}}{\sum_{k \neq l} (1 + \|y_k - y_l\|^2)^{-1}}$$
+
+**Loss:**
+
+$$\mathcal{L} = \mathrm{KL}(P \,\|\, Q) = \sum_{i \neq j} p_{ij} \log \frac{p_{ij}}{q_{ij}}$$""",
+        "import_code": "from ml.basics.tsne import demo",
+        "run_code": "demo()",
+        "questions": [
+            "What is the core difference between t-SNE and PCA? (linear vs nonlinear, global vs local)",
+            "What does perplexity control, and what happens if it is too small or too large?",
+            "Why can distances between clusters in a t-SNE plot not be read as similarities?",
+        ],
+    },
 ]
 
 
@@ -209,6 +232,10 @@ for m in MODELS:
 {qs}
 """)
 
+    # Deterministic cell ids: nbformat generates random ones, which would make
+    # every regeneration dirty the working tree.
+    for index, cell in enumerate(cells):
+        cell["id"] = f"{m['name']}-{index:02d}"
     nb.cells = cells
     path = f"ml/basics/{m['name']}.ipynb"
     with open(path, "w") as f:

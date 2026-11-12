@@ -22,7 +22,7 @@ Implement mainstream deep learning models from scratch.
 ├── ROADMAP.md
 ├── ml/                    # Classical Machine Learning (pure NumPy)
 │   ├── mlp/               # MLP (MNIST, manual backprop)
-│   └── basics/            # 10 standalone models (lin/log reg, SVM, K-Means, PCA, t-SNE, etc.)
+│   └── basics/            # 12 standalone models (lin/log reg, SVM, clustering, PCA, t-SNE, etc.)
 ├── cv/                    # Computer Vision
 │   ├── simplecnn/         # SimpleCNN (CIFAR-10, Conv×3+Pool×3+FC×2)
 │   ├── resnet18/          # ResNet18 (CelebA, 15 attrs, skip connections)
@@ -54,74 +54,8 @@ Implement mainstream deep learning models from scratch.
 │   ├── config.py          # YAML config loading/saving
 │   ├── seed.py            # Reproducibility seed locking
 │   └── device.py          # CUDA → MPS → CPU auto-detection
+├── docker/                # NGC PyTorch container for the GB10 GPU
 └── scripts/               # Notebook generation scripts
-│   ├── __init__.py
-│   ├── config.yaml        # DCGAN hyperparameters
-│   ├── model.py           # Generator + Discriminator
-│   ├── data.py            # CelebA images (64×64, no labels)
-│   ├── train.py           # Adversarial training loop (G/D alternating)
-│   └── generate.py        # Generate sample grid from trained model
-├── vit/
-│   ├── __init__.py
-│   ├── config.yaml        # ViT hyperparameters (patch_size, d_model, n_layers, etc.)
-│   ├── model.py           # ViT: PatchEmbed → Transformer encoder (reused from BERT) → CLS head
-│   ├── data.py            # CIFAR-10 via HF datasets
-│   ├── train.py           # Training loop
-│   └── eval.py            # Per-class accuracy on test split
-├── unet/
-│   ├── __init__.py
-│   ├── config.yaml        # UNet hyperparameters
-│   ├── model.py           # U-Net: encoder–decoder with skip connections
-│   ├── data.py            # Oxford-IIIT Pet (image + mask) with augmentation
-│   ├── train.py           # Training loop (pixel-wise CrossEntropy)
-│   └── eval.py            # IoU and pixel accuracy
-├── cnn/
-│   ├── __init__.py
-│   ├── data.py            # CIFAR-10 via HF datasets (uoft-cs/cifar10)
-│   ├── model.py           # Plain CNN (Conv×3 + Pool×3 + FC×2)
-│   ├── train.py           # Training script (Adam + CosineAnnealingLR)
-│   └── eval.py            # Test evaluation + confusion matrix
-├── mlp/
-│   ├── __init__.py
-│   ├── data.py            # MNIST via HF datasets (ylecun/mnist)
-│   ├── model.py           # MLP — pure NumPy (Linear, ReLU, SoftmaxCrossEntropy, SGD)
-│   ├── train.py           # Training script
-│   └── eval.py            # Test evaluation (per-digit accuracy)
-├── utils/
-│   ├── __init__.py
-│   ├── config.py             # YAML config loading/saving (load_config / save_config)
-│   └── seed.py               # set_seed() — lock torch + numpy + random + cudnn
-├── nlp/
-│   ├── bert/
-│   ├── word2vec/
-│   ├── lstm/
-│   ├── gpt/
-│   └── seq2seq/
-│       ├── __init__.py
-│       ├── tokenizer.py       # Word-level tokenizer (5000 vocab, from text8)
-│       ├── model.py           # Decoder-only Transformer (Causal Attention + KV Cache)
-│       ├── train.py           # Autoregressive LM on text8
-│       └── generate.py        # Text generation (temperature + top-k + [SEP] blocked)
-│   └── seq2seq/
-│       ├── __init__.py
-│       ├── config.yaml        # Transformer hyperparameters
-│       ├── model.py           # Encoder (from BERT) + Decoder (cross-attention) → Seq2Seq
-│       ├── data.py            # Multi30k EN→DE, word-level tokenizer
-│       ├── train.py           # Teacher forcing training
-│       └── generate.py        # Greedy decoding translation demo
-├── basics/
-│   ├── __init__.py
-│   ├── logistic_regression.py   # Single Linear layer + Softmax (92.3% on MNIST)
-│   ├── linear_regression.py     # California Housing (Normal Equation + GD, R²=0.583)
-│   ├── k_means.py               # Unsupervised clustering (pure NumPy)
-│   ├── svm.py                   # SVM — GD (primal) + SMO (dual, Linear/RBF kernels)
-│   ├── decision_tree.py          # ID3/CART on Iris (ASCII tree, ~93% acc)
-│   ├── naive_bayes.py            # Gaussian NB on MNIST (generative classifier)
-│   ├── pca.py                    # SVD-based dimensionality reduction (MNIST 2D visualisation)
-│   ├── knn.py                    # k-Nearest Neighbors (instance-based, MNIST)
-│   └── perceptron.py             # Single neuron (Rosenblatt 1958, step activation)
-├── .gitattributes                 # LFS: *.zip *.pt
-└── uv.lock
 ```
 
 ## Infrastructure
@@ -386,6 +320,7 @@ published FID tables.
 | Decision Tree | `ml/basics/decision_tree.py` | Iris | 93.3% test acc |
 | Naive Bayes | `ml/basics/naive_bayes.py` | MNIST | 53.0% test acc |
 | PCA | `ml/basics/pca.py` | MNIST | 17.3% variance in 2 components |
+| t-SNE | `ml/basics/tsne.py` | MNIST | 2-D embedding (perplexity=30), compared with PCA |
 | k-NN | `ml/basics/knn.py` | MNIST | ~87% (k=5, 2000 train) |
 | Perceptron | `ml/basics/perceptron.py` | MNIST 0v1 | 100% (linearly separable) |
 
@@ -398,7 +333,7 @@ Run the two new clustering demos with `uv run python -m ml.basics.gmm` and `uv r
 | `SVM_GD` | Primal GD | Linear only | Fast, robust, ~80 lines |
 | `SVM_SMO` | Dual SMO | Linear + RBF | Platt SMO, ~150 lines, supports kernel trick |
 
-See [resnet18/README.md](resnet18/README.md) for details.
+See [cv/resnet18/README.md](cv/resnet18/README.md) for details.
 
 ## Core Concepts
 
@@ -408,19 +343,20 @@ it demonstrates.
 
 | Module | Model | Key concepts |
 |--------|-------|-------------|
-| `basics/` | Logistic Regression | Linear decision boundary, Softmax, Cross-Entropy, closed-form vs gradient descent |
-| `basics/` | Linear Regression | Normal Equation, MSE, R² score, feature standardisation |
-| `basics/` | K-Means | Unsupervised learning, Euclidean distance, iterative centroid refinement, silhouette (label-free) vs purity/NMI/ARI (evaluation-only) |
-| `basics/` | GMM (EM) | Soft assignment, log-sum-exp responsibilities, full covariance, BIC/AIC model selection |
-| `basics/` | DBSCAN | Density-based clustering, core/border/noise points, arbitrary shapes, eps sensitivity in high dimensions |
-| `basics/` | SVM (GD) | Hinge loss, max-margin classification, L2 regularisation, primal gradient descent |
-| `basics/` | SVM (SMO) | Dual formulation, Lagrange multipliers, KKT conditions, kernel trick (RBF) |
-| `basics/` | Decision Tree | Entropy, Information Gain, recursive partitioning, interpretable ASCII tree |
-| `basics/` | Naive Bayes | Bayes' theorem, generative vs discriminative models, Gaussian likelihood, log-space prediction |
-| `basics/` | PCA | Singular Value Decomposition (SVD), eigenvalue, dimensionality reduction, variance explained |
+| `ml/basics/` | Logistic Regression | Linear decision boundary, Softmax, Cross-Entropy, closed-form vs gradient descent |
+| `ml/basics/` | Linear Regression | Normal Equation, MSE, R² score, feature standardisation |
+| `ml/basics/` | K-Means | Unsupervised learning, Euclidean distance, iterative centroid refinement, silhouette (label-free) vs purity/NMI/ARI (evaluation-only) |
+| `ml/basics/` | GMM (EM) | Soft assignment, log-sum-exp responsibilities, full covariance, BIC/AIC model selection |
+| `ml/basics/` | DBSCAN | Density-based clustering, core/border/noise points, arbitrary shapes, eps sensitivity in high dimensions |
+| `ml/basics/` | SVM (GD) | Hinge loss, max-margin classification, L2 regularisation, primal gradient descent |
+| `ml/basics/` | SVM (SMO) | Dual formulation, Lagrange multipliers, KKT conditions, kernel trick (RBF) |
+| `ml/basics/` | Decision Tree | Entropy, Information Gain, recursive partitioning, interpretable ASCII tree |
+| `ml/basics/` | Naive Bayes | Bayes' theorem, generative vs discriminative models, Gaussian likelihood, log-space prediction |
+| `ml/basics/` | PCA | Singular Value Decomposition (SVD), eigenvalue, dimensionality reduction, variance explained |
+| `ml/basics/` | t-SNE | Nonlinear dimensionality reduction, perplexity, KL divergence, local vs global structure |
 | `gen/autoencoder/` | Autoencoder | Reconstruction-only training, bottleneck representation, nonlinear encoder/decoder, no prior or KL term |
-| `basics/` | k-NN | Instance-based learning, distance metrics, curse of dimensionality, bias-variance tradeoff |
-| `basics/` | Perceptron | Single neuron, step activation, online learning, Perceptron Convergence Theorem |
+| `ml/basics/` | k-NN | Instance-based learning, distance metrics, curse of dimensionality, bias-variance tradeoff |
+| `ml/basics/` | Perceptron | Single neuron, step activation, online learning, Perceptron Convergence Theorem |
 | `mlp/` | MLP (NumPy) | **Manual backpropagation**, chain rule, gradient descent without autograd, softmax cross-entropy |
 | `cv/simplecnn/` | SimpleCNN | Convolution, max-pooling, BatchNorm, Dropout, CosineAnnealing LR schedule |
 | `cv/resnet18/` | ResNet18 | **Residual connections (skip connections)**, BatchNorm in deep networks, bottleneck design, AMP |
@@ -442,6 +378,13 @@ it demonstrates.
 | `cv/mobilenet/` | MobileNet | Depthwise separable convolution, efficient CNN, width multiplier |
 | `cv/yolo/` | YOLO | Single-stage object detection, grid-based regression, NMS |
 | `nlp/gpt/` | GPT | **Causal Self-Attention**, **KV Cache**, autoregressive generation, word-level tokenizer, temperature + top-k sampling, bad-token blocking |
+
+### Unsupervised and self-supervised examples
+
+| Family | Examples |
+|---|---|
+| Unsupervised (no labels) | [K-Means](ml/basics/k_means.py), [PCA](ml/basics/pca.py), [t-SNE](ml/basics/tsne.py), [GMM](ml/basics/gmm.py), [DBSCAN](ml/basics/dbscan.py), [Autoencoder](gen/autoencoder/), [VAE](gen/vae/), [DCGAN](gen/dcgan/), [DDPM](gen/ddpm/) |
+| Self-supervised (labels from the data) | [SimCLR](selfsup/simclr/), [Word2Vec](nlp/word2vec/), [BERT MLM](nlp/bert/pretrain.py), [GPT](nlp/gpt/train.py) |
 
 ## Setup & Run
 
@@ -496,7 +439,6 @@ uv run python -m nlp.lora.generate
 # Train / Evaluate MobileNet
 uv run python -m cv.mobilenet.train
 uv run python -m cv.mobilenet.eval
-uv run python -m cv.yolo.train
 
 # Train / Generate / Evaluate (FID) DDPM
 uv run python -m gen.ddpm.train
@@ -521,19 +463,20 @@ uv run python -m cv.simplecnn.train
 uv run python -m cv.simplecnn.eval
 
 # Train / Evaluate MLP (pure NumPy)
-uv run python -m mlp.train
-uv run python -m mlp.eval
+uv run python -m ml.mlp.train
+uv run python -m ml.mlp.eval
 
 # Basics
-uv run python -m basics.logistic_regression
-uv run python -m basics.k_means
-uv run python -m basics.linear_regression
-uv run python -m basics.svm
-uv run python -m basics.decision_tree
-uv run python -m basics.naive_bayes
-uv run python -m basics.pca
-uv run python -m basics.knn
-uv run python -m basics.perceptron
+uv run python -m ml.basics.logistic_regression
+uv run python -m ml.basics.k_means
+uv run python -m ml.basics.linear_regression
+uv run python -m ml.basics.svm
+uv run python -m ml.basics.decision_tree
+uv run python -m ml.basics.naive_bayes
+uv run python -m ml.basics.pca
+uv run python -m ml.basics.knn
+uv run python -m ml.basics.perceptron
+uv run python -m ml.basics.tsne
 
 # NLP
 uv run python -m nlp.bert.pretrain
