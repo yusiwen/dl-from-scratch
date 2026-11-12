@@ -33,6 +33,7 @@ Implement mainstream deep learning models from scratch.
 │   ├── unet/              # UNet (Oxford-IIIT Pet segmentation)
 │   └── yolo/              # YOLO (Pascal VOC object detection)
 ├── gen/                   # Generative Models
+│   ├── autoencoder/       # Autoencoder (MNIST, reconstruction-only)
 │   ├── dcgan/             # DCGAN (CelebA, transposed conv)
 │   ├── vae/               # VAE (reparameterization trick, KL divergence)
 │   └── ddpm/              # DDPM (CIFAR-10, denoising diffusion)
@@ -173,6 +174,20 @@ uv run python -m cv.resnet18.train
 | Attributes | All 40 binary attributes |
 | Optimizer | SGD + Momentum (0.9, weight_decay=1e-4) |
 | Architecture | Bottleneck block: 1×1 → 3×3 → 1×1 (contrast with BasicBlock's two 3×3) |
+
+## GEN/Autoencoder
+
+| Item | Value |
+|---|---|
+| Model | Autoencoder (469,010 params; MLP 784→256→128→2, mirrored decoder) |
+| Dataset | MNIST via HF datasets — 5,000 images, pixels in [0,1] |
+| Loss | BCE reconstruction (no KL term, no sampling), Adam(lr=1e-3), 20 epochs |
+| Reconstruction MSE | default 2-D: AE 0.0435 vs PCA-2 0.0556; 32-D comparison run: AE 0.0213 vs PCA-32 0.0168 |
+| Measured | CPU, 17 s; subset sha256 `da4ae28e…`, identical to `ml/basics/pca.py` |
+
+At 2 dimensions the nonlinear autoencoder beats linear PCA; at 32 dimensions PCA
+still wins. The autoencoder is the step that makes the VAE's extra machinery
+(a prior and a KL term) meaningful, not a replacement for PCA.
 
 ## GEN/VAE
 
@@ -396,6 +411,7 @@ it demonstrates.
 | `basics/` | Decision Tree | Entropy, Information Gain, recursive partitioning, interpretable ASCII tree |
 | `basics/` | Naive Bayes | Bayes' theorem, generative vs discriminative models, Gaussian likelihood, log-space prediction |
 | `basics/` | PCA | Singular Value Decomposition (SVD), eigenvalue, dimensionality reduction, variance explained |
+| `gen/autoencoder/` | Autoencoder | Reconstruction-only training, bottleneck representation, nonlinear encoder/decoder, no prior or KL term |
 | `basics/` | k-NN | Instance-based learning, distance metrics, curse of dimensionality, bias-variance tradeoff |
 | `basics/` | Perceptron | Single neuron, step activation, online learning, Perceptron Convergence Theorem |
 | `mlp/` | MLP (NumPy) | **Manual backpropagation**, chain rule, gradient descent without autograd, softmax cross-entropy |
@@ -438,6 +454,10 @@ uv run python -m cv.resnet34.eval
 # Train / Evaluate ResNet50
 uv run python -m cv.resnet50.train
 uv run python -m cv.resnet50.eval
+
+# Train / Generate Autoencoder
+uv run python -m gen.autoencoder.train
+uv run python -m gen.autoencoder.generate
 
 # Train / Generate VAE
 uv run python -m gen.vae.train
@@ -573,6 +593,7 @@ locally after training; paths are shown below for reference.
 | ResNet18 (15 attrs, 1K samples) | `cv/resnet18/resnet18_celeba.pt` | 45 MB |
 | ResNet34 (40 attrs, 200K samples) | `cv/resnet34/resnet34_celeba.pt` | ~80 MB |
 | ResNet50 (40 attrs, 200K samples) | `cv/resnet50/resnet50_celeba.pt` | ~90 MB |
+| Autoencoder (MNIST, 2-D) | `gen/autoencoder/autoencoder_mnist.pt` | 1.9 MB |
 | VAE (CelebA, 64×64) | `gen/vae/vae_celeba.pt` | 10 MB |
 | Seq2Seq Transformer (Multi30k) | `nlp/seq2seq/seq2seq_multi30k.pt` | 4 MB |
 | GCN (Cora) | `graph/gcn/gcn_cora.pt` | 0.1 MB |
