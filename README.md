@@ -38,6 +38,7 @@ Implement mainstream deep learning models from scratch.
 │   ├── vae/               # VAE (reparameterization trick, KL divergence)
 │   └── ddpm/              # DDPM (CIFAR-10, denoising diffusion)
 ├── selfsup/               # Self-Supervised Learning
+│   ├── byol/              # BYOL (CIFAR-10, EMA target, no negatives)
 │   ├── mae/               # MAE (CIFAR-10, masked image modeling + linear probe)
 │   └── simclr/            # SimCLR (CIFAR-10, contrastive learning + linear probe)
 ├── graph/                 # Graph Neural Networks
@@ -193,6 +194,22 @@ still wins. The autoencoder is the step that makes the VAE's extra machinery
 | Training | 75% patch masking, MSE on masked patches only, AdamW(lr=1.5e-4), 100 epoch |
 | Linear probe | **46.8%** test top-1 (frozen 128-d CLS features) |
 | kNN (k=20, cosine) | 37.0% test top-1 |
+
+## SELFSUP/BYOL
+
+| Item | Value |
+|---|---|
+| Model | BYOL (22.7M params: online + EMA-target ResNet18, projector, predictor) |
+| Dataset | CIFAR-10 via HF datasets — 50K images, two augmented views |
+| Training | no negative pairs, EMA target (τ=0.999), AdamW(lr=1e-4), 100 epoch |
+| Linear probe | 28.7% test top-1 (frozen 512-d online-encoder features) |
+| kNN (k=20, cosine) | 28.9% test top-1 |
+
+This miniature BYOL **partially collapses** with this recipe: encoder feature
+std falls 0.65 → 0.13 and the probe lands far below SimCLR (70.1%). The loss
+drops to ~0.01 within two epochs, which is the classic no-negative collapse
+signature. LARS, larger batches and target centering are the usual fixes; the
+measured numbers are reported as-is rather than tuned to look competitive.
 
 ## CV/YOLO
 
@@ -386,6 +403,7 @@ it demonstrates.
 | `rl/dqn/` | DQN | Q-Learning, experience replay, target network, ε-greedy |
 | `selfsup/simclr/` | SimCLR | Contrastive learning, NT-Xent loss, data augmentation, frozen-encoder linear probe + kNN evaluation |
 | `selfsup/mae/` | MAE | Masked image modeling, high mask ratio, asymmetric encoder/decoder, pixel reconstruction, linear probe |
+| `selfsup/byol/` | BYOL | EMA target network, no negative pairs, predictor asymmetry, collapse failure mode |
 | `nlp/lora/` | LoRA | Low-rank adaptation, parameter-efficient fine-tuning, GPT adapter |
 | `cv/mobilenet/` | MobileNet | Depthwise separable convolution, efficient CNN, width multiplier |
 | `cv/yolo/` | YOLO | Single-stage object detection, grid-based regression, NMS |
@@ -444,6 +462,10 @@ uv run python -m selfsup.simclr.eval
 # Train / Evaluate MAE (masked image modeling + linear probe)
 uv run python -m selfsup.mae.train
 uv run python -m selfsup.mae.eval
+
+# Train / Evaluate BYOL (EMA target, no negatives)
+uv run python -m selfsup.byol.train
+uv run python -m selfsup.byol.eval
 
 # Train YOLO
 uv run python -m cv.yolo.train
