@@ -23,8 +23,8 @@
 - Config system (YAML), TensorBoard logging, Reproducibility (seed + config saving)
 - Device auto-detection (`utils.device.get_device`: CUDA → MPS → CPU)
 
-**Jupyter Notebooks (21):**
-- Original 15: GPT, ViT, DCGAN, UNet, CNN, BERT, ResNet18, ResNet34, basics (9), Word2Vec, LSTM
+**Jupyter Notebooks (22):**
+- Original 15: GPT, ViT, DCGAN, UNet, CNN, BERT, ResNet18, ResNet34, basics (10, incl. t-SNE), Word2Vec, LSTM
 - New 6: GCN, DQN, SimCLR, YOLO, MobileNet, LoRA
 
 ---
