@@ -2,3 +2,5 @@ seed: 42
 k: 10
 max_iters: 50
 tol: 0.0001
+# Silhouette is O(n^2) in memory, so it is computed on a seeded subsample.
+metric_sample_size: 5000

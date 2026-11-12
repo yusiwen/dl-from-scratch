@@ -15,6 +15,7 @@ data/
 # Model weights / training artifacts (regenerated on each run)
 *.pt
 *.npz
+*_metrics.json
 
 # TensorBoard event logs
 runs/

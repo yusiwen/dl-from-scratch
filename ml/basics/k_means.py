@@ -11,14 +11,32 @@ Unlike the other models in this project, K-Means has no labels, no loss
 function, no gradient descent — it's purely distance-based clustering.
 
 We cluster 60K MNIST digits into 10 clusters (k=10, one per digit).
-The "accuracy" here is cluster purity: for each cluster, we check what
-digit label is most common, and measure how many points match it.
+
+Four quality numbers are reported (see ml/basics/metrics.py):
+
+  purity     - label-dependent: majority-class share per cluster
+  silhouette - label-free: geometric separation of the clusters
+  NMI / ARI  - label-dependent: agreement with the true digit labels
+
+Only silhouette is computed without ground truth. Purity, NMI and ARI are
+evaluation-only: the clustering never sees the digit labels, they are used
+after the assignments are fixed.
 
 Expected purity: ~50-60% (unsupervised, no label information used).
 """
 
+import json
+
 import numpy as np
 from datasets import load_dataset
+
+from ml.basics.metrics import (
+    ari_score,
+    euclidean_distances,
+    nmi_score,
+    purity_score,
+    silhouette_score,
+)
 from utils.config import load_config, save_config
 from utils.seed import set_seed
 
@@ -32,19 +50,6 @@ def load_mnist_flat():
     images /= 255.0
     labels = np.array(batch["label"], dtype=np.int32)
     return images, labels
-
-
-def euclidean_distances(a, b):
-    """
-    Compute pairwise Euclidean distances between two sets of points.
-
-    ||a - b||^2 = ||a||^2 + ||b||^2 - 2 * a @ b.T
-
-    Using this identity avoids explicit loops and is much faster.
-    """
-    a_norm = np.sum(a ** 2, axis=1, keepdims=True)
-    b_norm = np.sum(b ** 2, axis=1, keepdims=True).T
-    return np.sqrt(np.maximum(a_norm + b_norm - 2 * a @ b.T, 0))
 
 
 def kmeans(data, k=10, max_iters=50, tol=1e-4):
@@ -95,26 +100,6 @@ def kmeans(data, k=10, max_iters=50, tol=1e-4):
     return centers, assignments
 
 
-def purity_score(assignments, labels, k=10):
-    """
-    Compute cluster purity: for each cluster, find the majority class label
-    and count how many points match it, then average.
-
-    Purity = (1 / n) * sum_c max_class count_in_cluster_c
-
-    Purity ranges from 1/k (random) to 1 (perfect clusters).
-    """
-    total = 0
-    for i in range(k):
-        mask = assignments == i
-        if mask.sum() > 0:
-            cluster_labels = labels[mask]
-            # Find the most common label in this cluster.
-            majority = np.bincount(cluster_labels).max()
-            total += majority
-    return total / len(labels)
-
-
 def visualize_centers(centers):
     """
     Print a simple ASCII visualization of cluster centers.
@@ -146,8 +131,39 @@ def train():
 
     k = cfg["k"]
     centers, assignments = kmeans(images, k=k, max_iters=cfg["max_iters"], tol=cfg["tol"])
-    purity = purity_score(assignments, labels, k=k)
-    print(f"\nCluster purity: {purity:.2%}")
+
+    # Evaluate after the assignments are fixed. Only silhouette is label-free;
+    # purity, NMI and ARI compare against the true digits and are reported for
+    # diagnosis, not used by the clustering.
+    metric_sample_size = cfg["metric_sample_size"]
+    purity = purity_score(assignments, labels)
+    silhouette = silhouette_score(
+        images, assignments, sample_size=metric_sample_size, seed=cfg["seed"]
+    )
+    nmi = nmi_score(labels, assignments)
+    ari = ari_score(labels, assignments)
+
+    print("\nClustering quality:")
+    print(f"  purity     {purity:7.2%}  (needs labels)")
+    print(f"  silhouette {silhouette:7.4f}  (label-free, "
+          f"{min(metric_sample_size, len(images)):,}-point sample)")
+    print(f"  NMI        {nmi:7.4f}  (needs labels)")
+    print(f"  ARI        {ari:7.4f}  (needs labels)")
+
+    metrics = {
+        "k": int(k),
+        "seed": int(cfg["seed"]),
+        "silhouette_sample_size": int(min(metric_sample_size, len(images))),
+        "purity": round(float(purity), 6),
+        "silhouette": round(float(silhouette), 6),
+        "nmi": round(float(nmi), 6),
+        "ari": round(float(ari), 6),
+    }
+    metrics_path = "ml/basics/kmeans_metrics.json"
+    with open(metrics_path, "w") as f:
+        json.dump(metrics, f, indent=2, sort_keys=True)
+        f.write("\n")
+    print(f"\nMetrics saved to {metrics_path}")
 
     # Per-cluster breakdown.
     print(f"\n{'Cluster':<10} {'Majority Class':<15} {'Size':>6}")
