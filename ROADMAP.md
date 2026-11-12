@@ -14,7 +14,7 @@
 - Segmentation (1): UNet — Oxford-IIIT Pet
 - Graph (1): GCN — Cora citation network, spectral graph convolution
 - Reinforcement Learning (1): DQN — CartPole-v1, experience replay
-- Self-Supervised (3): SimCLR — CIFAR-10, NT-Xent contrastive loss; MAE — CIFAR-10, masked image modeling; BYOL — CIFAR-10, EMA target without negatives
+- Self-Supervised (3): SimCLR — CIFAR-10, NT-Xent contrastive loss; MAE — CIFAR-10, masked image modeling; BYOL — CIFAR-10, EMA target + centering without negatives
 - Deep Clustering (1): DEC — MNIST, autoencoder + KL cluster refinement
 - Object Detection (1): YOLO — Pascal VOC, grid-based detection
 - Efficient Architectures (1): MobileNet — CIFAR-10, depthwise separable convolution
