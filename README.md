@@ -512,6 +512,30 @@ uv run python -m nlp.lstm.eval
 uv run python -m nlp.gpt.train
 uv run python -m nlp.gpt.generate
 ```
+### GPU environment (GB10 / Grace Blackwell)
+
+On the GB10 host the `torch` wheel installed by `uv sync` cannot see the GPU:
+`nvidia-smi` fails with `Failed to initialize NVML` and `torch.cuda.is_available()`
+is `False`. Use NVIDIA's NGC PyTorch container instead — its CUDA 13.4 build works
+on GB10 (compute capability 12.1):
+
+```bash
+docker build -t dlf-ngc:26.09 -f docker/ngc-pytorch.Dockerfile docker/
+
+scripts/ngc-run.sh python -c "import torch; print(torch.cuda.get_device_name(0))"
+scripts/ngc-run.sh python -m cv.simplecnn.train
+```
+
+The runner adds `--gpus all` and `--ipc=host`, mounts this repo at `/workspace`
+and the HuggingFace cache at `$HF_CACHE` (default `~/.cache/huggingface`), and
+runs as your `uid:gid` so checkpoints stay owned by you. The image is the official
+`nvcr.io/nvidia/pytorch:26.09-py3` plus `scikit-learn`, the only dependency the
+official image lacks.
+
+Verified 2026-11-12: `torch 2.14.0a0+b2c75dd062.nv26.09`, `NVIDIA GB10`,
+capability `(12, 1)`, 48 SMs, 130.6 GB; a BF16 conv/backward step and an 8K
+BF16 matmul (79 TFLOP/s) run in the container, and `ml/basics/k_means`
+reproduces the host metrics JSON byte-for-byte.
 
 ## Models
 
