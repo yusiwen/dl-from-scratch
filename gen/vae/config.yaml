@@ -8,3 +8,6 @@ image_size: 64
 num_samples: 10000
 model_path: gen/vae/vae_celeba.pt
 sample_interval: 5
+
+# Images used for the FID-style evaluation (Inception features).
+fid_num_samples: 2048

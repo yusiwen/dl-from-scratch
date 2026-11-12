@@ -198,6 +198,7 @@ still wins. The autoencoder is the step that makes the VAE's extra machinery
 | Architecture | Conv Encoder → μ,logσ² → reparameterize → Deconv Decoder → Sigmoid |
 | Loss | Reconstruction (BCE) + KL divergence |
 | Training | Adam(lr=2e-4), 50 epoch |
+| FID (N=2048) | not measured — no trained checkpoint in this environment |
 
 ## NLP/Seq2Seq Transformer
 
@@ -216,6 +217,7 @@ still wins. The autoencoder is the step that makes the VAE's extra machinery
 | Dataset | CIFAR-10 via HF datasets — 50K images (32×32) |
 | Architecture | UNet + timestep embedding + sinusoid positional encoding |
 | Training | Noise prediction (MSE), T=1000, linear β schedule |
+| FID (N=2048) | not measured — no trained checkpoint in this environment |
 | Sampling | Reverse diffusion (x_T → x_0), 1000 steps |
 
 ## GRAPH/GCN
@@ -285,6 +287,11 @@ still wins. The autoencoder is the step that makes the VAE's extra machinery
 | Architecture | Transposed conv G / Conv D, BN, LeakyReLU |
 | Optimizer | Adam(lr=2e-4, β₁=0.5) — separate for G and D |
 | Training | BCELoss, label smoothing, fixed noise grid for monitoring |
+| FID (N=2048) | **237.6** (20-epoch checkpoint) |
+
+FID is computed by `utils/fid.py` from 2048-d torchvision InceptionV3 features,
+so values are only comparable with values produced by that class — not with
+published FID tables.
 
 ## CV/ViT
 
@@ -459,9 +466,10 @@ uv run python -m cv.resnet50.eval
 uv run python -m gen.autoencoder.train
 uv run python -m gen.autoencoder.generate
 
-# Train / Generate VAE
+# Train / Generate / Evaluate (FID) VAE
 uv run python -m gen.vae.train
 uv run python -m gen.vae.generate
+uv run python -m gen.vae.eval
 
 # Train / Translate Seq2Seq
 uv run python -m nlp.seq2seq.train
@@ -490,13 +498,15 @@ uv run python -m cv.mobilenet.train
 uv run python -m cv.mobilenet.eval
 uv run python -m cv.yolo.train
 
-# Train / Generate DDPM
+# Train / Generate / Evaluate (FID) DDPM
 uv run python -m gen.ddpm.train
 uv run python -m gen.ddpm.generate
+uv run python -m gen.ddpm.eval
 
-# Train / Generate DCGAN
+# Train / Generate / Evaluate (FID) DCGAN
 uv run python -m gen.dcgan.train
 uv run python -m gen.dcgan.generate
+uv run python -m gen.dcgan.eval
 
 # Train / Evaluate ViT
 uv run python -m cv.vit.train
