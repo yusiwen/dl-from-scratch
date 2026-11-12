@@ -512,12 +512,29 @@ uv run python -m nlp.lstm.eval
 uv run python -m nlp.gpt.train
 uv run python -m nlp.gpt.generate
 ```
+
 ### GPU environment (GB10 / Grace Blackwell)
 
-On the GB10 host the `torch` wheel installed by `uv sync` cannot see the GPU:
-`nvidia-smi` fails with `Failed to initialize NVML` and `torch.cuda.is_available()`
-is `False`. Use NVIDIA's NGC PyTorch container instead — its CUDA 13.4 build works
-on GB10 (compute capability 12.1):
+The environment from `uv sync` drives GB10 directly — `torch 2.12.1+cu130` and
+`torchvision 0.27.1+cu130` from PyPI:
+
+```bash
+uv run python -c "import torch; print(torch.cuda.get_device_name(0), torch.cuda.get_device_capability(0))"
+# NVIDIA GB10 (12, 1)
+```
+
+Verified 2026-11-12: 48 SMs, 130.6 GB; compiled kernels for
+`sm_80/90/100/110/120`; a BF16 conv/backward step and an 8K BF16 matmul
+(87.7 TFLOP/s) run on the GPU.
+
+GPU access requires opening `/dev/nvidia*`. A file sandbox that denies those
+opens (some agent sandboxes do) reports `CUDA unavailable` and
+`Failed to initialize NVML` even though the driver and wheel are fine — run GPU
+commands outside such a sandbox.
+
+#### Alternative: NGC PyTorch container
+
+For a newer stack, NVIDIA's NGC image works on GB10 too:
 
 ```bash
 docker build -t dlf-ngc:26.09 -f docker/ngc-pytorch.Dockerfile docker/
@@ -532,10 +549,9 @@ runs as your `uid:gid` so checkpoints stay owned by you. The image is the offici
 `nvcr.io/nvidia/pytorch:26.09-py3` plus `scikit-learn`, the only dependency the
 official image lacks.
 
-Verified 2026-11-12: `torch 2.14.0a0+b2c75dd062.nv26.09`, `NVIDIA GB10`,
-capability `(12, 1)`, 48 SMs, 130.6 GB; a BF16 conv/backward step and an 8K
-BF16 matmul (79 TFLOP/s) run in the container, and `ml/basics/k_means`
-reproduces the host metrics JSON byte-for-byte.
+Verified: `torch 2.14.0a0+b2c75dd062.nv26.09`, capability `(12, 1)`, 79.3 TFLOP/s
+on the same 8K BF16 matmul, and `ml/basics/k_means` reproduces the host metrics
+JSON byte-for-byte.
 
 ## Models
 
