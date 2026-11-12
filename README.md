@@ -228,6 +228,8 @@ uv run python -m cv.resnet18.train
 | Dataset | CIFAR-10 via HF datasets — self-supervised (no labels) |
 | Architecture | ResNet18 → Projector(512→256→128) → NT-Xent loss |
 | Training | 100 epoch, temperature=0.5, dual random augmentation |
+| Linear probe | **70.1%** test top-1 (frozen 512-d encoder features) |
+| kNN (k=20, cosine) | 67.1% test top-1 (no training) |
 
 ## CV/YOLO
 
@@ -411,7 +413,7 @@ it demonstrates.
 | `nlp/lstm/` | LSTM | **Input/forget/output gates**, **cell state**, gradient flow through gating, sequential processing vs parallel attention |
 | `graph/gcn/` | GCN | Graph convolution, message passing, semi-supervised node classification |
 | `rl/dqn/` | DQN | Q-Learning, experience replay, target network, ε-greedy |
-| `gen/simclr/` | SimCLR | Contrastive learning, NT-Xent loss, data augmentation |
+| `gen/simclr/` | SimCLR | Contrastive learning, NT-Xent loss, data augmentation, frozen-encoder linear probe + kNN evaluation |
 | `nlp/lora/` | LoRA | Low-rank adaptation, parameter-efficient fine-tuning, GPT adapter |
 | `cv/mobilenet/` | MobileNet | Depthwise separable convolution, efficient CNN, width multiplier |
 | `cv/yolo/` | YOLO | Single-stage object detection, grid-based regression, NMS |
@@ -451,8 +453,9 @@ uv run python -m graph.gcn.eval
 # Train DQN
 uv run python -m rl.dqn.train
 
-# Train SimCLR
+# Train / Evaluate SimCLR (frozen-encoder linear probe + kNN)
 uv run python -m gen.simclr.train
+uv run python -m gen.simclr.eval
 
 # Train YOLO
 uv run python -m cv.yolo.train

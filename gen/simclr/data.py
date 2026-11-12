@@ -1,7 +1,7 @@
 """CIFAR-10 with SimCLR augmentations (two random views per image)."""
 
 from torchvision import transforms
-from torch.utils.data import Dataset
+from torch.utils.data import DataLoader, Dataset
 from datasets import load_dataset
 
 
@@ -30,12 +30,40 @@ def load_cifar10_simclr(batch_size=256, num_workers=4):
         views1, views2 = zip(*[transform(img) for img in images])
         batch["view1"] = list(views1)
         batch["view2"] = list(views2)
+        # The raw PIL column cannot be collated by the DataLoader.
+        batch.pop("img", None)
         return batch
 
     ds = load_dataset("uoft-cs/cifar10", split="train")
     ds.set_transform(transform_batch)
 
-    from torch.utils.data import DataLoader
     loader = DataLoader(ds, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
     return loader
+
+
+def load_cifar10_eval(batch_size=512, num_workers=4):
+    """CIFAR-10 train/test loaders with a deterministic, augmentation-free transform.
+
+    Used by the linear probe: representations must not change because a random
+    crop happened to move, so the probe sees the same pixels every run.
+    """
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.4914, 0.4822, 0.4465], std=[0.2470, 0.2435, 0.2616]),
+    ])
+
+    def transform_batch(batch):
+        batch["image"] = [transform(img.convert("RGB")) for img in batch["img"]]
+        batch.pop("img", None)
+        return batch
+
+    loaders = []
+    for split in ("train", "test"):
+        ds = load_dataset("uoft-cs/cifar10", split=split)
+        ds.set_transform(transform_batch)
+        loaders.append(DataLoader(
+            ds, batch_size=batch_size, shuffle=False,
+            num_workers=num_workers, pin_memory=True,
+        ))
+    return loaders[0], loaders[1]
