@@ -23,8 +23,12 @@ class LoRALayer(nn.Module):
 
         in_dim = base_linear.in_features
         out_dim = base_linear.out_features
-        self.lora_A = nn.Parameter(torch.randn(r, in_dim) * 0.01)
-        self.lora_B = nn.Parameter(torch.zeros(out_dim, r))
+        # Allocate on the base layer's device: callers usually move the model to
+        # the GPU before injecting LoRA, and a CPU-only adapter would then fail
+        # with "mat2 is on cpu, different from other tensors on cuda".
+        device = base_linear.weight.device
+        self.lora_A = nn.Parameter(torch.randn(r, in_dim, device=device) * 0.01)
+        self.lora_B = nn.Parameter(torch.zeros(out_dim, r, device=device))
 
     def forward(self, x):
         return self.base(x) + (x @ self.lora_A.T @ self.lora_B.T) * self.scaling

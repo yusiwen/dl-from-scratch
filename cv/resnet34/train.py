@@ -55,7 +55,7 @@ def train():
     print(f"Training on {len(train_dataset):,} samples, validating on {len(val_dataset):,}")
     print(f"Attributes: all 40")
 
-    criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+    criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight.to(device))
     optimizer = optim.SGD(model.parameters(), lr=cfg["lr"], momentum=cfg["momentum"], weight_decay=cfg["weight_decay"])
     scheduler = CosineAnnealingLR(optimizer, T_max=cfg["T_max"])
 

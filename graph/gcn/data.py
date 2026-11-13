@@ -1,20 +1,36 @@
 """Cora citation network dataset loader."""
 
 import os
+import tarfile
+import tempfile
 import urllib.request
 import numpy as np
 import torch
 
 
-CORA_URL = "https://raw.githubusercontent.com/tkipf/pygraph/gcn/master/data/cora/"
+# The Cora archive published by LINQS (UC Santa Cruz). It ships cora/cora.content
+# and cora/cora.cites, which is what we parse below. The pygraph URL this used to
+# point at returns 404.
+CORA_URL = "https://linqs-data.soe.ucsc.edu/public/lbc/cora.tgz"
+CORA_FILES = ("cora.content", "cora.cites")
 
 
 def _download(raw_dir="graph/gcn/raw"):
     os.makedirs(raw_dir, exist_ok=True)
-    for fname in ["cora.content", "cora.cites"]:
-        path = os.path.join(raw_dir, fname)
-        if not os.path.exists(path):
-            urllib.request.urlretrieve(CORA_URL + fname, path)
+    if all(os.path.exists(os.path.join(raw_dir, f)) for f in CORA_FILES):
+        return
+    with tempfile.TemporaryDirectory() as tmp:
+        archive = os.path.join(tmp, "cora.tgz")
+        urllib.request.urlretrieve(CORA_URL, archive)
+        with tarfile.open(archive, "r:gz") as tar:
+            for member in tar.getmembers():
+                base = os.path.basename(member.name)
+                if base in CORA_FILES:
+                    extracted = tar.extractfile(member)
+                    if extracted is None:
+                        continue
+                    with extracted, open(os.path.join(raw_dir, base), "wb") as dst:
+                        dst.write(extracted.read())
 
 
 def _encode_onehot(labels):

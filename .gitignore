@@ -11,6 +11,8 @@ wheels/
 
 # Local data (now using HF datasets, not tracked in git)
 data/
+# Raw dataset downloads (e.g. the Cora archive extracted by graph/gcn/data.py)
+graph/gcn/raw/
 
 # Model weights / training artifacts (regenerated on each run)
 *.pt
