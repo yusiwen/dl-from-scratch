@@ -22,20 +22,28 @@ TEST_SIZE = 19962
 
 
 class CelebADataset(Dataset):
-    def __init__(self, split="train", transform=None):
+    def __init__(self, split="train", transform=None, num_samples=None):
         self.transform = transform
         self.attr_indices = list(range(40))
 
+        # eurecom-ds/celeba exposes train / validation / test as separate splits.
+        # Slicing "train[N:M]" does not work: the train split ends at TRAIN_SIZE,
+        # so a slice into the validation range raises "corresponds to no data".
         if split == "train":
-            slice_ = slice(0, TRAIN_SIZE)
+            hf_split = "train"
         elif split == "val":
-            slice_ = slice(TRAIN_SIZE, TRAIN_SIZE + VAL_SIZE)
+            hf_split = "validation"
         elif split == "test":
-            slice_ = slice(TRAIN_SIZE + VAL_SIZE, TRAIN_SIZE + VAL_SIZE + TEST_SIZE)
+            hf_split = "test"
         else:
             raise ValueError(f"Unknown split: {split}")
 
-        ds = load_dataset("eurecom-ds/celeba", split=f"train[{slice_.start}:{slice_.stop}]")
+        # Read only the rows we need; the HF split syntax avoids materializing
+        # the whole 162K-image split (which would exhaust memory).
+        if num_samples is not None:
+            hf_split = f"{hf_split}[:{num_samples}]"
+
+        ds = load_dataset("eurecom-ds/celeba", split=hf_split)
 
         self.samples = []
         for item in ds:
