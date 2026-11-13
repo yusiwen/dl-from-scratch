@@ -6,7 +6,7 @@ import pathlib as _pathlib
 import sys as _sys
 
 _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
-from nb_bootstrap import bootstrap_cell  # noqa: E402
+from nb_bootstrap import bootstrap_cell, config_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},"language_info": {"name": "python", "version": "3.12.0"}}
@@ -69,6 +69,7 @@ from utils.device import get_device
 device = get_device()
 print(f"Device: {device}")
 """)
+cells.append(config_cell("nlp/lora/config.yaml"))
 
 code("""\
 # Load pretrained GPT
@@ -100,7 +101,7 @@ print(f"Trainable:   {trainable:,}")
 
 md("""## 训练
 
-> ⏱ 预估耗时：**10 epoch × ~60s/epoch ≈ 10 分钟**（M4 Max, batch_size=32）
+> ⏱ epoch / lr / batch size 全部来自 config.yaml，上面的配置格会打印实际值。
 """)
 
 code("""\
@@ -125,14 +126,14 @@ class TextDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         return self.examples[idx]
 
-dataset = TextDataset(sentences, tokenizer, max_len=64)
-loader = DataLoader(dataset, batch_size=32, shuffle=True)
+dataset = TextDataset(sentences, tokenizer, max_len=cfg["max_len"])
+loader = DataLoader(dataset, batch_size=cfg["batch_size"], shuffle=True)
 print(f"Training chunks: {len(sentences):,}")
 """)
 
 code("""\
-NUM_EPOCHS = 10
-LR = 0.001
+NUM_EPOCHS = cfg["num_epochs"]
+LR = cfg["lr"]
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=LR)

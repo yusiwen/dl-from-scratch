@@ -6,7 +6,7 @@ import pathlib as _pathlib
 import sys as _sys
 
 _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
-from nb_bootstrap import bootstrap_cell  # noqa: E402
+from nb_bootstrap import bootstrap_cell, config_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},"language_info": {"name": "python", "version": "3.12.0"}}
@@ -37,7 +37,7 @@ md("""## 数学原理
 
 对每个批次 $N$ 张图，生成两个增强视图，共 $2N$ 个样本：
 
-$$\ell(i, j) = -\\log \\frac{\\exp(\\text{sim}(z_i, z_j) / \\tau)}{\\sum_{k=1}^{2N} \\mathbb{1}_{[k \\neq i]} \\exp(\\text{sim}(z_i, z_k) / \\tau)}$$
+$$\\ell(i, j) = -\\log \\frac{\\exp(\\text{sim}(z_i, z_j) / \\tau)}{\\sum_{k=1}^{2N} \\mathbb{1}_{[k \\neq i]} \\exp(\\text{sim}(z_i, z_k) / \\tau)}$$
 
 其中 $\\text{sim}(u, v) = \\frac{u^\\top v}{\\|u\\|\\|v\\|}$ 是余弦相似度，$(i, j)$ 是一对正样本（同一图的两种增强）。
 """)
@@ -57,11 +57,12 @@ from utils.device import get_device
 device = get_device()
 print(f"Device: {device}")
 """)
+cells.append(config_cell("selfsup/simclr/config.yaml"))
 
 code("""\
 from selfsup.simclr.data import SimCLRTransform, load_cifar10_simclr
 
-loader = load_cifar10_simclr(batch_size=256, num_workers=4)
+loader = load_cifar10_simclr(batch_size=cfg["batch_size"], num_workers=cfg["num_workers"])
 print(f"Batches per epoch: {len(loader)}")
 """)
 
@@ -78,13 +79,13 @@ print(f"  Projector (MLP):    {proj:,}")
 
 md("""## 训练
 
-> ⏱ 预估耗时：**100 epoch × ~40s/epoch ≈ 1 小时**（M4 Max, batch_size=256）
-> 如果太久，把下面 `NUM_EPOCHS` 改到 10 先看 loss 趋势。
+> ⏱ epoch / lr / batch size 全部来自 config.yaml，上面的配置格会打印实际值。
+> 想缩短训练时间：改该目录下的 config.yaml，而不是 notebook 里的数字。
 """)
 
 code("""\
-NUM_EPOCHS = 100
-LR = 0.0003
+NUM_EPOCHS = cfg["num_epochs"]
+LR = cfg["lr"]
 
 optimizer = optim.Adam(model.parameters(), lr=LR)
 loss_hist = []

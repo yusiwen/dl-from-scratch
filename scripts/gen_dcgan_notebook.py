@@ -6,7 +6,7 @@ import pathlib as _pathlib
 import sys as _sys
 
 _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
-from nb_bootstrap import bootstrap_cell  # noqa: E402
+from nb_bootstrap import bootstrap_cell, config_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {
@@ -70,12 +70,13 @@ from utils.device import get_device
 device = get_device()
 print(f"Device: {device}")
 """)
+cells.append(config_cell("gen/dcgan/config.yaml"))
 
 code("""\
 # 加载 CelebA 子集
 transform = transforms.Compose([
-    transforms.Resize(72),
-    transforms.RandomCrop(64),
+    transforms.Resize(cfg["image_size"] + 8),
+    transforms.RandomCrop(cfg["image_size"]),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
 ])
@@ -83,7 +84,7 @@ transform = transforms.Compose([
 ds = load_dataset("eurecom-ds/celeba", split="train[:10000]")
 images = [transform(item["image"]).unsqueeze(0) for item in ds]
 dataset = torch.cat(images)
-loader = DataLoader(dataset, batch_size=128, shuffle=True, drop_last=True)
+loader = DataLoader(dataset, batch_size=cfg["batch_size"], shuffle=True, drop_last=True)
 print(f"Dataset: {len(dataset):,} images, {len(loader)} batches")
 """)
 
@@ -98,13 +99,13 @@ print(f"D params: {sum(p.numel() for p in netD.parameters()):,}")
 md("""\
 ## 训练
 
-> ⏱ 预估耗时：**30 epoch × ~30s/epoch ≈ 15 分钟**（M4 Max, batch_size=128）
+> ⏱ epoch / lr / batch size 全部来自 config.yaml，上面的配置格会打印实际值。
 > GAN 训练较慢，如果想快速看效果可以把 `NUM_EPOCHS` 改到 10。
 """)
 
 code("""\
-NUM_EPOCHS = 30
-LR = 0.0002
+NUM_EPOCHS = cfg["num_epochs"]
+LR = cfg["lr"]
 BETA1 = 0.5
 LABEL_SMOOTHING = True
 

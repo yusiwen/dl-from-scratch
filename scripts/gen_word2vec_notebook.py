@@ -6,7 +6,7 @@ import pathlib as _pathlib
 import sys as _sys
 
 _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
-from nb_bootstrap import bootstrap_cell  # noqa: E402
+from nb_bootstrap import bootstrap_cell, config_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {
@@ -70,6 +70,7 @@ from utils.device import get_device
 device = get_device()
 print(f"Device: {device}")
 """)
+cells.append(config_cell("nlp/word2vec/config.yaml"))
 
 code("""\
 # 加载数据
@@ -85,26 +86,26 @@ code("""\
 tokenized = subsample(texts, word_to_id)
 cbow_pairs, skipgram_pairs = generate_training_pairs(tokenized, window_size=2)
 
-max_pairs = 100000
+max_pairs = cfg["max_pairs"]
 cbow_pairs = cbow_pairs[:max_pairs]
 sg_pairs = skipgram_pairs[:max_pairs]
 
 cbow_dataset = CBOWDataset(cbow_pairs, max_window=2)
 sg_dataset = SkipGramDataset(sg_pairs, vocab_size)
-cbow_loader = DataLoader(cbow_dataset, batch_size=128, shuffle=True)
-sg_loader = DataLoader(sg_dataset, batch_size=128, shuffle=True)
+cbow_loader = DataLoader(cbow_dataset, batch_size=cfg["batch_size"], shuffle=True)
+sg_loader = DataLoader(sg_dataset, batch_size=cfg["batch_size"], shuffle=True)
 noise_sampler = NoiseSampler(vocab, vocab_size)
 print(f"CBOW: {len(cbow_pairs):,}  Skip-gram: {len(sg_pairs):,}")
 """)
 
 md("""## 训练
 
-> ⏱ 预估耗时：**5 epoch × ~1min/epoch ≈ 5 分钟**（M4 Max, batch_size=128）
+> ⏱ epoch / lr / batch size 全部来自 config.yaml，上面的配置格会打印实际值。
 """)
 
 code("""\
-NUM_EPOCHS = 5
-LR = 0.01
+NUM_EPOCHS = cfg["num_epochs"]
+LR = cfg["lr"]
 K_NEG = 5
 
 model_sg = Word2Vec(vocab_size, embed_dim=50)

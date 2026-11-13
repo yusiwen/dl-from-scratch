@@ -6,7 +6,7 @@ import pathlib as _pathlib
 import sys as _sys
 
 _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
-from nb_bootstrap import bootstrap_cell  # noqa: E402
+from nb_bootstrap import bootstrap_cell, config_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},"language_info": {"name": "python", "version": "3.12.0"}}
@@ -72,6 +72,7 @@ from utils.device import get_device
 device = get_device()
 print(f"Device: {device}")
 """)
+cells.append(config_cell("cv/yolo/config.yaml"))
 
 code("""\
 from cv.yolo.data import load_voc, VOC_CLASSES
@@ -79,7 +80,7 @@ from cv.yolo.data import load_voc, VOC_CLASSES
 # 用 VOC2007 子集控制 notebook 训练时长（trainval 共 5011 张）。
 # 训练取前 3000 张，评测取之后的 1000 张：两段不相交，避免训练集与评测集重叠。
 train_loader, test_loader = load_voc(
-    batch_size=32, image_size=224, S=7, B=2, C=20, num_workers=4,
+    batch_size=cfg["batch_size"], image_size=cfg["image_size"], S=cfg["S"], B=cfg["B"], C=cfg["C"], num_workers=cfg["num_workers"],
     max_train=3000, max_test=1000,
 )
 print(f"Classes ({len(VOC_CLASSES)}): {VOC_CLASSES}")
@@ -87,19 +88,19 @@ print(f"Train batches: {len(train_loader)}")
 """)
 
 code("""\
-model = YOLO(S=7, B=2, C=20).to(device)
+model = YOLO(S=cfg["S"], B=cfg["B"], C=cfg["C"]).to(device)
 print(f"Parameters: {model.num_params():,}")
 """)
 
 md("""## 训练
 
-> ⏱ 预估耗时：**50 epoch × ~120s/epoch ≈ 1.5 小时**（M4 Max, batch_size=32）
-> 如果太久，把下面 `NUM_EPOCHS` 改到 5 先看 loss 趋势。
+> ⏱ epoch / lr / batch size 全部来自 config.yaml，上面的配置格会打印实际值。
+> 想缩短训练时间：改该目录下的 config.yaml，而不是 notebook 里的数字。
 """)
 
 code("""\
-NUM_EPOCHS = 50
-LR = 0.0001
+NUM_EPOCHS = cfg["num_epochs"]
+LR = cfg["lr"]
 
 optimizer = optim.Adam(model.parameters(), lr=LR)
 loss_hist = []
@@ -110,7 +111,7 @@ for epoch in range(1, NUM_EPOCHS + 1):
     for images, targets in train_loader:
         images, targets = images.to(device), targets.to(device)
         pred = model(images)
-        loss = yolo_loss(pred, targets, S=7, B=2, C=20, coord_scale=5, noobj_scale=0.5)
+        loss = yolo_loss(pred, targets, S=cfg["S"], B=cfg["B"], C=cfg["C"], coord_scale=cfg["coord_scale"], noobj_scale=cfg["noobj_scale"])
         optimizer.zero_grad(); loss.backward(); optimizer.step()
         total_loss += loss.item()
 
@@ -183,7 +184,7 @@ code("""\
 from cv.yolo.eval import evaluate_map
 
 # test_loader.dataset 就是 VOCDataset；评测会用它还原原始边界框
-metrics = evaluate_map(model, test_loader.dataset, device, image_size=224, batch_size=32)
+metrics = evaluate_map(model, test_loader.dataset, device, image_size=cfg["image_size"], batch_size=cfg["batch_size"])
 
 print(f"评测图片: {metrics['num_images']}   真实框: {metrics['num_ground_truths']}")
 print(f"mAP@0.5      : {metrics['mAP@0.5']:.3f}")

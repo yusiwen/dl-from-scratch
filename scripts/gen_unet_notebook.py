@@ -6,7 +6,7 @@ import pathlib as _pathlib
 import sys as _sys
 
 _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
-from nb_bootstrap import bootstrap_cell  # noqa: E402
+from nb_bootstrap import bootstrap_cell, config_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {
@@ -80,17 +80,18 @@ from utils.device import get_device
 device = get_device()
 print(f"Device: {device}")
 """)
+cells.append(config_cell("cv/unet/config.yaml"))
 
 code("""\
 # 数据集封装在 cv/unet/data.py：torchvision 拉取官方 Oxford-IIIT Pet 归档
 # （约 800 MB，只需下载一次，落在 gitignore 的 data/ 目录）
 from cv.unet.data import PetDataset
 
-IMAGE_SIZE = 128
+IMAGE_SIZE = cfg["image_size"]
 train_dataset = PetDataset(split="train", image_size=IMAGE_SIZE, augment=True)
 test_dataset = PetDataset(split="test", image_size=IMAGE_SIZE, augment=False)
-train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=4, pin_memory=True)
-test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False, num_workers=4, pin_memory=True)
+train_loader = DataLoader(train_dataset, batch_size=cfg["batch_size"], shuffle=True, num_workers=cfg["num_workers"], pin_memory=True)
+test_loader = DataLoader(test_dataset, batch_size=cfg["batch_size"], shuffle=False, num_workers=cfg["num_workers"], pin_memory=True)
 print(f"Train: {len(train_dataset):,}  Test: {len(test_dataset):,}")
 """)
 
@@ -102,13 +103,13 @@ print(f"Parameters: {model.num_params():,}")
 md("""\
 ## 训练
 
-> ⏱ 预估耗时：**30 epoch × ~40s/epoch ≈ 20 分钟**（M4 Max, batch_size=16）
-> 如果太久，把下面 `NUM_EPOCHS` 改小到 10 先看趋势。
+> ⏱ epoch / lr / batch size 全部来自 config.yaml，上面的配置格会打印实际值。
+> 想缩短训练时间：改该目录下的 config.yaml，而不是 notebook 里的数字。
 """)
 
 code("""\
-NUM_EPOCHS = 30
-LR = 1e-3
+NUM_EPOCHS = cfg["num_epochs"]
+LR = cfg["lr"]
 
 criterion = nn.CrossEntropyLoss(ignore_index=0)
 optimizer = optim.Adam(model.parameters(), lr=LR)

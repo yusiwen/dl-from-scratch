@@ -6,7 +6,7 @@ import pathlib as _pathlib
 import sys as _sys
 
 _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
-from nb_bootstrap import bootstrap_cell  # noqa: E402
+from nb_bootstrap import bootstrap_cell, config_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {
@@ -94,6 +94,7 @@ from utils.device import get_device
 device = get_device()
 print(f"Device: {device}")
 """)
+cells.append(config_cell("nlp/gpt/config.yaml"))
 
 # ── Tokenizer ──
 code("""\
@@ -133,15 +134,15 @@ sentences = [s.strip() for s in raw_chunks if len(s.strip()) > 5]
 sentences = sentences[:15000]  # 用 15K 子集控制训练时间
 print(f"Training chunks: {len(sentences):,}")
 
-dataset = TextDataset(sentences, tokenizer, max_len=64)
-loader = DataLoader(dataset, batch_size=64, shuffle=True, num_workers=0)
+dataset = TextDataset(sentences, tokenizer, max_len=cfg["max_len"])
+loader = DataLoader(dataset, batch_size=cfg["batch_size"], shuffle=True, num_workers=0)
 """)
 
 # ── Model ──
 code("""\
 model = GPT(
     vocab_size=tokenizer.vocab_size,
-    d_model=256, n_heads=4, n_layers=4, max_len=64,
+    d_model=256, n_heads=4, n_layers=4, max_len=cfg["max_len"],
 ).to(device)
 print(f"Parameters: {model.num_params():,}")
 """)
@@ -150,13 +151,13 @@ print(f"Parameters: {model.num_params():,}")
 md("""\
 ## 训练
 
-> ⏱ 预估耗时：**15 epoch × ~45s/epoch ≈ 11 分钟**（M4 Max, batch_size=64）
+> ⏱ epoch / lr / batch size 全部来自 config.yaml，上面的配置格会打印实际值。
 > 如果觉得太久，可以把下面 `NUM_EPOCHS` 改小到 5 先看趋势。
 """)
 
 code("""\
-NUM_EPOCHS = 15         # ← 可调
-LR = 1e-3
+NUM_EPOCHS = cfg["num_epochs"]
+LR = cfg["lr"]
 GRAD_CLIP = 1.0
 
 criterion = nn.CrossEntropyLoss()
@@ -223,7 +224,7 @@ md("""\
 
 code("""\
 def generate_text(model, tokenizer, prompt, max_new_tokens=30, temperature=0.8, top_k=40):
-    tokens, _ = tokenizer.encode(prompt, max_len=64)
+    tokens, _ = tokenizer.encode(prompt, max_len=cfg["max_len"])
     input_ids = torch.tensor([tokens], dtype=torch.long, device=device)
 
     with torch.no_grad():

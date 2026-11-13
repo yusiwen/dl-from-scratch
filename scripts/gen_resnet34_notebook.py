@@ -6,7 +6,7 @@ import pathlib as _pathlib
 import sys as _sys
 
 _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
-from nb_bootstrap import bootstrap_cell  # noqa: E402
+from nb_bootstrap import bootstrap_cell, config_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {
@@ -67,6 +67,7 @@ from utils.device import get_device
 device = get_device()
 print(f"Device: {device}")
 """)
+cells.append(config_cell("cv/resnet34/config.yaml"))
 
 code("""\
 # 使用 20K 子集控制 notebook 训练时间（全量 162K）
@@ -76,8 +77,8 @@ SUBSET_SIZE = 20000
 train_dataset = CelebADataset(split="train", transform=train_transform(), num_samples=SUBSET_SIZE)
 val_dataset = CelebADataset(split="val", transform=train_transform(), num_samples=2000)
 
-train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=4, pin_memory=True)
-val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False, num_workers=4, pin_memory=True)
+train_loader = DataLoader(train_dataset, batch_size=cfg["batch_size"], shuffle=True, num_workers=cfg["num_workers"], pin_memory=True)
+val_loader = DataLoader(val_dataset, batch_size=cfg["batch_size"], shuffle=False, num_workers=cfg["num_workers"], pin_memory=True)
 
 print(f"Train: {len(train_dataset):,}  Val: {len(val_dataset):,}")
 print(f"Attributes: {len(CELEBA_ATTR_ORDER)}")
@@ -102,18 +103,24 @@ print(f"Parameters: {sum(p.numel() for p in model.parameters()):,}")
 md("""\
 ## 训练
 
-> ⏱ 预估耗时：**20 epoch × ~70s/epoch ≈ 23 分钟**（20K 子集, M4 Max, batch_size=64）
+> ⏱ epoch / lr / batch size 全部来自 config.yaml，上面的配置格会打印实际值。
 """)
 
 code("""\
-NUM_EPOCHS = 20
-LR = 0.1
-MOMENTUM = 0.9
-WEIGHT_DECAY = 1e-4
+NUM_EPOCHS = cfg["num_epochs"]
+LR = cfg["lr"]
+MOMENTUM = cfg["momentum"]
+WEIGHT_DECAY = cfg["weight_decay"]
 
 criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight.to(device))
 optimizer = optim.SGD(model.parameters(), lr=LR, momentum=MOMENTUM, weight_decay=WEIGHT_DECAY)
-scheduler = CosineAnnealingLR(optimizer, T_max=NUM_EPOCHS)
+scheduler = CosineAnnealingLR(optimizer, T_max=cfg["T_max"])
+
+# amp（Automatic Mixed Precision，自动混合精度）来自 config.yaml；CPU 上
+# enabled=False，与全精度训练完全等价。
+use_amp = bool(cfg.get("amp")) and device.type == "cuda"
+scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
+print(f"AMP: {use_amp}")
 
 train_loss_hist, val_loss_hist = [], []
 
@@ -123,10 +130,12 @@ for epoch in range(1, NUM_EPOCHS + 1):
     for images, labels in train_loader:
         images, labels = images.to(device), labels.to(device)
         optimizer.zero_grad()
-        outputs = model(images)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
+        with torch.amp.autocast("cuda", enabled=use_amp):
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+        scaler.scale(loss).backward()
+        scaler.step(optimizer)
+        scaler.update()
         train_loss += loss.item()
     scheduler.step()
 
