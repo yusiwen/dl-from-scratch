@@ -2,6 +2,11 @@
 """Generate UNet notebook."""
 
 import nbformat as nbf
+import pathlib as _pathlib
+import sys as _sys
+
+_sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
+from nb_bootstrap import bootstrap_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {
@@ -77,39 +82,13 @@ print(f"Device: {device}")
 """)
 
 code("""\
-class PetDataset(torch.utils.data.Dataset):
-    def __init__(self, split="train", image_size=128, augment=False):
-        self.image_size = image_size
-        self.augment = augment and split == "train"
-        ds = load_dataset("tchevrou/oxford-iiit-pet", split=split)
-        self.images = [item["image"].convert("RGB") for item in ds]
-        self.masks = [item["label"] for item in ds]
-        del ds
+# 数据集封装在 cv/unet/data.py：torchvision 拉取官方 Oxford-IIIT Pet 归档
+# （约 800 MB，只需下载一次，落在 gitignore 的 data/ 目录）
+from cv.unet.data import PetDataset
 
-    def __len__(self):
-        return len(self.images)
-
-    def __getitem__(self, idx):
-        image = self.images[idx]
-        mask = self.masks[idx]
-
-        image = TF.resize(image, self.image_size, TF.InterpolationMode.BILINEAR)
-        mask = TF.resize(mask, self.image_size, TF.InterpolationMode.NEAREST)
-
-        if self.augment:
-            if random.random() > 0.5:
-                image = TF.hflip(image); mask = TF.hflip(mask)
-            angle = random.uniform(-10, 10)
-            image = TF.rotate(image, angle, TF.InterpolationMode.BILINEAR)
-            mask = TF.rotate(mask, angle, TF.InterpolationMode.NEAREST)
-
-        image = TF.to_tensor(image)
-        image = TF.normalize(image, [0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        mask = torch.tensor(list(mask.getdata()), dtype=torch.long).view(self.image_size, self.image_size)
-        return image, mask
-
-train_dataset = PetDataset(split="train", image_size=128, augment=True)
-test_dataset = PetDataset(split="test", image_size=128, augment=False)
+IMAGE_SIZE = 128
+train_dataset = PetDataset(split="train", image_size=IMAGE_SIZE, augment=True)
+test_dataset = PetDataset(split="test", image_size=IMAGE_SIZE, augment=False)
 train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=4, pin_memory=True)
 test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False, num_workers=4, pin_memory=True)
 print(f"Train: {len(train_dataset):,}  Test: {len(test_dataset):,}")
@@ -226,7 +205,7 @@ md("""\
 4. 试试把 `NUM_EPOCHS` 加到 100，观察 IoU 和 pixel accuracy 的变化。
 """)
 
-nb.cells = cells
+nb.cells = [bootstrap_cell(), *cells]
 out = "cv/unet/unet.ipynb"
 with open(out, "w") as f:
     nbf.write(nb, f)

@@ -2,6 +2,11 @@
 """Generate CNN notebook."""
 
 import nbformat as nbf
+import pathlib as _pathlib
+import sys as _sys
+
+_sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
+from nb_bootstrap import bootstrap_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {
@@ -201,7 +206,7 @@ md("""\
 4. 试着把 Conv 层数从 3 加到 4，参数量和准确率会怎么变？
 """)
 
-nb.cells = cells
+nb.cells = [bootstrap_cell(), *cells]
 out = "cv/simplecnn/cnn.ipynb"
 with open(out, "w") as f:
     nbf.write(nb, f)

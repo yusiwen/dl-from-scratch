@@ -2,6 +2,11 @@
 """Generate GPT notebook."""
 
 import nbformat as nbf
+import pathlib as _pathlib
+import sys as _sys
+
+_sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
+from nb_bootstrap import bootstrap_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {
@@ -219,7 +224,7 @@ md("""\
 code("""\
 def generate_text(model, tokenizer, prompt, max_new_tokens=30, temperature=0.8, top_k=40):
     tokens, _ = tokenizer.encode(prompt, max_len=64)
-    input_ids = torch.tensor([tokens], dtype=torch.long)
+    input_ids = torch.tensor([tokens], dtype=torch.long, device=device)
 
     with torch.no_grad():
         output = model.generate(
@@ -267,7 +272,7 @@ md("""\
 5. 把 `num_epochs` 从 15 改到 25，PPL 会降到多少？试试看。
 """)
 
-nb.cells = cells
+nb.cells = [bootstrap_cell(), *cells]
 out = "nlp/gpt/gpt.ipynb"
 with open(out, "w") as f:
     nbf.write(nb, f)

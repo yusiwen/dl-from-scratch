@@ -2,6 +2,11 @@
 """Generate MobileNet notebook."""
 
 import nbformat as nbf
+import pathlib as _pathlib
+import sys as _sys
+
+_sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
+from nb_bootstrap import bootstrap_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},"language_info": {"name": "python", "version": "3.12.0"}}
@@ -82,7 +87,7 @@ for wm in [1.0, 0.5, 0.25]:
 # 与 SimpleCNN 对比
 from cv.simplecnn.model import SimpleCNN
 cnn = SimpleCNN(num_classes=10)
-cnn_params = sum(p.numel() for p in cv.simplecnn.parameters())
+cnn_params = sum(p.numel() for p in cnn.parameters())
 print(f"  SimpleCNN:  {cnn_params:,} params")
 print(f"  MobileNet × {cnn_params / 135562:.1f} smaller")
 """)
@@ -155,7 +160,7 @@ md("""\
 4. MobileNet 的设计哲学适用于 Transformer 吗？（提示：MQA / GQA）
 """)
 
-nb.cells = cells
+nb.cells = [bootstrap_cell(), *cells]
 with open("cv/mobilenet/mobilenet.ipynb", "w") as f:
     nbf.write(nb, f)
 print("Generated cv/mobilenet/mobilenet.ipynb")

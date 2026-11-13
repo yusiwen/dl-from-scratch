@@ -2,6 +2,11 @@
 """Generate ViT notebook."""
 
 import nbformat as nbf
+import pathlib as _pathlib
+import sys as _sys
+
+_sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
+from nb_bootstrap import bootstrap_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {
@@ -181,7 +186,7 @@ md("""\
 4. ViT 的 [CLS] token 和 BERT 的 [CLS] 有什么区别和联系？
 """)
 
-nb.cells = cells
+nb.cells = [bootstrap_cell(), *cells]
 out = "cv/vit/vit.ipynb"
 with open(out, "w") as f:
     nbf.write(nb, f)

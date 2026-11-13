@@ -2,6 +2,11 @@
 """Generate DCGAN notebook."""
 
 import nbformat as nbf
+import pathlib as _pathlib
+import sys as _sys
+
+_sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
+from nb_bootstrap import bootstrap_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {
@@ -192,7 +197,7 @@ md("""\
 5. 试试把 `NUM_EPOCHS` 加到 100，观察生成质量的变化。
 """)
 
-nb.cells = cells
+nb.cells = [bootstrap_cell(), *cells]
 out = "gen/dcgan/dcgan.ipynb"
 with open(out, "w") as f:
     nbf.write(nb, f)

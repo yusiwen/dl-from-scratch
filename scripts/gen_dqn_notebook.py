@@ -2,6 +2,11 @@
 """Generate DQN notebook."""
 
 import nbformat as nbf
+import pathlib as _pathlib
+import sys as _sys
+
+_sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
+from nb_bootstrap import bootstrap_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},"language_info": {"name": "python", "version": "3.12.0"}}
@@ -148,7 +153,7 @@ md("""\
 4. 如果把 `hidden_dim` 从 128 改到 32，训练速度会怎样？收敛难度呢？
 """)
 
-nb.cells = cells
+nb.cells = [bootstrap_cell(), *cells]
 with open("rl/dqn/dqn.ipynb", "w") as f:
     nbf.write(nb, f)
 print("Generated rl/dqn/dqn.ipynb")

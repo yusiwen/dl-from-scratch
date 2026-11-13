@@ -2,6 +2,11 @@
 """Generate LoRA notebook."""
 
 import nbformat as nbf
+import pathlib as _pathlib
+import sys as _sys
+
+_sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
+from nb_bootstrap import bootstrap_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},"language_info": {"name": "python", "version": "3.12.0"}}
@@ -174,7 +179,7 @@ md("""\
 4. 尝试将 $\\alpha$ 从 16 改到 4 或 64，观察训练速度和 loss 的变化。
 """)
 
-nb.cells = cells
+nb.cells = [bootstrap_cell(), *cells]
 with open("nlp/lora/lora.ipynb", "w") as f:
     nbf.write(nb, f)
 print("Generated nlp/lora/lora.ipynb")
