@@ -6,7 +6,7 @@ import pathlib as _pathlib
 import sys as _sys
 
 _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
-from nb_bootstrap import bootstrap_cell  # noqa: E402
+from nb_bootstrap import bootstrap_cell, config_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {
@@ -75,6 +75,7 @@ from utils.device import get_device
 device = get_device()
 print(f"Device: {device}")
 """)
+cells.append(config_cell("cv/vit/config.yaml"))
 
 code("""\
 # CIFAR-10 数据加载
@@ -101,8 +102,8 @@ ds_test = load_dataset("uoft-cs/cifar10", split="test")
 ds_train.set_transform(lambda b: transform_batch(b, train_transform))
 ds_test.set_transform(lambda b: transform_batch(b, test_transform))
 
-train_loader = DataLoader(ds_train, batch_size=128, shuffle=True, num_workers=4)
-test_loader = DataLoader(ds_test, batch_size=128, shuffle=False, num_workers=4)
+train_loader = DataLoader(ds_train, batch_size=cfg["batch_size"], shuffle=True, num_workers=cfg["num_workers"])
+test_loader = DataLoader(ds_test, batch_size=cfg["batch_size"], shuffle=False, num_workers=cfg["num_workers"])
 
 CIFAR10_CLASSES = ["airplane","automobile","bird","cat","deer","dog","frog","horse","ship","truck"]
 print(f"Train: {len(ds_train):,}  Test: {len(ds_test):,}")
@@ -119,13 +120,13 @@ print(f"Parameters: {model.num_params():,}")
 md("""\
 ## 训练
 
-> ⏱ 预估耗时：**30 epoch × ~30s/epoch ≈ 15 分钟**（M4 Max, batch_size=128）
-> 如果太久，把下面 `NUM_EPOCHS` 改小到 10 先看趋势。
+> ⏱ epoch / lr / batch size 全部来自 config.yaml，上面的配置格会打印实际值。
+> 想缩短训练时间：改该目录下的 config.yaml，而不是 notebook 里的数字。
 """)
 
 code("""\
-NUM_EPOCHS = 30
-LR = 1e-3
+NUM_EPOCHS = cfg["num_epochs"]
+LR = cfg["lr"]
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=LR)

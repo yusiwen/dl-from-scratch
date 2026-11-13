@@ -6,7 +6,7 @@ import pathlib as _pathlib
 import sys as _sys
 
 _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
-from nb_bootstrap import bootstrap_cell  # noqa: E402
+from nb_bootstrap import bootstrap_cell, config_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {
@@ -80,6 +80,7 @@ from utils.device import get_device
 device = get_device()
 print(f"Device: {device}")
 """)
+cells.append(config_cell("nlp/lstm/config.yaml"))
 
 code("""\
 # 数据加载
@@ -118,8 +119,8 @@ class SentimentDataset(Dataset):
 
 train_dataset = SentimentDataset(train_texts, train_labels, tokenizer)
 test_dataset = SentimentDataset(test_texts, test_labels, tokenizer)
-train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
-test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=cfg["batch_size"], shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=cfg["batch_size"], shuffle=False)
 """)
 
 code("""\
@@ -133,12 +134,12 @@ print(f"Parameters: {sum(p.numel() for p in model.parameters()):,}")
 md("""\
 ## 训练
 
-> ⏱ 预估耗时：**10 epoch × ~50s/epoch ≈ 8 分钟**（M4 Max, batch_size=64）
+> ⏱ epoch / lr / batch size 全部来自 config.yaml，上面的配置格会打印实际值。
 """)
 
 code("""\
-NUM_EPOCHS = 10
-LR = 5e-4
+NUM_EPOCHS = cfg["num_epochs"]
+LR = cfg["lr"]
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.AdamW(model.parameters(), lr=LR)

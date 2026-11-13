@@ -6,7 +6,7 @@ import pathlib as _pathlib
 import sys as _sys
 
 _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
-from nb_bootstrap import bootstrap_cell  # noqa: E402
+from nb_bootstrap import bootstrap_cell, config_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {
@@ -75,6 +75,7 @@ from utils.device import get_device
 device = get_device()
 print(f"Device: {device}")
 """)
+cells.append(config_cell("cv/resnet18/config.yaml"))
 
 code("""\
 # 数据加载
@@ -85,13 +86,13 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
-full_dataset = CelebADataset(ATTRIBUTES, num_samples=1000, transform=transform)
+full_dataset = CelebADataset(ATTRIBUTES, num_samples=cfg["num_samples"], transform=transform)
 train_dataset, val_dataset = torch.utils.data.random_split(
-    full_dataset, [800, 200], generator=torch.Generator().manual_seed(42)
+    full_dataset, [cfg["train_split"], cfg["val_split"]], generator=torch.Generator().manual_seed(cfg["seed"])
 )
 
-train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True, num_workers=0, pin_memory=True)
-val_loader = DataLoader(val_dataset, batch_size=128, shuffle=False, num_workers=0, pin_memory=True)
+train_loader = DataLoader(train_dataset, batch_size=cfg["batch_size"], shuffle=True, num_workers=cfg["num_workers"], pin_memory=True)
+val_loader = DataLoader(val_dataset, batch_size=cfg["batch_size"], shuffle=False, num_workers=cfg["num_workers"], pin_memory=True)
 
 print(f"Train: {len(train_dataset)}  Val: {len(val_dataset)}")
 print(f"Attributes ({len(ATTRIBUTES)}): {', '.join(ATTRIBUTES)}")
@@ -105,15 +106,21 @@ print(f"Parameters: {sum(p.numel() for p in model.parameters()):,}")
 md("""\
 ## 训练
 
-> ⏱ 预估耗时：**30 epoch × ~20s/epoch ≈ 10 分钟**（M4 Max, batch_size=128）
+> ⏱ epoch / lr / batch size 全部来自 config.yaml，上面的配置格会打印实际值。
 """)
 
 code("""\
-NUM_EPOCHS = 30
-LR = 1e-3
+NUM_EPOCHS = cfg["num_epochs"]
+LR = cfg["lr"]
 
 criterion = nn.BCEWithLogitsLoss()
 optimizer = optim.Adam(model.parameters(), lr=LR)
+
+# amp（Automatic Mixed Precision，自动混合精度）来自 config.yaml；CPU 上
+# enabled=False，与全精度训练完全等价。
+use_amp = bool(cfg.get("amp")) and device.type == "cuda"
+scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
+print(f"AMP: {use_amp}")
 
 train_loss_hist, val_loss_hist, val_acc_hist = [], [], []
 
@@ -123,10 +130,12 @@ for epoch in range(1, NUM_EPOCHS + 1):
     for images, labels in train_loader:
         images, labels = images.to(device), labels.to(device)
         optimizer.zero_grad()
-        outputs = model(images)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
+        with torch.amp.autocast("cuda", enabled=use_amp):
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+        scaler.scale(loss).backward()
+        scaler.step(optimizer)
+        scaler.update()
         train_loss += loss.item()
 
     model.eval()

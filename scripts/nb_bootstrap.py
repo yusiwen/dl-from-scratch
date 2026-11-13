@@ -57,3 +57,22 @@ def is_current(nb):
     """True when the bootstrap cell matches BOOTSTRAP_SRC exactly."""
     idx = bootstrap_index(nb)
     return idx is not None and "".join(nb.cells[idx].get("source", "")) == BOOTSTRAP_SRC
+
+
+def config_cell(config_path):
+    """Cell that loads ``config.yaml`` and seeds every RNG.
+
+    Notebooks must not hardcode training hyperparameters: ``config.yaml`` is the
+    single source of truth for a training run, so the notebook reads it here and
+    every later cell takes epochs / lr / batch size from ``cfg``. That keeps a
+    notebook run comparable with ``python -m <module>.train``.
+    """
+    source = f'''# --- 超参数唯一真源：{config_path} ---
+from utils.config import load_config
+from utils.seed import set_seed
+
+cfg = load_config("{config_path}")
+set_seed(cfg["seed"])
+print(f"config: {{cfg}}")
+'''
+    return nbf.v4.new_code_cell(source)

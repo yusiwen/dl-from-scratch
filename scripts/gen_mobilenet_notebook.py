@@ -6,7 +6,7 @@ import pathlib as _pathlib
 import sys as _sys
 
 _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
-from nb_bootstrap import bootstrap_cell  # noqa: E402
+from nb_bootstrap import bootstrap_cell, config_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},"language_info": {"name": "python", "version": "3.12.0"}}
@@ -70,11 +70,12 @@ from utils.device import get_device
 device = get_device()
 print(f"Device: {device}")
 """)
+cells.append(config_cell("cv/mobilenet/config.yaml"))
 
 code("""\
 from cv.mobilenet.data import load_cifar10, CIFAR10_CLASSES
 
-train_loader, test_loader = load_cifar10(batch_size=128, num_workers=4)
+train_loader, test_loader = load_cifar10(batch_size=cfg["batch_size"], num_workers=cfg["num_workers"])
 print(f"Train batches: {len(train_loader)}, Test batches: {len(test_loader)}")
 """)
 
@@ -99,12 +100,12 @@ print(f"Parameters: {sum(p.numel() for p in model.parameters()):,}")
 
 md("""## 训练
 
-> ⏱ 预估耗时：**50 epoch × ~25s/epoch ≈ 20 分钟**（M4 Max, batch_size=128）
+> ⏱ epoch / lr / batch size 全部来自 config.yaml，上面的配置格会打印实际值。
 """)
 
 code("""\
-NUM_EPOCHS = 50
-LR = 0.001
+NUM_EPOCHS = cfg["num_epochs"]
+LR = cfg["lr"]
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=LR)

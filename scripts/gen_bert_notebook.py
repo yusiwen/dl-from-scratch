@@ -6,7 +6,7 @@ import pathlib as _pathlib
 import sys as _sys
 
 _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
-from nb_bootstrap import bootstrap_cell  # noqa: E402
+from nb_bootstrap import bootstrap_cell, config_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {
@@ -75,6 +75,7 @@ from utils.device import get_device
 device = get_device()
 print(f"Device: {device}")
 """)
+cells.append(config_cell("nlp/bert/config.yaml"))
 
 code("""\
 # 构建字符级分词器
@@ -124,14 +125,14 @@ class TextDataset(Dataset):
             ),
         }
 
-dataset = TextDataset(chunks, tokenizer, max_len=128)
-loader = DataLoader(dataset, batch_size=32, shuffle=True, num_workers=0)
+dataset = TextDataset(chunks, tokenizer, max_len=cfg["max_len"])
+loader = DataLoader(dataset, batch_size=cfg["batch_size"], shuffle=True, num_workers=0)
 """)
 
 code("""\
 model = BERTForMLM(
     vocab_size=tokenizer.vocab_size,
-    d_model=128, n_heads=4, n_layers=4, max_len=128,
+    d_model=128, n_heads=4, n_layers=4, max_len=cfg["max_len"],
 ).to(device)
 print(f"Parameters: {model.num_params():,}")
 """)
@@ -139,12 +140,12 @@ print(f"Parameters: {model.num_params():,}")
 md("""\
 ## 训练
 
-> ⏱ 预估耗时：**10 epoch × ~60s/epoch ≈ 10 分钟**（M4 Max, batch_size=32）
+> ⏱ epoch / lr / batch size 全部来自 config.yaml，上面的配置格会打印实际值。
 """)
 
 code("""\
-NUM_EPOCHS = 10
-LR = 1e-4
+NUM_EPOCHS = cfg["num_epochs"]
+LR = cfg["lr"]
 
 criterion = nn.CrossEntropyLoss(ignore_index=-100)
 optimizer = optim.AdamW(model.parameters(), lr=LR)
@@ -200,7 +201,7 @@ md("""## [MASK] 预测演示
 
 code("""\
 def predict_mask(text, model, tokenizer, top_k=5):
-    tokens, mask = tokenizer.encode(text, max_len=128)
+    tokens, mask = tokenizer.encode(text, max_len=cfg["max_len"])
     input_ids = torch.tensor([tokens], dtype=torch.long).to(device)
     mask_id = tokenizer.mask_id
 

@@ -6,7 +6,7 @@ import pathlib as _pathlib
 import sys as _sys
 
 _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
-from nb_bootstrap import bootstrap_cell  # noqa: E402
+from nb_bootstrap import bootstrap_cell, config_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},"language_info": {"name": "python", "version": "3.12.0"}}
@@ -70,26 +70,27 @@ labels = labels.to(device)
 train_mask = train_mask.to(device)
 val_mask = val_mask.to(device)
 """)
+cells.append(config_cell("graph/gcn/config.yaml"))
 
 code("""\
 model = GCN(
     in_features=features.size(1),
-    hidden_dim=16,
+    hidden_dim=cfg["hidden_dim"],
     num_classes=labels.max().item() + 1,
-    dropout=0.5,
+    dropout=cfg["dropout"],
 ).to(device)
 print(f"Parameters: {model.num_params():,}")
 """)
 
 md("""## 训练
 
-> ⏱ 预估耗时：**200 epoch × ~0.1s/epoch ≈ 20 秒**（CPU 即可完成）
+> ⏱ epoch / lr / batch size 全部来自 config.yaml，上面的配置格会打印实际值。
 """)
 
 code("""\
-NUM_EPOCHS = 200
-LR = 0.01
-WEIGHT_DECAY = 5e-4
+NUM_EPOCHS = cfg["num_epochs"]
+LR = cfg["lr"]
+WEIGHT_DECAY = cfg["weight_decay"]
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY)

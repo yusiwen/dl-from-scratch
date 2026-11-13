@@ -6,7 +6,7 @@ import pathlib as _pathlib
 import sys as _sys
 
 _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
-from nb_bootstrap import bootstrap_cell  # noqa: E402
+from nb_bootstrap import bootstrap_cell, config_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},"language_info": {"name": "python", "version": "3.12.0"}}
@@ -68,10 +68,11 @@ state_dim = env.observation_space.shape[0]
 action_dim = env.action_space.n
 print(f"State: {state_dim}  Action: {action_dim}")
 """)
+cells.append(config_cell("rl/dqn/config.yaml"))
 
 code("""\
-model = DQN(state_dim, action_dim, hidden_dim=128).to(device)
-target = DQN(state_dim, action_dim, hidden_dim=128).to(device)
+model = DQN(state_dim, action_dim, hidden_dim=cfg["hidden_dim"]).to(device)
+target = DQN(state_dim, action_dim, hidden_dim=cfg["hidden_dim"]).to(device)
 target.load_state_dict(model.state_dict())
 target.eval()
 print(f"Parameters: {sum(p.numel() for p in model.parameters()):,}")
@@ -79,19 +80,19 @@ print(f"Parameters: {sum(p.numel() for p in model.parameters()):,}")
 
 md("""## 训练
 
-> ⏱ 预估耗时：**500 episode × ~0.2s ≈ 2 分钟**（M4 Max）
+> ⏱ epoch / lr / batch size 全部来自 config.yaml，上面的配置格会打印实际值。
 """)
 
 code("""\
-NUM_EPISODES = 500
-LR = 0.001
-GAMMA = 0.99
-BATCH_SIZE = 64
-BUFFER_SIZE = 50000
-TARGET_UPDATE = 100
-EPSILON_START = 1.0
-EPSILON_END = 0.01
-EPSILON_DECAY = 500
+NUM_EPISODES = cfg["num_episodes"]
+LR = cfg["lr"]
+GAMMA = cfg["gamma"]
+BATCH_SIZE = cfg["batch_size"]
+BUFFER_SIZE = cfg["buffer_size"]
+TARGET_UPDATE = cfg["target_update"]
+EPSILON_START = cfg["epsilon_start"]
+EPSILON_END = cfg["epsilon_end"]
+EPSILON_DECAY = cfg["epsilon_decay"]
 
 optimizer = optim.Adam(model.parameters(), lr=LR)
 buffer = ReplayBuffer(BUFFER_SIZE)
