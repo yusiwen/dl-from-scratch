@@ -2,6 +2,11 @@
 """Batch-generate all 10 basics notebooks."""
 
 import nbformat as nbf
+import pathlib as _pathlib
+import sys as _sys
+
+_sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
+from nb_bootstrap import bootstrap_cell  # noqa: E402
 
 MODELS = [
     {
@@ -236,7 +241,7 @@ for m in MODELS:
     # every regeneration dirty the working tree.
     for index, cell in enumerate(cells):
         cell["id"] = f"{m['name']}-{index:02d}"
-    nb.cells = cells
+    nb.cells = [bootstrap_cell(), *cells]
     path = f"ml/basics/{m['name']}.ipynb"
     with open(path, "w") as f:
         nbf.write(nb, f)

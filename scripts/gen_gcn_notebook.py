@@ -2,6 +2,11 @@
 """Generate GCN notebook."""
 
 import nbformat as nbf
+import pathlib as _pathlib
+import sys as _sys
+
+_sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
+from nb_bootstrap import bootstrap_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},"language_info": {"name": "python", "version": "3.12.0"}}
@@ -141,7 +146,7 @@ md("""\
 4. GCN 层数加深为什么会导致性能下降？（提示：过平滑问题）
 """)
 
-nb.cells = cells
+nb.cells = [bootstrap_cell(), *cells]
 with open("graph/gcn/gcn.ipynb", "w") as f:
     nbf.write(nb, f)
 print("Generated graph/gcn/gcn.ipynb")

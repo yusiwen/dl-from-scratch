@@ -2,6 +2,11 @@
 """Generate LSTM notebook."""
 
 import nbformat as nbf
+import pathlib as _pathlib
+import sys as _sys
+
+_sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
+from nb_bootstrap import bootstrap_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {
@@ -206,7 +211,7 @@ md("""\
 4. 把 LSTM 层数从 1 加到 2，准确率会提升吗？参数量增加多少？
 """)
 
-nb.cells = cells
+nb.cells = [bootstrap_cell(), *cells]
 out = "nlp/lstm/lstm.ipynb"
 with open(out, "w") as f:
     nbf.write(nb, f)

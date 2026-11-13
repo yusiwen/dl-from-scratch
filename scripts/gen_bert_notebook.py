@@ -2,6 +2,11 @@
 """Generate BERT notebook."""
 
 import nbformat as nbf
+import pathlib as _pathlib
+import sys as _sys
+
+_sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
+from nb_bootstrap import bootstrap_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {
@@ -230,7 +235,7 @@ md("""\
 4. BERT 的 [CLS] token 在预训练中没有明确任务，为什么能用于分类？
 """)
 
-nb.cells = cells
+nb.cells = [bootstrap_cell(), *cells]
 out = "nlp/bert/bert.ipynb"
 with open(out, "w") as f:
     nbf.write(nb, f)

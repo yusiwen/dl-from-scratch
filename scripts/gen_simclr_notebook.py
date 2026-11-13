@@ -2,6 +2,11 @@
 """Generate SimCLR notebook."""
 
 import nbformat as nbf
+import pathlib as _pathlib
+import sys as _sys
+
+_sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
+from nb_bootstrap import bootstrap_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},"language_info": {"name": "python", "version": "3.12.0"}}
@@ -118,7 +123,7 @@ md("""\
 4. SimCLR 为什么需要大 batch size？（提示：负样本数量）
 """)
 
-nb.cells = cells
+nb.cells = [bootstrap_cell(), *cells]
 with open("selfsup/simclr/simclr.ipynb", "w") as f:
     nbf.write(nb, f)
 print("Generated selfsup/simclr/simclr.ipynb")

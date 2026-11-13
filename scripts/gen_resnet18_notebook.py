@@ -2,6 +2,11 @@
 """Generate ResNet18 notebook."""
 
 import nbformat as nbf
+import pathlib as _pathlib
+import sys as _sys
+
+_sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
+from nb_bootstrap import bootstrap_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {
@@ -194,7 +199,7 @@ md("""\
 4. 尝试去掉 shortcut 训练（把 `+ x` 注释掉），观察 loss 有何不同。
 """)
 
-nb.cells = cells
+nb.cells = [bootstrap_cell(), *cells]
 out = "cv/resnet18/resnet18.ipynb"
 with open(out, "w") as f:
     nbf.write(nb, f)

@@ -2,6 +2,11 @@
 """Generate ResNet34 notebook."""
 
 import nbformat as nbf
+import pathlib as _pathlib
+import sys as _sys
+
+_sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
+from nb_bootstrap import bootstrap_cell  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {
@@ -64,15 +69,12 @@ print(f"Device: {device}")
 """)
 
 code("""\
-# 使用 20K 子集控制 notebook 训练时间
-# 全量 162K → 改为 20000
+# 使用 20K 子集控制 notebook 训练时间（全量 162K）
 SUBSET_SIZE = 20000
 
-train_dataset = CelebADataset(split="train", transform=train_transform())
-# 截取前 SUBSET_SIZE 个样本
-train_dataset.samples = train_dataset.samples[:SUBSET_SIZE]
-
-val_dataset = CelebADataset(split="val", transform=train_transform())
+# num_samples 在 HF split 上切片，避免先把 162K 张图全部载入内存
+train_dataset = CelebADataset(split="train", transform=train_transform(), num_samples=SUBSET_SIZE)
+val_dataset = CelebADataset(split="val", transform=train_transform(), num_samples=2000)
 
 train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=4, pin_memory=True)
 val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False, num_workers=4, pin_memory=True)
@@ -109,7 +111,7 @@ LR = 0.1
 MOMENTUM = 0.9
 WEIGHT_DECAY = 1e-4
 
-criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight.to(device))
 optimizer = optim.SGD(model.parameters(), lr=LR, momentum=MOMENTUM, weight_decay=WEIGHT_DECAY)
 scheduler = CosineAnnealingLR(optimizer, T_max=NUM_EPOCHS)
 
@@ -172,7 +174,7 @@ md("""\
 5. 对比 ResNet18 和 ResNet34 在此任务上的表现差异。
 """)
 
-nb.cells = cells
+nb.cells = [bootstrap_cell(), *cells]
 out = "cv/resnet34/resnet34.ipynb"
 with open(out, "w") as f:
     nbf.write(nb, f)
