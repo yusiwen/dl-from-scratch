@@ -4,6 +4,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from cv.yolo.model import YOLO
 from cv.yolo.loss import yolo_loss
+from cv.yolo.eval import evaluate_map
 from cv.yolo.data import load_voc, VOC_CLASSES
 from utils.config import load_config, save_config
 from utils.seed import set_seed
@@ -53,6 +54,16 @@ def train():
         avg_loss = total_loss / num_batches
         writer.add_scalar("train/loss", avg_loss, epoch)
         print(f"Epoch [{epoch:2d}/{num_epochs}]  Loss: {avg_loss:.4f}")
+
+    # Score the detector on the held-out tail. The loss alone cannot tell
+    # whether the boxes and class probabilities are usable (see the eval notes
+    # in cv/yolo/yolo.ipynb), so every run reports mAP next to its loss.
+    metrics = evaluate_map(model, test_loader.dataset, device,
+                           image_size=cfg["image_size"], batch_size=cfg["batch_size"])
+    writer.add_scalar("eval/mAP@0.5", metrics["mAP@0.5"], num_epochs)
+    writer.add_scalar("eval/mAP@0.5:0.95", metrics["mAP@0.5:0.95"], num_epochs)
+    print(f"\nmAP@0.5: {metrics['mAP@0.5']:.3f}   mAP@0.5:0.95: {metrics['mAP@0.5:0.95']:.3f} "
+          f"({metrics['num_images']} images, {metrics['num_ground_truths']} boxes)")
 
     writer.close()
     save_path = cfg["model_path"]
