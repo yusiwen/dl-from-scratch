@@ -1,36 +1,42 @@
 """Cora citation network dataset loader."""
 
 import os
-import tarfile
-import tempfile
 import urllib.request
 import numpy as np
 import torch
 
 
-# The Cora archive published by LINQS (UC Santa Cruz). It ships cora/cora.content
-# and cora/cora.cites, which is what we parse below. The pygraph URL this used to
-# point at returns 404.
-CORA_URL = "https://linqs-data.soe.ucsc.edu/public/lbc/cora.tgz"
+# The two files of the Cora archive published by LINQS (UC Santa Cruz):
+# cora.content (one node per line: id, 1433 bag-of-words features, label) and
+# cora.cites (one directed edge per line). They are mirrored byte-for-byte in the
+# reference GCN repository, whose raw files we fetch.
+#
+# LINQS itself is not usable from a default TLS client: the host serves an
+# unrelated intermediate ("InCommon RSA Server CA 2") for a leaf issued by
+# "SSL.com TLS Issuing RSA CA R1", so verification fails with "unable to verify
+# the first certificate" (openssl verify return code 21, 2026-11-14).
+# The mirror below is pinned to a commit, and both files hash to the same
+# SHA-256 as the ones inside cora.tgz.
+CORA_BASE = "https://raw.githubusercontent.com/tkipf/pygcn/1600b5b748b3976413d1e307540ccc62605b4d6d/data/cora"
 CORA_FILES = ("cora.content", "cora.cites")
 
 
 def _download(raw_dir="graph/gcn/raw"):
+    """Fetch whichever of CORA_FILES is missing; existing files are kept."""
     os.makedirs(raw_dir, exist_ok=True)
-    if all(os.path.exists(os.path.join(raw_dir, f)) for f in CORA_FILES):
-        return
-    with tempfile.TemporaryDirectory() as tmp:
-        archive = os.path.join(tmp, "cora.tgz")
-        urllib.request.urlretrieve(CORA_URL, archive)
-        with tarfile.open(archive, "r:gz") as tar:
-            for member in tar.getmembers():
-                base = os.path.basename(member.name)
-                if base in CORA_FILES:
-                    extracted = tar.extractfile(member)
-                    if extracted is None:
-                        continue
-                    with extracted, open(os.path.join(raw_dir, base), "wb") as dst:
-                        dst.write(extracted.read())
+    for name in CORA_FILES:
+        dest = os.path.join(raw_dir, name)
+        if os.path.exists(dest):
+            continue
+        tmp = dest + ".part"
+        try:
+            urllib.request.urlretrieve(f"{CORA_BASE}/{name}", tmp)
+        except Exception as exc:
+            raise RuntimeError(
+                f"could not download {name} from {CORA_BASE} ({exc}); "
+                f"place cora.content and cora.cites in {raw_dir}/ by hand"
+            ) from exc
+        os.replace(tmp, dest)
 
 
 def _encode_onehot(labels):
