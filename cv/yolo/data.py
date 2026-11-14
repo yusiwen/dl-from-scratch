@@ -78,8 +78,13 @@ def annotation_to_boxes(annotation, image_size=224):
 
 def _voc_to_yolo(annotation, S, B, C, image_size=224):
     """Convert a VOC annotation dict to a YOLO target tensor (S, S, B*5+C)."""
-    target = torch.zeros(S, S, B * 5 + C)
     boxes, labels = _scaled_boxes(annotation, image_size)
+    return _boxes_to_yolo(boxes, labels, S, B, C, image_size)
+
+
+def _boxes_to_yolo(boxes, labels, S, B, C, image_size=224):
+    """Rasterise boxes in the resized image frame onto the S x S target grid."""
+    target = torch.zeros(S, S, B * 5 + C)
 
     for (xmin, ymin, xmax, ymax), class_idx in zip(boxes.tolist(), labels):
         if class_idx >= C:
@@ -110,11 +115,34 @@ def _voc_to_yolo(annotation, S, B, C, image_size=224):
     return target
 
 
+# Light photometric jitter: brightness/contrast/saturation only, so the boxes
+# stay valid. Applied per sample by the training dataset.
+_COLOR_JITTER = transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3)
+
+
+def _augment(image, boxes, labels, image_size=224, p_flip=0.5):
+    """Random horizontal flip (boxes mirrored) plus colour jitter.
+
+    VOC objects are roughly left-right symmetric, so a flip is a free extra
+    sample -- but the boxes have to be mirrored with the image, otherwise the
+    target stops pointing at the object. Colour jitter leaves geometry alone.
+    Without this the 11M-parameter detector overfits 3,000 images: mAP@0.5
+    peaks at 0.0339 around epoch 25 and is down to 0.0127 by epoch 50.
+    """
+    if boxes.numel() and torch.rand(1).item() < p_flip:
+        image = torch.flip(image, dims=[2])
+        x1 = boxes[:, 0].clone()
+        boxes[:, 0] = image_size - boxes[:, 2]
+        boxes[:, 2] = image_size - x1
+    return _COLOR_JITTER(image), boxes, labels
+
+
 class VOCDataset(Dataset):
     def __init__(self, split="trainval", image_size=224, S=7, B=2, C=20,
-                 max_samples=None, offset=0):
+                 max_samples=None, offset=0, augment=False):
         self.S, self.B, self.C = S, B, C
         self.image_size = image_size
+        self.augment = augment
         self.transform = _build_transform(image_size)
 
         self.dataset = VOCDetection(
@@ -138,7 +166,10 @@ class VOCDataset(Dataset):
         image, target = self.dataset[self.indices[idx]]
         image = self.transform(image.convert("RGB"))
         annotation = target.get("annotation", {}) if isinstance(target, dict) else {}
-        return image, _voc_to_yolo(annotation, self.S, self.B, self.C, self.image_size)
+        boxes, labels = _scaled_boxes(annotation, self.image_size)
+        if self.augment:
+            image, boxes, labels = _augment(image, boxes, labels, self.image_size)
+        return image, _boxes_to_yolo(boxes, labels, self.S, self.B, self.C, self.image_size)
 
     def annotation(self, idx):
         """Raw VOC annotation dict, parsed straight from XML.
@@ -169,9 +200,9 @@ def load_voc(batch_size=32, image_size=224, S=7, B=2, C=20, num_workers=4,
     n_test = max_test if max_test is not None else total - n_train
 
     train_dataset = VOCDataset(split="trainval", image_size=image_size, S=S, B=B, C=C,
-                               max_samples=n_train, offset=0)
+                               max_samples=n_train, offset=0, augment=True)
     test_dataset = VOCDataset(split="trainval", image_size=image_size, S=S, B=B, C=C,
-                              max_samples=n_test, offset=n_train)
+                              max_samples=n_test, offset=n_train, augment=False)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
