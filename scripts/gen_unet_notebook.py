@@ -6,7 +6,7 @@ import pathlib as _pathlib
 import sys as _sys
 
 _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
-from nb_bootstrap import bootstrap_cell, config_cell  # noqa: E402
+from nb_bootstrap import bootstrap_cell, config_cell, stabilize_ids  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {
@@ -208,6 +208,7 @@ md("""\
 
 nb.cells = [bootstrap_cell(), *cells]
 out = "cv/unet/unet.ipynb"
+stabilize_ids(nb)
 with open(out, "w") as f:
     nbf.write(nb, f)
 print(f"Generated {out}")

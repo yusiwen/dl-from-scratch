@@ -6,7 +6,7 @@ import pathlib as _pathlib
 import sys as _sys
 
 _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parent))
-from nb_bootstrap import bootstrap_cell, config_cell  # noqa: E402
+from nb_bootstrap import bootstrap_cell, config_cell, stabilize_ids  # noqa: E402
 
 nb = nbf.v4.new_notebook()
 nb.metadata = {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},"language_info": {"name": "python", "version": "3.12.0"}}
@@ -205,6 +205,7 @@ md("""\
 """)
 
 nb.cells = [bootstrap_cell(), *cells]
+stabilize_ids(nb)
 with open("cv/yolo/yolo.ipynb", "w") as f:
     nbf.write(nb, f)
 print("Generated cv/yolo/yolo.ipynb")
