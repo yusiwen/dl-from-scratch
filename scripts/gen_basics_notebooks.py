@@ -193,6 +193,60 @@ $$\mathcal{L} = \mathrm{KL}(P \,\|\, Q) = \sum_{i \neq j} p_{ij} \log \frac{p_{i
             "Why can distances between clusters in a t-SNE plot not be read as similarities?",
         ],
     },
+    {
+        "name": "gmm",
+        "title": "Gaussian Mixture Model (EM)",
+        "desc": "Soft clustering with full covariances on MNIST, fitted by expectation-maximization (BIC for K).",
+        "formula": r"""**Mixture model:**
+
+$$p(x) = \sum_{k=1}^{K} \pi_k \, \mathcal{N}(x \mid \mu_k, \Sigma_k)$$
+
+**E-step (responsibilities):**
+
+$$r_{ik} = \frac{\pi_k \, \mathcal{N}(x_i \mid \mu_k, \Sigma_k)}{\sum_{j=1}^{K} \pi_j \, \mathcal{N}(x_i \mid \mu_j, \Sigma_j)}$$
+
+**M-step (weighted maximum likelihood):**
+
+$$\pi_k = \frac{1}{N}\sum_i r_{ik}, \qquad
+\mu_k = \frac{\sum_i r_{ik} x_i}{\sum_i r_{ik}}, \qquad
+\Sigma_k = \frac{\sum_i r_{ik} (x_i - \mu_k)(x_i - \mu_k)^\top}{\sum_i r_{ik}}$$
+
+**Log-likelihood (EM never decreases it):**
+
+$$\log L = \sum_i \log \sum_k \pi_k \, \mathcal{N}(x_i \mid \mu_k, \Sigma_k)$$""",
+        "import_code": "from ml.basics.gmm import main",
+        "run_code": "main()",
+        "questions": [
+            "GMM 和 K-Means 是什么关系？（提示：K-Means 是责任度为 0/1、协方差固定的特例）",
+            "为什么 EM 能保证对数似然单调不降？E 步和 M 步各自在优化什么？",
+            "BIC/AIC 怎么用来选簇数 K？它们惩罚的是什么？",
+            "全协方差矩阵在 50 维 PCA 空间里参数有多少个？高维时会遇到什么问题？",
+        ],
+    },
+    {
+        "name": "dbscan",
+        "title": "DBSCAN",
+        "desc": "Density-based clustering on MNIST (and synthetic rings) that leaves sparse points as noise.",
+        "formula": r"""**eps-邻域：**
+
+$$N_\varepsilon(p) = \{ q \in D \mid \mathrm{dist}(p, q) \le \varepsilon \}$$
+
+**三类点：**
+
+- **核心点（core）**：$|N_\varepsilon(p)| \ge \text{min\_samples}$
+- **边界点（border）**：不是核心点，但落在某个核心点的 $\varepsilon$-邻域内
+- **噪声（noise）**：两者都不是，标为 $-1$
+
+**簇：** 从一个核心点出发、由密度可达（density-reachable）关系连成的最大点集。""",
+        "import_code": "from ml.basics.dbscan import main",
+        "run_code": "main()",
+        "questions": [
+            "核心点、边界点、噪声点的定义分别是什么？",
+            "eps 变大或变小，簇的数量和质量会怎么变？k-距离图能怎么帮你选 eps？",
+            "DBSCAN 为什么不需要预先指定簇数？它对密度差异很大的数据有什么局限？",
+            "为什么在 50 维空间里\"密度\"比二维更难定义？",
+        ],
+    },
 ]
 
 
