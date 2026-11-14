@@ -108,5 +108,7 @@ jobs:
         if: always()
         with:
           name: notebook-smoke-summary
-          path: runs/notebooks/summary.md
+          path: |
+            runs/notebooks/summary.md
+            runs/notebooks/summary.json
           if-no-files-found: warn

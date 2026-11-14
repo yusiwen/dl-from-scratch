@@ -238,6 +238,10 @@ def main(argv=None):
         results_path.write_text(json.dumps(results, indent=2) + "\n")
         tail = record["highlights"][-1] if record["highlights"] else ""
         print(f"    {record['status']:8s} {record['elapsed_s']:7.1f}s  {tail[:100]}", flush=True)
+        # Print the errors too: the first one is the cause, the rest are cascade,
+        # and a CI log that only shows the status sends the reader to the notebook.
+        for err in record["errors"]:
+            print(f"      ! {err[:200]}", flush=True)
 
     write_markdown(results, out_root / "summary.md")
     counts = {}
