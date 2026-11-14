@@ -1,11 +1,19 @@
-"""Simplified YOLO: CNN backbone + detection head."""
+"""Simplified YOLO: CNN backbone + convolutional detection head."""
 
 import torch
 import torch.nn as nn
 
 
 class YOLO(nn.Module):
-    """Simplified YOLO detector (like YOLOv1)."""
+    """Simplified YOLO detector (YOLOv1 layout: S x S grid, B boxes per cell).
+
+    The head is convolutional on purpose. A ``Flatten() + Linear(1024*S*S, ...)``
+    head mixes every spatial location into one vector, so a cell's box
+    prediction no longer depends on *its* patch of the feature map; the grid
+    structure that the target tensor encodes is thrown away. Keeping the head
+    convolutional leaves the (S, S) layout intact and cuts the head from 51M to
+    ~5M parameters, which matters with a few thousand training images.
+    """
 
     def __init__(self, S=7, B=2, C=20):
         super().__init__()
@@ -21,19 +29,18 @@ class YOLO(nn.Module):
             nn.AdaptiveAvgPool2d((S, S)),
         )
 
-        # Detection head.
+        # Detection head: per-cell prediction, (B*5+C) channels, one 1x1 conv.
         self.det_head = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(1024 * S * S, 1024),
+            nn.Conv2d(1024, 512, 3, 1, 1),
+            nn.BatchNorm2d(512),
             nn.LeakyReLU(0.1),
-            nn.Linear(1024, S * S * (B * 5 + C)),
+            nn.Conv2d(512, B * 5 + C, 1),
         )
 
     def forward(self, x):
-        B = x.size(0)
-        x = self.features(x)
-        x = self.det_head(x)
-        return x.view(B, self.S, self.S, self.B * 5 + self.C)
+        x = self.features(x)              # (N, 1024, S, S)
+        x = self.det_head(x)              # (N, B*5+C, S, S)
+        return x.permute(0, 2, 3, 1)      # (N, S, S, B*5+C)
 
     def num_params(self):
         return sum(p.numel() for p in self.parameters())
