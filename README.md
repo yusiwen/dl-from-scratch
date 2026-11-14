@@ -92,11 +92,26 @@ does it):
 scripts/run_notebooks.sh --only ml/basics/knn.ipynb --timeout 600
 ```
 
-Two gates keep the notebooks honest:
+Three gates keep the notebooks honest:
 
 ```bash
-python scripts/check_notebook_config.py      # hyperparameters come from config.yaml
-python scripts/check_notebook_coverage.py   # every model dir has a notebook, docs count matches
+python scripts/fix_notebook_bootstrap.py --check   # every notebook can find the repo root
+python scripts/check_notebook_config.py            # hyperparameters come from config.yaml
+python scripts/check_notebook_coverage.py          # every model dir has a notebook, docs count matches
+```
+
+CI runs all three on every push and pull request, then executes the cheap subset
+(`ml/basics/*` except `tsne`, `rl/dqn`, `graph/gcn`) on a CPU runner — see
+[`.github/workflows/notebooks.yml`](.github/workflows/notebooks.yml). The smoke job fails
+when a notebook raises and uploads `runs/notebooks/summary.md` as an artifact. `tsne` is
+excluded because the demo costs about 8 minutes at 5,000 points × 1,000 iterations, which
+would not fit the 15-minute job budget.
+
+Run the same subset locally (no Docker, no GPU):
+
+```bash
+python scripts/run_notebooks.py --only 'ml/basics/*' --skip 'ml/basics/tsne.ipynb' \
+  --only 'rl/dqn/*' --only 'graph/gcn/*' --timeout 300 --fail-on partial
 ```
 
 ### Usage
