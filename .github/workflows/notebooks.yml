@@ -1,0 +1,112 @@
+name: Notebooks
+
+# Two levels of protection, both cheap:
+#
+#   gates  — static checks over every notebook, no dataset needed (seconds).
+#   smoke  — really executes the inexpensive notebooks on a CPU runner.
+#
+# The smoke set is the cheap tail of scripts/run_notebooks.py's cost order. It is
+# a *sample*, not full coverage: one executing notebook per import surface (classical
+# ML, RL, graph) catches the breakages that static checks cannot see (a renamed
+# helper, a moved config key, a notebook whose cells no longer run in order).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: notebooks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    name: Gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install
+        run: python -m pip install nbformat pyyaml
+
+      - name: Bootstrap cell present and current
+        run: python scripts/fix_notebook_bootstrap.py --check
+
+      - name: Hyperparameters come from config.yaml
+        run: python scripts/check_notebook_config.py
+
+      - name: Coverage and docs count
+        run: python scripts/check_notebook_coverage.py
+
+  smoke:
+    name: Smoke
+    needs: gates
+    runs-on: ubuntu-latest
+    # Acceptance for issue #34: the smoke job stays under 15 minutes.
+    timeout-minutes: 15
+    env:
+      MPLBACKEND: Agg
+      # Keep HF telemetry and the dataset cache out of the checkout.
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      # Both datasets come off the network: MNIST through Hugging Face, Cora as a
+      # 10 MB tarball. Nothing under data/ is touched by the smoke set.
+      - name: Cache datasets
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/huggingface
+            ~/.cache/torch
+            graph/gcn/raw
+          key: notebooks-data-${{ runner.os }}-${{ hashFiles('utils/data.py', 'graph/gcn/data.py', 'ml/basics/data.py') }}
+          restore-keys: notebooks-data-${{ runner.os }}-
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install numpy scikit-learn matplotlib pyyaml \
+            nbformat nbclient ipykernel datasets gymnasium
+
+      - name: Run smoke notebooks
+        env:
+          MPLCONFIGDIR: ${{ runner.temp }}/mpl
+        run: |
+          python scripts/run_notebooks.py \
+            --only 'ml/basics/*' \
+            --skip 'ml/basics/tsne.ipynb' \
+            --only 'rl/dqn/*' \
+            --only 'graph/gcn/*' \
+            --timeout 300 \
+            --fail-on partial
+
+      - name: Report
+        if: always()
+        run: cat runs/notebooks/summary.md || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: notebook-smoke-summary
+          path: runs/notebooks/summary.md
+          if-no-files-found: warn
