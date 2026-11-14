@@ -36,8 +36,14 @@ else:
 
 
 def bootstrap_cell():
-    """Return a fresh code cell carrying the bootstrap snippet."""
-    return nbf.v4.new_code_cell(BOOTSTRAP_SRC)
+    """Return a fresh code cell carrying the bootstrap snippet.
+
+    The cell id is fixed so regenerating a notebook is byte-identical; nbformat
+    otherwise assigns a random id and every run dirties the working tree.
+    """
+    cell = nbf.v4.new_code_cell(BOOTSTRAP_SRC)
+    cell["id"] = "nb-bootstrap"
+    return cell
 
 
 def bootstrap_index(nb):
@@ -75,4 +81,17 @@ cfg = load_config("{config_path}")
 set_seed(cfg["seed"])
 print(f"config: {{cfg}}")
 '''
-    return nbf.v4.new_code_cell(source)
+    cell = nbf.v4.new_code_cell(source)
+    cell["id"] = "nb-config"
+    return cell
+
+
+def stabilize_ids(notebook):
+    """Give every cell a positional id so regeneration is byte-identical.
+
+    nbformat assigns random ids to new cells, so without this every run of a
+    generator dirties the tree even though nothing changed.
+    """
+    for index, cell in enumerate(notebook.cells):
+        cell["id"] = f"cell-{index:02d}"
+    return notebook
