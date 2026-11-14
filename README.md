@@ -277,7 +277,13 @@ numbers are reported as-is.
 
 | Item | Value |
 |---|---|
-| Model | Simplified YOLO (59M params) |
+| Model | Simplified YOLO (11M params, 5.4M of them in the conv head) |
+| Dataset | Pascal VOC 2007 via torchvision — 3,000 train / 1,000 held-out |
+| Architecture | CNN backbone → conv head (3×3 → 1×1) → 7×7×30 output |
+| Training | YOLOv1 loss (coordinate MSE + objectness BCE + class CE), NMS at inference |
+| Augmentation | Random horizontal flip (boxes mirrored) + colour jitter, training split only |
+| mAP@0.5 | **0.034** (50 epochs, 1,000 held-out images) |
+| mAP@0.5:0.95 | **0.008** |
 
 ## NLP/LoRA
 
@@ -298,9 +304,6 @@ numbers are reported as-is.
 | Architecture | DepthwiseSeparableConv (depthwise 3×3 + pointwise 1×1) |
 | Key concept | Depthwise separable convolution, ~8.4× fewer ops than standard conv |
 | Comparison | SimpleCNN 620K params → MobileNet 135K (4.6× smaller) |
-| Dataset | Pascal VOC via HF datasets — 20 classes |
-| Architecture | CNN backbone → FC detection head → 7×7×30 output |
-| Training | YOLO loss (coord + obj + noobj + class), NMS at inference |
 
 ## DCGAN
 
@@ -656,7 +659,7 @@ locally after training; paths are shown below for reference.
 | GCN (Cora) | `graph/gcn/gcn_cora.pt` | 0.1 MB |
 | DQN (CartPole) | `rl/dqn/dqn_cartpole.pt` | 0.07 MB |
 | SimCLR (CIFAR-10) | `selfsup/simclr/simclr_cifar10.pt` | 44 MB |
-| YOLO (Pascal VOC) | `cv/yolo/yolo_voc.pt` | 226 MB |
+| YOLO (Pascal VOC) | `cv/yolo/yolo_voc.pt` | 44 MB |
 | LoRA (GPT-adapted, text8) | `nlp/lora/lora_gpt.pt` | 0.2 MB |
 | MobileNet (CIFAR-10) | `cv/mobilenet/mobilenet_cifar10.pt` | 0.5 MB |
 | DDPM (CIFAR-10, 32×32) | `gen/ddpm/ddpm_cifar10.pt` | 62 MB |

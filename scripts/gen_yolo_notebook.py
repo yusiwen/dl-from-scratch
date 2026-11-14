@@ -31,25 +31,42 @@ YOLO（Redmon et al. 2016）是首个单阶段目标检测器，将检测视为�
 数据集：**Pascal VOC** — 20 类物体，含边界框标注。
 """)
 
-md("""## 数学原理
+md(r"""## 数学原理
 
 ### 输出表示
 
 每个网格单元预测 $B$ 个边界框，每个框 5 个值：
 
-$$(x, y, w, h, \\text{confidence})$$
+$$(x, y, w, h, C)$$
 
 - $x, y$: 框中心相对于网格单元的偏移（0~1）
 - $w, h$: 框宽高相对于图像尺寸的比例
-- $\\text{confidence}$: $P(\\text{object}) \\times \\text{IoU}_{\\text{pred}}^{\\text{truth}}$
+- $C$: 目标置信度 $P(\text{object}) \times \text{IoU}_{\text{pred}}^{\text{truth}}$
 
-再加上 $C$ 个类别概率 $P(\\text{class}_i \\mid \\text{object})$
+再加上 $C$ 个类别概率 $P(\text{class}_i \mid \text{object})$
 
-输出张量：$S \\times S \\times (B \\times 5 + C)$
+输出张量：$S \times S \times (B \times 5 + C) = 7 \times 7 \times 30$
 
 ### 损失函数
 
-$$\\mathcal{L} = \\lambda_{\\text{coord}} \\sum \\mathbb{1}_{ij}^{\\text{obj}} [(x - \\hat{x})^2 + (y - \\hat{y})^2 + (\\sqrt{w} - \\sqrt{\\hat{w}})^2 + (\\sqrt{h} - \\sqrt{\\hat{h}})^2] + \\sum \\mathbb{1}_{ij}^{\\text{obj}} (C - \\hat{C})^2 + \\lambda_{\\text{noobj}} \\sum \\mathbb{1}_{ij}^{\\text{noobj}} (C - \\hat{C})^2 + \\sum \\mathbb{1}_{i}^{\\text{obj}} \\sum_{c=1}^C (p_i(c) - \\hat{p}_i(c))^2$$
+三项，各自按 YOLOv1 的方式归一化（`cv/yolo/loss.py`）：
+
+- **坐标**：只在「拥有目标框」的框槽上算平方误差，$w, h$ 先开平方再比较
+  （同样大小的误差，小框罚得比大框重），再除以目标框数量 $N_{\text{obj}}$
+- **置信度**：对**每个**框槽做二分类交叉熵 —— 有目标记 1、无目标记 0；
+  正样本除以 $N_{\text{obj}}$，负样本除以空格数量 $N_{\text{bg}}$ 并乘 $\lambda_{\text{noobj}}$
+- **类别**：在有目标的格子上做交叉熵（网络输出的是 logits，评测时再 softmax）
+
+$$\mathcal{L} = \lambda_{\text{coord}} \frac{1}{N_{\text{obj}}} \sum_{b} \sum_{\text{obj}_b}
+\big[(x-\hat{x})^2 + (y-\hat{y})^2\big]
++ \lambda_{\text{coord}} \frac{1}{N_{\text{obj}}} \sum_{b} \sum_{\text{obj}_b}
+\big[(\sqrt{w}-\sqrt{\hat{w}})^2 + (\sqrt{h}-\sqrt{\hat{h}})^2\big]
++ \frac{1}{N_{\text{obj}}} \sum_{\text{obj}} \mathrm{BCE}(C, \hat{C})
++ \frac{\lambda_{\text{noobj}}}{N_{\text{bg}}} \sum_{\text{noobj}} \mathrm{BCE}(C, \hat{C})
++ \frac{1}{N_{\text{obj}}} \sum_{\text{obj}} \mathrm{CE}(p, \hat{p})$$
+
+> 两个框槽都必须监督。早期实现只读第 0 个槽的置信度、也只回归第 0 个槽的坐标，
+> 第 1 个槽的框和置信度从未拿到梯度 —— 等于输出张量里有一半是随机数。
 
 ### 非极大值抑制（NMS）
 
@@ -79,12 +96,27 @@ from cv.yolo.data import load_voc, VOC_CLASSES
 
 # 用 VOC2007 子集控制 notebook 训练时长（trainval 共 5011 张）。
 # 训练取前 3000 张，评测取之后的 1000 张：两段不相交，避免训练集与评测集重叠。
+# 训练集带随机水平翻转 + 颜色扰动（框随图镜像），评测集不做增强。
 train_loader, test_loader = load_voc(
     batch_size=cfg["batch_size"], image_size=cfg["image_size"], S=cfg["S"], B=cfg["B"], C=cfg["C"], num_workers=cfg["num_workers"],
     max_train=3000, max_test=1000,
 )
 print(f"Classes ({len(VOC_CLASSES)}): {VOC_CLASSES}")
 print(f"Train batches: {len(train_loader)}")
+""")
+
+md(r"""### 检测头为什么是卷积的
+
+每个网格单元要独立输出 $B 	imes 5 + C = 30$ 个值，所以检测头保持空间结构：
+
+`Conv3x3(1024→512) → BN → LeakyReLU → Conv1x1(512→30)`
+
+输出仍是 $7 	imes 7 	imes 30$：每个格子只由它自己那片感受野决定，整个头约 540 万参数。
+
+早期版本是 `Flatten() → Linear(1024·49 → 1024) → Linear(1024 → 1470)`：7×7 的位置
+信息被压进同一个向量，单个格子的预测可以依赖整张图任意位置的特征；头本身有
+5100 万参数，而训练集只有 3000 张图。空间结构和参数量这两个问题一起把 mAP@0.5
+压在 0.008。
 """)
 
 code("""\
