@@ -19,9 +19,11 @@ def decode_predictions(pred, S=7, B=2, C=20, image_size=224,
     Boxes come back in pixel coordinates of the ``image_size`` square, matching
     the coordinate frame that ``annotation_to_boxes`` returns.
 
-    The head is trained with MSE against one-hot targets, so the class logits
-    are normalised with a softmax; a detection's score is confidence times its
-    best class probability, which is what the precision/recall curve needs.
+    The head emits raw logits: the class block is trained with cross entropy
+    (softmax here), and each box's confidence is trained as a logit with binary
+    cross entropy, so it is squashed with a sigmoid before it becomes a score.
+    A detection's score is confidence times its best class probability, which is
+    what the precision/recall curve needs.
     """
     device = pred.device
     rows, cols = torch.meshgrid(
@@ -34,11 +36,14 @@ def decode_predictions(pred, S=7, B=2, C=20, image_size=224,
     boxes_per_slot, scores_per_slot = [], []
     for b in range(B):
         raw = pred[..., b * 5:(b + 1) * 5]                  # (S, S, 5)
-        conf = raw[..., 4]
-        cx = (cols + raw[..., 0]) / S * image_size
-        cy = (rows + raw[..., 1]) / S * image_size
-        w = raw[..., 2] * image_size
-        h = raw[..., 3] * image_size
+        conf = raw[..., 4].sigmoid()
+        # Clamp before decoding: an untrained or early-epoch head can emit a
+        # centre outside its cell or a negative size, which would turn into an
+        # inverted box (x2 < x1) and a meaningless IoU.
+        cx = (cols + raw[..., 0].clamp(0.0, 1.0)) / S * image_size
+        cy = (rows + raw[..., 1].clamp(0.0, 1.0)) / S * image_size
+        w = raw[..., 2].clamp(min=0.0) * image_size
+        h = raw[..., 3].clamp(min=0.0) * image_size
         boxes_per_slot.append(
             torch.stack([cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2], dim=-1)
         )

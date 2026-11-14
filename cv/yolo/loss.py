@@ -1,42 +1,78 @@
 """YOLO loss and NMS utilities."""
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 
 
 def yolo_loss(pred, target, S=7, B=2, C=20, coord_scale=5, noobj_scale=0.5):
-    """YOLO loss: coord + obj + noobj + class."""
+    """YOLOv1 loss over a whole (N, S, S, B*5+C) head output.
+
+    Three terms, each normalised the way the paper does it:
+
+    * **coordinates** — squared error over every slot that owns a target box,
+      averaged over objects and weighted by ``coord_scale``.
+    * **objectness** — binary cross entropy on *every* slot's confidence logit:
+      1 where the slot owns a box, 0 elsewhere. The background half is scaled by
+      ``noobj_scale`` and averaged over the empty slots.
+    * **class** — cross entropy over the cells that contain an object, so the
+      class logits are trained as logits (the evaluation already applies a
+      softmax to them).
+
+    Slot ``b`` is responsible for its cell's object when the target marks its
+    confidence channel, which is why both slots are supervised. The previous
+    version read only slot 0: slot 1's boxes and confidence never received a
+    gradient, and the class term regressed one-hot labels with MSE.
+    """
     pred = pred.view(-1, S, S, B * 5 + C)
     target = target.view(-1, S, S, B * 5 + C)
 
-    obj_mask = target[..., 4] > 0  # (N, S, S) — first box has obj
+    conf_channels = [b * 5 + 4 for b in range(B)]
+    tconf = torch.stack([target[..., i] for i in conf_channels], dim=-1)   # (N, S, S, B)
+    pconf = torch.stack([pred[..., i] for i in conf_channels], dim=-1)     # logits
 
-    # ── Box coordinates loss (only for obj cells, best box) ──
-    coord_loss = torch.tensor(0.0, device=pred.device)
-    if obj_mask.any():
-        pred_box = pred[obj_mask]
-        target_box = target[obj_mask]
-        # Take first box for simplicity (would IoU match in real YOLO).
-        coord_loss = F.mse_loss(pred_box[:, :4], target_box[:, :4], reduction="sum")
+    has_obj = tconf.sum(dim=-1) > 0                                       # (N, S, S)
 
-    # ── Confidence loss ──
-    obj_conf = pred[..., 4]
-    target_conf = target[..., 4]
-    obj_loss = F.mse_loss(obj_conf[obj_mask], target_conf[obj_mask], reduction="sum")
-    noobj_loss = F.mse_loss(obj_conf[~obj_mask], target_conf[~obj_mask], reduction="sum")
+    # ── Box coordinates, for each slot that carries a target box ──
+    # w and h are compared in square-root space, as in the paper: the same box
+    # error in a small box then costs more than in a large one, which keeps the
+    # loss from being dominated by big objects.
+    coord_loss = pred.new_zeros(())
+    for b in range(B):
+        owns = tconf[..., b] > 0
+        if owns.any():
+            xy_pred, wh_pred = pred[..., b * 5:b * 5 + 2][owns], pred[..., b * 5 + 2:b * 5 + 4][owns]
+            xy_true, wh_true = target[..., b * 5:b * 5 + 2][owns], target[..., b * 5 + 2:b * 5 + 4][owns]
+            coord_loss = coord_loss + F.mse_loss(xy_pred, xy_true, reduction="sum")
+            coord_loss = coord_loss + F.mse_loss(
+                wh_pred.clamp(min=1e-6).sqrt(), wh_true.clamp(min=1e-6).sqrt(), reduction="sum"
+            )
 
-    # ── Class loss ──
-    class_loss = torch.tensor(0.0, device=pred.device)
-    if obj_mask.any():
-        class_loss = F.mse_loss(
-            pred[obj_mask][:, B * 5:],
-            target[obj_mask][:, B * 5:],
+    # ── Objectness, positive and negative halves normalised separately ──
+    positive = tconf > 0
+    obj_loss = F.binary_cross_entropy_with_logits(pconf[positive],
+                                                  tconf[positive], reduction="sum")
+    noobj_loss = F.binary_cross_entropy_with_logits(pconf[~positive],
+                                                    tconf[~positive], reduction="sum")
+
+    # ── Class, cross entropy on the cells that hold an object ──
+    class_loss = pred.new_zeros(())
+    if has_obj.any():
+        class_loss = F.cross_entropy(
+            pred[..., B * 5:][has_obj],
+            target[..., B * 5:][has_obj].argmax(dim=-1),
             reduction="sum",
         )
 
-    N = obj_mask.numel()
-    return (coord_scale * coord_loss + obj_loss + noobj_scale * noobj_loss + class_loss) / N
+    n_obj = positive.sum().clamp(min=1)
+    n_bg = (~positive).sum().clamp(min=1)
+    n_cells = has_obj.sum().clamp(min=1)
+
+    return (
+        coord_scale * coord_loss / n_obj
+        + obj_loss / n_obj
+        + noobj_scale * noobj_loss / n_bg
+        + class_loss / n_cells
+    )
 
 
 def nms(predictions, conf_threshold=0.3, iou_threshold=0.5):
@@ -48,7 +84,7 @@ def nms(predictions, conf_threshold=0.3, iou_threshold=0.5):
         for col in range(S):
             for b in range(B):
                 box = predictions[row, col, b * 5:(b + 1) * 5]
-                conf = box[4].item()
+                conf = box[4].sigmoid().item()
                 if conf < conf_threshold:
                     continue
                 x, y, w, h = box[:4].tolist()
