@@ -12,9 +12,15 @@ so heavy notebooks still yield partial output (epoch lines) that we can report.
     python scripts/run_notebooks.py                       # run everything
     python scripts/run_notebooks.py --only 'ml/basics/*'  # subset
     python scripts/run_notebooks.py --resume              # skip already-ok
+
+Filters (``--only`` / ``--skip``) accept a glob (``ml/basics/*``) or a plain
+substring (``ml/basics``), and may be repeated. ``--fail-on`` turns the report
+into a gate: it exits 1 when a run reaches the given status, which is what CI
+uses.
 """
 
 import argparse
+import fnmatch
 import json
 import re
 import sys
@@ -29,35 +35,49 @@ from nbclient.exceptions import CellExecutionError
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SKIP_DIRS = {".venv", ".git", "__pycache__", ".ipynb_checkpoints", "runs", "node_modules"}
 
-# Cheapest first, so a long batch still produces the widest coverage.
+# Cheapest first, so a long batch still produces the widest coverage. Seconds
+# are the measured CPU time on a GB10 box (see runs/notebooks/summary.json).
 ORDER = [
-    "ml/basics/knn.ipynb",
-    "ml/basics/perceptron.ipynb",
-    "ml/basics/decision_tree.ipynb",
-    "ml/basics/naive_bayes.ipynb",
-    "ml/basics/linear_regression.ipynb",
-    "ml/basics/logistic_regression.ipynb",
-    "ml/basics/pca.ipynb",
-    "ml/basics/k_means.ipynb",
-    "ml/basics/svm.ipynb",
-    "ml/basics/tsne.ipynb",
-    "rl/dqn/dqn.ipynb",
-    "graph/gcn/gcn.ipynb",
-    "nlp/word2vec/word2vec.ipynb",
-    "cv/simplecnn/cnn.ipynb",
-    "gen/dcgan/dcgan.ipynb",
-    "nlp/lstm/lstm.ipynb",
-    "nlp/lora/lora.ipynb",
-    "cv/mobilenet/mobilenet.ipynb",
-    "nlp/bert/bert.ipynb",
-    "nlp/gpt/gpt.ipynb",
-    "cv/unet/unet.ipynb",
-    "cv/vit/vit.ipynb",
-    "cv/resnet18/resnet18.ipynb",
-    "cv/yolo/yolo.ipynb",
-    "cv/resnet34/resnet34.ipynb",
-    "selfsup/simclr/simclr.ipynb",
+    "ml/basics/decision_tree.ipynb",        # 5
+    "graph/gcn/gcn.ipynb",                  # 5
+    "ml/basics/perceptron.ipynb",           # 6
+    "ml/basics/pca.ipynb",                  # 7
+    "ml/basics/svm.ipynb",                  # 7
+    "ml/basics/dbscan.ipynb",               # 10
+    "ml/basics/naive_bayes.ipynb",          # 10
+    "ml/basics/knn.ipynb",                  # 10
+    "ml/basics/k_means.ipynb",              # 12
+    "rl/dqn/dqn.ipynb",                     # 14
+    "gen/autoencoder/autoencoder.ipynb",    # 14
+    "ml/basics/linear_regression.ipynb",    # 16
+    "selfsup/deep_cluster/dec.ipynb",       # 19
+    "nlp/lora/lora.ipynb",                  # 26
+    "nlp/bert/bert.ipynb",                  # 27
+    "ml/basics/gmm.ipynb",                  # 28
+    "ml/basics/logistic_regression.ipynb",  # 50
+    "nlp/lstm/lstm.ipynb",                  # 52
+    "nlp/gpt/gpt.ipynb",                    # 69
+    "ml/mlp/mlp.ipynb",                     # 77
+    "gen/dcgan/dcgan.ipynb",                # 84
+    "cv/simplecnn/cnn.ipynb",               # 102
+    "nlp/word2vec/word2vec.ipynb",          # 133
+    "cv/resnet18/resnet18.ipynb",           # 208
+    "cv/mobilenet/mobilenet.ipynb",         # 252
+    "selfsup/mae/mae.ipynb",                # 310
+    "cv/vit/vit.ipynb",                     # 322
+    "nlp/seq2seq/seq2seq.ipynb",            # 339
+    "ml/basics/tsne.ipynb",                 # 471
+    "gen/vae/vae.ipynb",                    # 614
+    "selfsup/simclr/simclr.ipynb",          # 674
+    "cv/yolo/yolo.ipynb",                   # 724
+    "selfsup/byol/byol.ipynb",              # 866
+    "cv/unet/unet.ipynb",                   # 1882
+    "gen/ddpm/ddpm.ipynb",                  # 2187
+    "cv/resnet34/resnet34.ipynb",           # 3119
+    "cv/resnet50/resnet50.ipynb",           # 3292
 ]
+
+STATUS_ORDER = {"ok": 0, "partial": 1, "error": 2}
 
 # Lines worth surfacing in the report: epoch progress, accuracy, loss, scores.
 INTERESTING = re.compile(
@@ -168,11 +188,21 @@ def run_one(rel, timeout, out_root):
     return record
 
 
+def matches(rel, patterns):
+    """True when `rel` matches any pattern as a glob or as a plain substring."""
+    return any(fnmatch.fnmatch(rel, pattern) or pattern in rel for pattern in patterns)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--timeout", type=int, default=1200, help="per-cell timeout in seconds")
     ap.add_argument("--budget", type=int, default=0, help="stop after this many seconds (0 = no cap)")
-    ap.add_argument("--only", default=None, help="glob-like substring filter on the path")
+    ap.add_argument("--only", action="append", default=[], metavar="PATTERN",
+                    help="keep notebooks matching this glob or substring (repeatable)")
+    ap.add_argument("--skip", action="append", default=[], metavar="PATTERN",
+                    help="drop notebooks matching this glob or substring (repeatable)")
+    ap.add_argument("--fail-on", choices=("none", "partial", "error"), default="none",
+                    help="exit 1 when any executed notebook reaches this status (default: none)")
     ap.add_argument("--resume", action="store_true", help="skip notebooks already recorded as ok")
     ap.add_argument("--outdir", default="runs/notebooks")
     args = ap.parse_args(argv)
@@ -187,7 +217,9 @@ def main(argv=None):
 
     targets = discover()
     if args.only:
-        targets = [t for t in targets if args.only in t]
+        targets = [t for t in targets if matches(t, args.only)]
+    if args.skip:
+        targets = [t for t in targets if not matches(t, args.skip)]
     if args.resume:
         targets = [t for t in targets if results.get(t, {}).get("status") != "ok"]
 
@@ -212,6 +244,18 @@ def main(argv=None):
     for rec in results.values():
         counts[rec["status"]] = counts.get(rec["status"], 0) + 1
     print(f"\ndone: {counts}")
+
+    if args.fail_on != "none":
+        threshold = STATUS_ORDER[args.fail_on]
+        failing = [
+            rel for rel in targets
+            if rel in results and STATUS_ORDER.get(results[rel]["status"], 9) >= threshold
+        ]
+        if failing:
+            print(f"\nfail-on={args.fail_on}: {len(failing)} notebook(s) below par", file=sys.stderr)
+            for rel in failing:
+                print(f"  {rel}: {results[rel]['status']}", file=sys.stderr)
+            return 1
     return 0
 
 
