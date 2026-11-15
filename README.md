@@ -96,13 +96,19 @@ scripts/run_notebooks.sh --only ml/basics/knn.ipynb --timeout 600
 
 ```bash
 scripts/jupyter.sh                # prints http://127.0.0.1:8888/lab?token=<generated>
-scripts/jupyter.sh --port 9000
+scripts/jupyter.sh --port 9000    # another port
+scripts/jupyter.sh --host 127.0.0.1   # this machine only
 ```
 
 The server runs in the same GPU image the notebooks are tested in, with this repository as its
 root directory, the Hugging Face cache mounted, and a fresh token printed in the URL. Every
 notebook under `cv/`, `gen/`, `nlp/`, `graph/`, `ml/`, `selfsup/` and `rl/` opens from the file
 browser; `Ctrl-C` stops it.
+
+It listens on **all interfaces** by default, so a notebook can also be opened from another
+machine on the same network - the URL printed second is the one to use there. The per-start
+token is then the only thing guarding a kernel that can read the repository and reach the GPU,
+so use `--host 127.0.0.1` when serving this machine only.
 
 Running `jupyter lab` in the repository's own virtualenv also works, but every torch notebook
 then runs on the CPU - the GPU lives in the container.
