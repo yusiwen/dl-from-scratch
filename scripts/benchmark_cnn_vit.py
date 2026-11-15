@@ -10,7 +10,9 @@ Usage:
 Requires: matplotlib (for plot), pytorch (for training)
 """
 
+import sys
 import time
+from pathlib import Path
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -18,6 +20,11 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from datasets import load_dataset
+
+# Run as a plain script from a checkout that is not pip-installed: the training
+# modules are imported as `cv.*` / `ml.*`, so the repository root has to be on
+# sys.path before the first project import.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from cv.simplecnn.model import SimpleCNN
 from cv.vit.model import ViT
