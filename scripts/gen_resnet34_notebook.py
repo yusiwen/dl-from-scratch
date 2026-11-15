@@ -97,7 +97,7 @@ print(f"pos_weight range: [{pos_weight.min():.2f}, {pos_weight.max():.2f}]")
 
 code("""\
 model = resnet34(num_classes=40).to(device)
-print(f"Parameters: {sum(p.numel() for p in model.parameters()):,}")
+print(f"Parameters: {model.num_params():,}")
 """)
 
 md("""\

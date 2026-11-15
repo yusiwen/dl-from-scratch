@@ -136,6 +136,10 @@ class ResNet(nn.Module):
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 
+    def num_params(self):
+        """Total trainable parameters, as every other model in the repo reports it."""
+        return sum(p.numel() for p in self.parameters())
+
     def forward(self, x):
         # Stage 0: initial 7x7 conv + maxpool
         out = self.relu(self.bn1(self.conv1(x)))

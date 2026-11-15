@@ -111,7 +111,7 @@ md("""## 模型""")
 
 code("""\
 model = resnet50(num_classes=len(CELEBA_ATTR_ORDER)).to(device)
-print(f"Parameters: {sum(p.numel() for p in model.parameters()):,}")
+print(f"Parameters: {model.num_params():,}")
 """)
 
 md("""## pos_weight""")
