@@ -13,6 +13,7 @@ Output: results/hyperparameter_search.csv
 """
 
 import argparse
+import copy
 import csv
 import itertools
 import os
@@ -22,8 +23,14 @@ import io
 import time
 import importlib
 import yaml
+from pathlib import Path
 
-from utils.config import save_config
+# Run as a plain script from a checkout that is not pip-installed: the training
+# modules are imported as `cv.*` / `ml.*`, so the repository root has to be on
+# sys.path before the first project import.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+import utils.config as config_module
 
 
 def parse_param(param_str):
@@ -48,6 +55,34 @@ def extract_metrics(text):
     acc = re.findall(r"Acc:\s*([\d.]+)%", text)
     return (float(loss[-1]) if loss else None,
             float(acc[-1]) if acc else None)
+
+
+def resolve_target(spec):
+    """Resolve ``--model`` to a callable.
+
+    Both spellings have to work, because the docstring advertises the first one:
+
+        cv.simplecnn.train        -> the train() function in cv/simplecnn/train.py
+        cv.simplecnn.train.train  -> the same function, spelled out
+    """
+    try:
+        module = importlib.import_module(spec)
+    except ImportError:
+        module = None
+
+    if module is not None:
+        for name in ("train", "main"):
+            fn = getattr(module, name, None)
+            if callable(fn):
+                return fn
+        raise SystemExit(f"{spec!r} is a module without a train()/main() to call")
+
+    module_path, func_name = spec.rsplit(".", 1)
+    module = importlib.import_module(module_path)
+    fn = getattr(module, func_name, None)
+    if callable(fn):
+        return fn
+    raise SystemExit(f"cannot resolve --model {spec!r} to a callable")
 
 
 def main():
@@ -79,27 +114,30 @@ def main():
     results_file = "results/hyperparameter_search.csv"
     os.makedirs("results", exist_ok=True)
 
-    # Save original config for restoration at the end.
     with open(args.config) as f:
-        original_config = yaml.safe_load(f)
+        base_config = yaml.safe_load(f)
 
-    module_path, func_name = args.model.rsplit(".", 1)
-    mod = importlib.import_module(module_path)
-    train_fn = getattr(mod, func_name)
+    # The train scripts bind `load_config` when they are imported
+    # (``from utils.config import load_config``), so the patch has to be in place
+    # *before* the import below. Every trial then reads an in-memory dict and the
+    # user's config.yaml is never written -- an interrupted search can no longer
+    # leave the grid's last values behind.
+    trial_config = {}
+    config_module.load_config = lambda path: copy.deepcopy(trial_config)
+
+    train_fn = resolve_target(args.model)
 
     with open(results_file, "w", newline="") as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(["model"] + param_keys + ["final_loss", "final_acc", "total_time_s"])
 
         for combo_idx, values in enumerate(itertools.product(*param_grids), 1):
-            # Load and modify config.
-            with open(args.config) as f:
-                cfg = yaml.safe_load(f)
+            cfg = copy.deepcopy(base_config)
             for k, v in zip(param_keys, values):
                 cfg[k] = v
             cfg["num_epochs"] = args.epochs
-            cfg["use_wandb"] = False
-            save_config(cfg, args.config)
+            trial_config.clear()
+            trial_config.update(cfg)
 
             combo_str = ", ".join(f"{k}={v}" for k, v in zip(param_keys, values))
             print(f"[{combo_idx}/{total}] {combo_str}", flush=True)
@@ -127,8 +165,6 @@ def main():
                              f"{elapsed:.0f}"])
             csvfile.flush()
 
-    # Restore original config.
-    save_config(original_config, args.config)
     print(f"\nDone. Results saved to {results_file}")
     print(f"View with: column -t -s, {results_file}")
 
