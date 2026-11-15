@@ -116,6 +116,41 @@ $$IG = H(S) - \sum \frac{|S_v|}{|S|} H(S_v)$$""",
         ],
     },
     {
+        "name": "random_forest",
+        "title": "Random Forest",
+        "desc": "Bagging + random feature subsets, majority vote over 50 trees (Iris, 120 train / 30 test).",
+        "formula": r"""**Bootstrap 采样：** 从训练集中有放回地采样 N 个样本
+
+**特征随机子空间：** 每个节点从 $\lfloor \sqrt{m} \rfloor$ 个随机特征中选最优分割
+
+**预测（多数投票）：** $\hat{y} = \text{mode}(\{T_1(x), T_2(x), \dots, T_B(x)\})$""",
+        "import_code": "from ml.basics.random_forest import demo",
+        "run_code": "demo()",
+        "questions": [
+            "为什么 Bagging 能降低方差而不增加偏差？",
+            "特征随机性（max_features='sqrt'）的作用是什么？",
+            "增大 n_estimators 会过拟合吗？为什么？",
+        ],
+    },
+    {
+        "name": "gbdt",
+        "title": "GBDT",
+        "desc": "Gradient Boosting — sequential regression trees fit pseudo-residuals (sin(x) reg + binary cls).",
+        "formula": r"""**初始化：** $F_0(x) = \arg\min_\gamma \sum L(y_i, \gamma)$
+
+**对 m=1..M：**
+  1. 负梯度（伪残差）: $\tilde{y}_i = -\left[\frac{\partial L(y_i, F(x_i))}{\partial F(x_i)}\right]_{F=F_{m-1}}$
+  2. 拟合回归树: $h_m(x)$ 到 $\tilde{y}_i$
+  3. 更新: $F_m(x) = F_{m-1}(x) + \eta \cdot h_m(x)$""",
+        "import_code": "from ml.basics.gbdt import demo",
+        "run_code": "demo()",
+        "questions": [
+            "GBDT 用回归树拟合残差，为什么叶子值不是直接取均值？",
+            "学习率 η 和树数量 M 之间的关系是什么？",
+            "LogLoss 的负梯度和 MSE 的负梯度有什么不同？",
+        ],
+    },
+    {
         "name": "naive_bayes",
         "title": "Naive Bayes",
         "desc": "Gaussian Naive Bayes on MNIST (53.0%) — shows independence assumption gap.",

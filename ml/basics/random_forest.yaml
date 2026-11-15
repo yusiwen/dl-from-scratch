@@ -1,0 +1,6 @@
+seed: 42
+n_estimators: 50
+max_depth: 4
+min_samples: 2
+max_features: "sqrt"
+bootstrap: true
