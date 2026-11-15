@@ -4,8 +4,8 @@
 
 ## ✅ Completed
 
-**Models (38):**
-- ML/Basics (12): Logistic Regression, Linear Regression, K-Means, SVM (GD + SMO), Decision Tree, Naive Bayes, PCA, k-NN, Perceptron, t-SNE, GMM (EM), DBSCAN
+**Models (40):**
+- ML/Basics (14): Logistic Regression, Linear Regression, K-Means, SVM (GD + SMO), Decision Tree, Naive Bayes, PCA, k-NN, Perceptron, t-SNE, GMM (EM), DBSCAN, GBDT, Random Forest
 - Deep Learning (11): MLP (pure NumPy), SimpleCNN, ResNet18, ResNet34, ResNet50 (Bottleneck), BERT, Word2Vec (CBOW + Skip-gram), LSTM (hand-written gates), GPT (Causal Attention + KV Cache), Seq2Seq Transformer (cross-attention), DDPM (Denoising Diffusion)
 - Image Generation (1): DCGAN — CelebA 64×64
 - Autoencoder (1): AE — MNIST, reconstruction-only (PCA → VAE bridge)
@@ -24,10 +24,10 @@
 - Config system (YAML), TensorBoard logging, Reproducibility (seed + config saving)
 - Device auto-detection (`utils.device.get_device`: CUDA → MPS → CPU)
 
-**Jupyter Notebooks (37):**
+**Jupyter Notebooks (39):**
 - CV (8): SimpleCNN, ResNet18, ResNet34, ResNet50, MobileNet, ViT, UNet, YOLO
 - Generative (4): Autoencoder, DCGAN, VAE, DDPM
-- Classical ML (12): basics — logistic/linear regression, K-Means, SVM, decision tree, naive Bayes, PCA, k-NN, perceptron, t-SNE, GMM, DBSCAN
+- Classical ML (14): basics — logistic/linear regression, K-Means, SVM, decision tree, GBDT, random forest, naive Bayes, PCA, k-NN, perceptron, t-SNE, GMM, DBSCAN
 - Deep learning basics (1): MLP in pure NumPy
 - NLP (6): BERT, GPT, LSTM, Word2Vec, Seq2Seq, LoRA
 - Graph (1): GCN

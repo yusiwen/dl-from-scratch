@@ -15,7 +15,11 @@ Unlike the gradient-based models in this project, decision trees have no
 weights, no learning rate, and no backprop — they just partition the data.
 """
 
+import json
+import os
+
 import numpy as np
+
 from utils.config import load_config
 from utils.seed import set_seed
 
@@ -117,23 +121,38 @@ def information_gain(y, y_left, y_right):
     return entropy(y) - (len(y_left) / n * entropy(y_left) + len(y_right) / n * entropy(y_right))
 
 
-def best_split(X, y):
+def mse(y):
+    """Mean squared error — used as impurity measure for regression trees."""
+    return float(np.mean((y - np.mean(y)) ** 2))
+
+
+def variance_reduction(y, y_left, y_right):
+    """Variance reduction = MSE(parent) - weighted_avg(MSE(left), MSE(right))."""
+    n = len(y)
+    return mse(y) - (len(y_left) / n * mse(y_left) + len(y_right) / n * mse(y_right))
+
+
+def best_split(X, y, criterion='entropy', feature_subset=None):
     """
-    Find the feature and threshold that give the highest information gain.
+    Find the feature and threshold that give the highest gain.
 
     For each feature, try every pair of adjacent sorted values as a candidate
-    threshold. Return the (feature_index, threshold) with the highest IG.
+    threshold. Return the (feature_index, threshold) with the highest gain.
+
+    criterion: 'entropy' → information_gain, 'mse' → variance_reduction.
+    feature_subset: list of feature indices to consider (None = all features).
     """
     n, m = X.shape
-    best_ig = 0
+    gain_fn = information_gain if criterion == 'entropy' else variance_reduction
+    best_gain = 0
     best_feat = None
     best_thresh = None
 
-    for feat in range(m):
-        # Sort values to find candidate thresholds (midpoints between unique values).
+    features = feature_subset if feature_subset is not None else range(m)
+
+    for feat in features:
         sorted_idx = np.argsort(X[:, feat])
         X_sorted = X[sorted_idx, feat]
-        y_sorted = y[sorted_idx]
 
         for i in range(1, n):
             if X_sorted[i] == X_sorted[i - 1]:
@@ -144,64 +163,71 @@ def best_split(X, y):
             y_right = y[~left_mask]
             if len(y_left) == 0 or len(y_right) == 0:
                 continue
-            ig = information_gain(y, y_left, y_right)
-            if ig > best_ig:
-                best_ig = ig
+            gain = gain_fn(y, y_left, y_right)
+            if gain > best_gain:
+                best_gain = gain
                 best_feat = feat
                 best_thresh = thresh
 
-    return best_feat, best_thresh, best_ig
+    return best_feat, best_thresh, best_gain
 
 
-def build_tree(X, y, depth=0, max_depth=5, min_samples=2):
+def build_tree(X, y, depth=0, max_depth=5, min_samples=2, criterion='entropy', feature_subset=None):
     """
     Recursively build a binary decision tree.
 
-    Stopping criteria (to prevent overfitting):
-      - max_depth: limits tree size
-      - min_samples: stops splitting when a node has too few samples
-      - pure node: all samples have the same label
+    Parameters
+    ----------
+    criterion : 'entropy' (classification) or 'mse' (regression)
+        Leaf values are int class labels for entropy or float means for mse.
+    feature_subset : list of feature indices or None
+        If set, only consider these features at each split (used by Random Forest).
 
     Returns a node dict:
-      {'is_leaf': True, 'label': int, 'size': int, 'depth': int}
-      or
-      {'is_leaf': False, 'feature': int, 'threshold': float,
-       'left': node, 'right': node, 'gain': float, 'size': int, 'depth': int}
+      Leaf:   {'is_leaf': True, 'value': int|float, 'size': int, 'depth': int}
+      Internal: {'is_leaf': False, 'feature': int, 'threshold': float,
+                 'gain': float, 'left': node, 'right': node, 'size': int, 'depth': int}
     """
     n = len(y)
-    unique = np.unique(y)
 
-    # Stopping conditions.
-    if len(unique) == 1 or depth >= max_depth or n < min_samples:
-        return {'is_leaf': True, 'label': np.bincount(y).argmax(), 'size': n, 'depth': depth}
+    def leaf_value(y):
+        if criterion == 'entropy':
+            return int(np.bincount(y).argmax())
+        return float(np.mean(y))
 
-    feat, thresh, ig = best_split(X, y)
+    if criterion == 'entropy' and len(np.unique(y)) == 1:
+        return {'is_leaf': True, 'value': leaf_value(y), 'size': n, 'depth': depth}
 
-    if feat is None or ig < 1e-10:
-        return {'is_leaf': True, 'label': np.bincount(y).argmax(), 'size': n, 'depth': depth}
+    if depth >= max_depth or n < min_samples:
+        return {'is_leaf': True, 'value': leaf_value(y), 'size': n, 'depth': depth}
+
+    feat, thresh, gain = best_split(X, y, criterion, feature_subset)
+
+    if feat is None or gain < 1e-10:
+        return {'is_leaf': True, 'value': leaf_value(y), 'size': n, 'depth': depth}
 
     left_mask = X[:, feat] <= thresh
     node = {
         'is_leaf': False,
-        'feature': feat,
-        'threshold': thresh,
-        'gain': ig,
+        'feature': int(feat),
+        'threshold': float(thresh),
+        'gain': float(gain),
         'size': n,
         'depth': depth,
-        'left': build_tree(X[left_mask], y[left_mask], depth + 1, max_depth, min_samples),
-        'right': build_tree(X[~left_mask], y[~left_mask], depth + 1, max_depth, min_samples),
+        'left': build_tree(X[left_mask], y[left_mask], depth + 1, max_depth, min_samples, criterion, feature_subset),
+        'right': build_tree(X[~left_mask], y[~left_mask], depth + 1, max_depth, min_samples, criterion, feature_subset),
     }
     return node
 
 
 def predict_sample(tree, x):
-    """Traverse the tree to predict the label for a single sample."""
+    """Traverse the tree to predict the value for a single sample."""
     while not tree['is_leaf']:
         if x[tree['feature']] <= tree['threshold']:
             tree = tree['left']
         else:
             tree = tree['right']
-    return tree['label']
+    return tree['value']
 
 
 def predict(tree, X):
@@ -209,7 +235,7 @@ def predict(tree, X):
     return np.array([predict_sample(tree, x) for x in X])
 
 
-def print_tree(tree, feature_names=None, indent=""):
+def print_tree(tree, feature_names=None, class_names=None, indent=""):
     """
     Print the decision tree as readable ASCII text.
 
@@ -222,20 +248,48 @@ def print_tree(tree, feature_names=None, indent=""):
               └── no  → virginica (46)
     """
     fnames = feature_names or [f"feat_{i}" for i in range(4)]
-    cnames = IRIS_CLASS_NAMES
 
     if tree['is_leaf']:
-        label_name = cnames[tree['label']] if cnames else str(tree['label'])
-        print(f"→ {label_name} ({tree['size']})")
+        v = tree['value']
+        if class_names and isinstance(v, int) and 0 <= v < len(class_names):
+            label = class_names[v]
+        elif isinstance(v, float):
+            label = f"{v:.4f}"
+        else:
+            label = str(v)
+        print(f"→ {label} ({tree['size']})")
     else:
         fname = fnames[tree['feature']]
-        print(f"{fname} <= {tree['threshold']:.2f}  [ig={tree['gain']:.3f}]")
+        gain_label = "ig" if tree.get('gain', 0) > 0 else "gain"
+        print(f"{fname} <= {tree['threshold']:.2f}  [{gain_label}={tree.get('gain', 0):.3f}]")
         print(f"{indent}├── yes ", end="")
         new_indent = indent + "│   "
-        print_tree(tree['left'], fnames, new_indent)
+        print_tree(tree['left'], fnames, class_names, new_indent)
         print(f"{indent}└── no  ", end="")
         new_indent = indent + "    "
-        print_tree(tree['right'], fnames, new_indent)
+        print_tree(tree['right'], fnames, class_names, new_indent)
+
+
+def save_tree(tree, path, metadata=None):
+    """Save a tree dict to a JSON file (numpy-safe, human-readable)."""
+    data = {
+        "format_version": 1,
+        "model_type": "DecisionTree",
+        "tree": tree,
+    }
+    if metadata:
+        data.update(metadata)
+
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
+
+
+def load_tree(path):
+    """Load a tree dict from a JSON file saved by save_tree()."""
+    with open(path) as f:
+        data = json.load(f)
+    return data["tree"]
 
 
 # ─────────────────────────────────────────────────────────
@@ -261,15 +315,25 @@ def demo():
     print(f"Train: {split}  Test: {len(y_te)}")
     print()
 
-    tree = build_tree(X_tr, y_tr, max_depth=cfg["max_depth"], min_samples=cfg["min_samples"])
+    tree = build_tree(X_tr, y_tr, max_depth=cfg["max_depth"], min_samples=cfg["min_samples"], criterion=cfg.get("criterion", "entropy"))
 
     print("Trained tree:")
-    print_tree(tree, IRIS_FEATURE_NAMES)
+    print_tree(tree, IRIS_FEATURE_NAMES, IRIS_CLASS_NAMES)
     print()
 
     y_pred = predict(tree, X_te)
     acc = (y_pred == y_te).mean()
     print(f"Test Accuracy: {acc:.1%}")
+
+    save_path = "runs/decision_tree/model.json"
+    save_tree(tree, save_path, metadata={
+        "config": dict(cfg),
+        "n_features": X.shape[1],
+        "n_classes": 3,
+        "feature_names": IRIS_FEATURE_NAMES,
+        "class_names": IRIS_CLASS_NAMES,
+    })
+    print(f"Model saved to {save_path}")
 
 
 if __name__ == "__main__":
