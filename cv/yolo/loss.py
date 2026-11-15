@@ -75,60 +75,6 @@ def yolo_loss(pred, target, S=7, B=2, C=20, coord_scale=5, noobj_scale=0.5):
     )
 
 
-def nms(predictions, conf_threshold=0.3, iou_threshold=0.5):
-    """Non-Maximum Suppression — simplified for single image."""
-    boxes, scores, labels = [], [], []
-    S, B, C = 7, 2, 20
-
-    for row in range(S):
-        for col in range(S):
-            for b in range(B):
-                box = predictions[row, col, b * 5:(b + 1) * 5]
-                conf = box[4].sigmoid().item()
-                if conf < conf_threshold:
-                    continue
-                x, y, w, h = box[:4].tolist()
-                # Convert to absolute coordinates.
-                x_abs = (col + x) / S * 224
-                y_abs = (row + y) / S * 224
-                w_abs = w * 224
-                h_abs = h * 224
-                x1 = x_abs - w_abs / 2
-                y1 = y_abs - h_abs / 2
-                x2 = x_abs + w_abs / 2
-                y2 = y_abs + h_abs / 2
-
-                class_probs = predictions[row, col, B * 5:].softmax(dim=0)
-                class_score, class_idx = class_probs.max(dim=0)
-
-                score = conf * class_score.item()
-                boxes.append([x1, y1, x2, y2])
-                scores.append(score)
-                labels.append(class_idx.item())
-
-    if not boxes:
-        return [], [], []
-
-    boxes = torch.tensor(boxes)
-    scores = torch.tensor(scores)
-    labels = torch.tensor(labels)
-
-    # Sort by score.
-    _, order = scores.sort(descending=True)
-    boxes, scores, labels = boxes[order], scores[order], labels[order]
-
-    keep = []
-    while boxes.size(0) > 0:
-        keep.append(0)
-        if boxes.size(0) == 1:
-            break
-        ious = _compute_iou(boxes[0:1], boxes[1:])
-        mask = ious < iou_threshold
-        boxes, scores, labels = boxes[1:][mask], scores[1:][mask], labels[1:][mask]
-
-    return boxes[keep], scores[keep], labels[keep]
-
-
 def _compute_iou(box1, box2):
     x1 = torch.max(box1[:, 0], box2[:, 0])
     y1 = torch.max(box1[:, 1], box2[:, 1])

@@ -7,7 +7,7 @@ from torchvision import transforms
 from PIL import Image, ImageDraw, ImageFont
 
 from cv.yolo.model import YOLO
-from cv.yolo.loss import nms
+from cv.yolo.eval import decode_predictions, batched_nms
 from cv.yolo.data import VOC_CLASSES
 from utils.config import load_config
 from utils.device import get_device
@@ -44,8 +44,19 @@ def demo():
     with torch.no_grad():
         output = model(input_tensor).squeeze(0).cpu()  # (S, S, B*5+C)
 
-    # NMS.
-    boxes, scores, labels = nms(output, args.conf, args.iou)
+    # Same decode + NMS path the mAP numbers are measured with: decode_predictions
+    # applies the sigmoid to the confidence logit and clamps the box into its cell,
+    # batched_nms drops overlaps per class.
+    boxes, scores, labels = decode_predictions(
+        output, cfg["S"], cfg["B"], cfg["C"], cfg["image_size"], conf_threshold=args.conf
+    )
+    keep = batched_nms(boxes, scores, labels, args.iou)
+    # An undertrained model can predict a zero-size box; it has no area to draw
+    # and can never match anything, so it is filtered here and not in the decoder
+    # (the mAP path keeps the same detections the model produced).
+    keep = [i for i in keep
+            if boxes[i][2] > boxes[i][0] and boxes[i][3] > boxes[i][1]]
+    boxes, scores, labels = boxes[keep], scores[keep], labels[keep]
 
     # Draw results.
     draw = ImageDraw.Draw(image)
