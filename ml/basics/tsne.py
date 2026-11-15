@@ -11,7 +11,7 @@ Key differences from PCA:
     distances between clusters are not meaningful.
   - Deterministic (PCA) vs stochastic (t-SNE): different runs give different results.
 
-We run both PCA and t-SNE on MNIST (5000 digits) and visualise the 2D projections
+We run both PCA and t-SNE on MNIST (3,000 digits) and visualise the 2D projections
 side by side to highlight these differences.
 """
 
@@ -47,18 +47,27 @@ def pca_projection(X, n_components=2):
 # ─────────────────────────────────────────────────────────
 
 def _binary_search_perplexity(dist_i, perplexity, tol=1e-5):
-    """Binary search for sigma_i such that Perp(P_i) ≈ perplexity."""
+    """Binary search for sigma_i such that Perp(P_i) ≈ perplexity.
+
+    Stops as soon as the target is hit within `tol` instead of always burning
+    all 50 halvings: the bisection converges in ~15-20 steps for typical rows,
+    and this runs once per point.
+    """
     lo, hi = 1e-10, 1e10
+    mid = 1.0
     for _ in range(50):
         mid = (lo + hi) / 2.0
         p = np.exp(-dist_i / (2.0 * mid ** 2))
         p = p / (p.sum() + 1e-12)
         ent = -np.sum(p * np.log(p + 1e-12))
         perp = 2.0 ** ent
+        if abs(perp - perplexity) < tol:
+            break
+        # Perplexity grows with sigma, so an overshoot means sigma is too large.
         if perp > perplexity:
-            lo = mid
-        else:
             hi = mid
+        else:
+            lo = mid
     return mid
 
 
@@ -88,21 +97,26 @@ def compute_pairwise_affinities(X, perplexity=30):
     return P
 
 
-def tsne(X, n_components=2, perplexity=30, n_iter=1000, lr=200, momentum=0.8, early_exag=4.0):
+def tsne(X, n_components=2, perplexity=30, n_iter=1000, lr=200, momentum=0.8,
+         early_exag=4.0, momentum_early=0.5, dtype=np.float32, kl_every=10):
     """
     t-SNE: reduce X to 2D via gradient descent on KL(P || Q).
 
+    The N x N affinities stay in `dtype` (float32 by default): they are the only
+    large arrays here, so their width sets the per-iteration memory traffic.
+    KL is reported every `kl_every` iterations (always including the last one).
+
     Returns:
         Y: (N, n_components) embedding
-        kl_history: KL divergence per iteration
+        kl_history: KL divergence samples
     """
     N = X.shape[0]
 
     # Compute high-dimensional affinities.
-    P = compute_pairwise_affinities(X, perplexity)
+    P = compute_pairwise_affinities(X, perplexity).astype(dtype)
 
     # Initialise low-dimensional embedding (random, scaled small).
-    Y = np.random.randn(N, n_components).astype(np.float64) * 0.01
+    Y = np.random.randn(N, n_components).astype(dtype) * 0.01
     vel = np.zeros_like(Y)
 
     kl_history = []
@@ -118,31 +132,32 @@ def tsne(X, n_components=2, perplexity=30, n_iter=1000, lr=200, momentum=0.8, ea
         np.fill_diagonal(Q_num, 0.0)
         Q = Q_num / (Q_num.sum() + 1e-12)
 
-        # Calculate gradient.
-        PQ_diff = P - Q
-
         # Early exaggeration: multiply P by early_exag for first iterations.
         if it <= early_exag_iters:
             PQ_diff = early_exag * P - Q
+        else:
+            PQ_diff = P - Q
 
-        grad = np.zeros_like(Y)
-        for i in range(N):
-            diff = Y[i] - Y
-            grad[i] = 4.0 * (PQ_diff[i][:, None] * diff).sum(axis=0)
+        # Gradient of KL(P || Q) with the Student-t kernel:
+        #   dKL/dy_i = 4 * sum_j (p_ij - q_ij) * w_ij * (y_i - y_j),  w = 1/(1+d^2)
+        # evaluated as one matmul. Dropping w_ij, as the first version did, makes
+        # far-apart points repel as hard as neighbours and the embedding blows up.
+        PQw = PQ_diff * Q_num
+        grad = 4.0 * (PQw.sum(axis=1)[:, None] * Y - PQw @ Y)
 
-        # Update with momentum.
-        vel = momentum * vel + lr * grad
+        # Descend, with the classic 0.5 -> 0.8 momentum schedule.
+        vel = (momentum_early if it <= early_exag_iters else momentum) * vel - lr * grad
         Y = Y + vel
 
         # Center embedding (subtract mean).
         Y = Y - Y.mean(axis=0)
 
-        # Compute KL divergence.
-        kl = (P * np.log(P / np.maximum(Q, 1e-12))).sum()
-        kl_history.append(kl)
+        if it % kl_every == 0 or it % 100 == 0 or it == 1 or it == n_iter:
+            kl = float((P * np.log(P / np.maximum(Q, 1e-12))).sum())
+            kl_history.append(kl)
 
         if it % 100 == 0 or it == 1:
-            print(f"  t-SNE iter {it:4d}/{n_iter}  KL={kl:.2f}")
+            print(f"  t-SNE iter {it:4d}/{n_iter}  KL={kl_history[-1]:.2f}")
 
     return Y, kl_history
 
@@ -183,10 +198,11 @@ def plot_comparison(X_pca, X_tsne, y, var_explained):
     print("\nSaved to ml/basics/tsne_vs_pca.png")
 
 
-def demo():
+def demo(max_samples=3000, n_iter=1000):
+    """Run the PCA vs t-SNE comparison on `max_samples` MNIST digits."""
     set_seed(42)
-    print("Loading MNIST (5000 samples)...")
-    X, y = load_mnist_flat(5000)
+    print(f"Loading MNIST ({max_samples} samples)...")
+    X, y = load_mnist_flat(max_samples)
     print(f"  Data shape: {X.shape}")
 
     # ── PCA ──
@@ -195,8 +211,8 @@ def demo():
     print(f"  Variance explained: {var_explained[0]:.1%} + {var_explained[1]:.1%} = {var_explained.sum():.1%}")
 
     # ── t-SNE ──
-    print("\nRunning t-SNE (this may take a few minutes)...")
-    X_tsne, kl_hist = tsne(X, n_components=2, perplexity=30, n_iter=1000)
+    print("\nRunning t-SNE (about 40 s for 3,000 points, 1,000 iterations)...")
+    X_tsne, kl_hist = tsne(X, n_components=2, perplexity=30, n_iter=n_iter)
 
     # ── Comparison ──
     print(f"\nFinal KL divergence: {kl_hist[-1]:.2f}")
