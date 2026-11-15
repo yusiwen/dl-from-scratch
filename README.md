@@ -92,6 +92,21 @@ does it):
 scripts/run_notebooks.sh --only ml/basics/knn.ipynb --timeout 600
 ```
 
+### Open them in JupyterLab
+
+```bash
+scripts/jupyter.sh                # prints http://127.0.0.1:8888/lab?token=<generated>
+scripts/jupyter.sh --port 9000
+```
+
+The server runs in the same GPU image the notebooks are tested in, with this repository as its
+root directory, the Hugging Face cache mounted, and a fresh token printed in the URL. Every
+notebook under `cv/`, `gen/`, `nlp/`, `graph/`, `ml/`, `selfsup/` and `rl/` opens from the file
+browser; `Ctrl-C` stops it.
+
+Running `jupyter lab` in the repository's own virtualenv also works, but every torch notebook
+then runs on the CPU - the GPU lives in the container.
+
 Three gates keep the notebooks honest:
 
 ```bash
