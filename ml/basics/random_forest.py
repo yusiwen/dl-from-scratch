@@ -24,13 +24,14 @@ class RandomForest:
     """Random Forest classifier/regressor."""
 
     def __init__(self, n_estimators=100, max_depth=5, min_samples=2,
-                 max_features='sqrt', bootstrap=True, seed=42):
+                 max_features='sqrt', bootstrap=True, seed=42, max_thresholds=None):
         self.n_estimators = n_estimators
         self.max_depth = max_depth
         self.min_samples = min_samples
         self.max_features = max_features
         self.bootstrap = bootstrap
         self.seed = seed
+        self.max_thresholds = max_thresholds
         self.trees = []
         self.feature_names_ = None
         self.class_names_ = None
@@ -55,7 +56,7 @@ class RandomForest:
 
             tree = build_tree(X_boot, y_boot, max_depth=self.max_depth,
                               min_samples=self.min_samples, criterion='entropy',
-                              feature_subset=subset)
+                              feature_subset=subset, max_thresholds=self.max_thresholds)
             self.trees.append(tree)
 
         return self

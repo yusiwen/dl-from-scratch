@@ -135,7 +135,7 @@ $$IG = H(S) - \sum \frac{|S_v|}{|S|} H(S_v)$$""",
     {
         "name": "gbdt",
         "title": "GBDT",
-        "desc": "Gradient Boosting — sequential regression trees fit pseudo-residuals (sin(x) reg + binary cls).",
+        "desc": "Gradient Boosting — regression trees fit pseudo-residuals; sin(x) regression and MNIST 3-vs-8 classification on a held-out split.",
         "formula": r"""**初始化：** $F_0(x) = \arg\min_\gamma \sum L(y_i, \gamma)$
 
 **对 m=1..M：**
