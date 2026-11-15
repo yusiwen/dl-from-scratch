@@ -50,8 +50,7 @@ def train():
     print(f"pos_weight computed: [{pos_weight[0]:.2f} ... {pos_weight[-1]:.2f}] (min={pos_weight.min():.2f}, max={pos_weight.max():.2f})")
 
     model = resnet34(num_classes=40).to(device)
-    total_params = sum(p.numel() for p in model.parameters())
-    print(f"Model parameters: {total_params:,}")
+    print(f"Model parameters: {model.num_params():,}")
     print(f"Training on {len(train_dataset):,} samples, validating on {len(val_dataset):,}")
     print(f"Attributes: all 40")
 

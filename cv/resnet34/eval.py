@@ -17,7 +17,7 @@ def evaluate():
     print(f"Loading model from {model_path}")
     model = torch.load(model_path, map_location=device, weights_only=False)
     model.eval()
-    print(f"Model parameters: {sum(p.numel() for p in model.parameters()):,}")
+    print(f"Model parameters: {model.num_params():,}")
 
     transform = eval_transform()
     test_dataset = CelebADataset(split="test", transform=transform)

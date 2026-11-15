@@ -48,8 +48,7 @@ def train():
     print(f"pos_weight computed: [{pos_weight[0]:.2f} ... {pos_weight[-1]:.2f}]")
 
     model = resnet50(num_classes=40).to(device)
-    total_params = sum(p.numel() for p in model.parameters())
-    print(f"Model parameters: {total_params:,}")
+    print(f"Model parameters: {model.num_params():,}")
     print(f"Training on {len(train_dataset):,}, validating on {len(val_dataset):,}")
 
     criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
