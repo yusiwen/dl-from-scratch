@@ -132,7 +132,7 @@ def variance_reduction(y, y_left, y_right):
     return mse(y) - (len(y_left) / n * mse(y_left) + len(y_right) / n * mse(y_right))
 
 
-def best_split(X, y, criterion='entropy', feature_subset=None):
+def best_split(X, y, criterion='entropy', feature_subset=None, max_thresholds=None):
     """
     Find the feature and threshold that give the highest gain.
 
@@ -141,6 +141,10 @@ def best_split(X, y, criterion='entropy', feature_subset=None):
 
     criterion: 'entropy' → information_gain, 'mse' → variance_reduction.
     feature_subset: list of feature indices to consider (None = all features).
+    max_thresholds: when set, evaluate that many quantile cuts per feature
+        instead of every adjacent pair. The exact scan is O(m·n) per node, which
+        is fine for Iris and hopeless for anything MNIST-sized; boosting on real
+        data needs the quantile version. None (the default) keeps the exact scan.
     """
     n, m = X.shape
     gain_fn = information_gain if criterion == 'entropy' else variance_reduction
@@ -151,14 +155,20 @@ def best_split(X, y, criterion='entropy', feature_subset=None):
     features = feature_subset if feature_subset is not None else range(m)
 
     for feat in features:
-        sorted_idx = np.argsort(X[:, feat])
-        X_sorted = X[sorted_idx, feat]
+        values = X[:, feat]
 
-        for i in range(1, n):
-            if X_sorted[i] == X_sorted[i - 1]:
-                continue
-            thresh = (X_sorted[i] + X_sorted[i - 1]) / 2.0
-            left_mask = X[:, feat] <= thresh
+        if max_thresholds is not None:
+            # Quantile cuts: the candidate set real GBDT implementations use.
+            candidates = np.unique(
+                np.quantile(values, np.linspace(0.0, 1.0, max_thresholds + 2)[1:-1])
+            )
+        else:
+            ordered = np.sort(values)
+            midpoints = (ordered[1:] + ordered[:-1]) / 2.0
+            candidates = midpoints[ordered[1:] != ordered[:-1]]
+
+        for thresh in candidates:
+            left_mask = values <= thresh
             y_left = y[left_mask]
             y_right = y[~left_mask]
             if len(y_left) == 0 or len(y_right) == 0:
@@ -172,7 +182,8 @@ def best_split(X, y, criterion='entropy', feature_subset=None):
     return best_feat, best_thresh, best_gain
 
 
-def build_tree(X, y, depth=0, max_depth=5, min_samples=2, criterion='entropy', feature_subset=None):
+def build_tree(X, y, depth=0, max_depth=5, min_samples=2, criterion='entropy',
+               feature_subset=None, max_thresholds=None):
     """
     Recursively build a binary decision tree.
 
@@ -182,6 +193,9 @@ def build_tree(X, y, depth=0, max_depth=5, min_samples=2, criterion='entropy', f
         Leaf values are int class labels for entropy or float means for mse.
     feature_subset : list of feature indices or None
         If set, only consider these features at each split (used by Random Forest).
+    max_thresholds : int or None
+        Quantile cuts per feature instead of the exact adjacent-pair scan; see
+        `best_split`.
 
     Returns a node dict:
       Leaf:   {'is_leaf': True, 'value': int|float, 'size': int, 'depth': int}
@@ -201,7 +215,8 @@ def build_tree(X, y, depth=0, max_depth=5, min_samples=2, criterion='entropy', f
     if depth >= max_depth or n < min_samples:
         return {'is_leaf': True, 'value': leaf_value(y), 'size': n, 'depth': depth}
 
-    feat, thresh, gain = best_split(X, y, criterion, feature_subset)
+    feat, thresh, gain = best_split(X, y, criterion, feature_subset,
+                                     max_thresholds=max_thresholds)
 
     if feat is None or gain < 1e-10:
         return {'is_leaf': True, 'value': leaf_value(y), 'size': n, 'depth': depth}
@@ -214,8 +229,10 @@ def build_tree(X, y, depth=0, max_depth=5, min_samples=2, criterion='entropy', f
         'gain': float(gain),
         'size': n,
         'depth': depth,
-        'left': build_tree(X[left_mask], y[left_mask], depth + 1, max_depth, min_samples, criterion, feature_subset),
-        'right': build_tree(X[~left_mask], y[~left_mask], depth + 1, max_depth, min_samples, criterion, feature_subset),
+        'left': build_tree(X[left_mask], y[left_mask], depth + 1, max_depth, min_samples,
+                                 criterion, feature_subset, max_thresholds),
+        'right': build_tree(X[~left_mask], y[~left_mask], depth + 1, max_depth, min_samples,
+                                  criterion, feature_subset, max_thresholds),
     }
     return node
 

@@ -3,4 +3,10 @@ n_estimators: 100
 learning_rate: 0.1
 max_depth: 3
 min_samples_leaf: 2
+max_thresholds: 32      # quantile cuts per feature; the exact scan is too slow past a few thousand rows
 loss: "mse"
+# Classification demo: MNIST digits {negative, positive} projected to PCA features.
+digits: [3, 8]
+max_samples: 4000
+n_components: 20
+train_fraction: 0.8

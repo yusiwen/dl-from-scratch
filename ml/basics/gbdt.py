@@ -31,13 +31,14 @@ class GBDT:
     """Gradient Boosted Decision Tree — regression ('mse') or binary ('logloss')."""
 
     def __init__(self, n_estimators=100, learning_rate=0.1, max_depth=3,
-                 min_samples_leaf=2, loss='mse', seed=42):
+                 min_samples_leaf=2, loss='mse', seed=42, max_thresholds=None):
         self.n_estimators = n_estimators
         self.learning_rate = learning_rate
         self.max_depth = max_depth
         self.min_samples_leaf = min_samples_leaf
         self.loss = loss
         self.seed = seed
+        self.max_thresholds = max_thresholds
         self.trees = []
         self.init_pred_ = None
         self.feature_names_ = None
@@ -70,7 +71,8 @@ class GBDT:
                 pseudo_residual = y - prob
 
             tree = build_tree(X, pseudo_residual, max_depth=self.max_depth,
-                              min_samples=self.min_samples_leaf, criterion='mse')
+                              min_samples=self.min_samples_leaf, criterion='mse',
+                              max_thresholds=self.max_thresholds)
             self.trees.append(tree)
 
             tree_pred = predict(tree, X)
@@ -170,18 +172,29 @@ def demo_regression():
     print(f"Model saved to {save_path}")
 
 
+def _logloss(y, p):
+    p = np.clip(p, 1e-12, 1 - 1e-12)
+    return float(-(y * np.log(p) + (1 - y) * np.log(1 - p)).mean())
+
+
 def demo_classification():
-    """GBDT binary classification on a 2D synthetic dataset."""
-    X = np.array([
-        [1.5, 2.0], [2.0, 1.8], [1.8, 2.2], [2.2, 1.5],
-        [5.0, 4.5], [4.8, 5.0], [5.2, 4.8], [4.5, 5.2],
-        [1.0, 5.0], [1.2, 4.8], [0.8, 5.2], [3.0, 3.0],
-        [3.2, 3.3], [2.8, 2.8], [3.5, 3.5], [2.7, 3.2],
-    ])
-    y = np.array([0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2])
-    y_bin = (y >= 1).astype(np.int32)
+    """GBDT binary classification on MNIST digits 3 vs 8, with a held-out split."""
+    from ml.basics.data import load_mnist_pca
 
     cfg = load_config("ml/basics/gbdt.yaml")
+    set_seed(cfg["seed"])
+
+    negative, positive = cfg["digits"]
+    X, labels, _ = load_mnist_pca(max_samples=cfg["max_samples"],
+                                  n_components=cfg["n_components"])
+    keep = (labels == negative) | (labels == positive)
+    X, y = X[keep], (labels[keep] == positive).astype(np.int32)
+
+    order = np.random.permutation(len(X))
+    split = int(len(X) * cfg["train_fraction"])
+    train_idx, test_idx = order[:split], order[split:]
+    X_train, y_train = X[train_idx], y[train_idx]
+    X_test, y_test = X[test_idx], y[test_idx]
 
     gbdt = GBDT(
         n_estimators=cfg["n_estimators"],
@@ -190,17 +203,23 @@ def demo_classification():
         min_samples_leaf=cfg["min_samples_leaf"],
         loss="logloss",
         seed=cfg["seed"],
+        max_thresholds=cfg["max_thresholds"],
     )
-    gbdt.fit(X, y_bin)
+    gbdt.fit(X_train, y_train)
 
-    y_pred = gbdt.predict(X)
-    acc = (y_pred == y_bin).mean()
+    train_acc = float((gbdt.predict(X_train) == y_train).mean())
+    proba = sigmoid(gbdt.predict_raw(X_test))
+    test_acc = float(((proba > 0.5) == y_test).mean())
+    baseline = float(max(y_test.mean(), 1.0 - y_test.mean()))
 
-    print("GBDT — Binary Classification (synthetic 2D)")
-    print("=" * 40)
+    print(f"GBDT — Binary Classification (MNIST {negative} vs {positive})")
+    print("=" * 56)
     print(f"Trees: {cfg['n_estimators']}  LR: {cfg['learning_rate']}  Max depth: {cfg['max_depth']}")
-    print(f"Samples: {len(X)}")
-    print(f"Train Accuracy: {acc:.1%}")
+    print(f"Features: {X.shape[1]} PCA components of {cfg['max_samples']} MNIST images")
+    print(f"Train: {len(y_train)}  Test: {len(y_test)}  ")
+    print(f"Train Accuracy : {train_acc:.1%}")
+    print(f"Test Accuracy  : {test_acc:.1%}   (majority-class baseline {baseline:.1%})")
+    print(f"Test LogLoss   : {_logloss(y_test, proba):.4f}")
 
     save_path = "runs/gbdt/classification_model.json"
     gbdt.save(save_path)
