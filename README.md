@@ -101,16 +101,14 @@ python scripts/check_notebook_coverage.py          # every model dir has a noteb
 ```
 
 CI runs all three on every push and pull request, then executes the cheap subset
-(`ml/basics/*` except `tsne`, `rl/dqn`, `graph/gcn`) on a CPU runner — see
+(`ml/basics/*`, `rl/dqn`, `graph/gcn`) on a CPU runner — see
 [`.github/workflows/notebooks.yml`](.github/workflows/notebooks.yml). The smoke job fails
-when a notebook raises and uploads `runs/notebooks/summary.md` as an artifact. `tsne` is
-excluded because the demo costs about 8 minutes at 5,000 points × 1,000 iterations, which
-would not fit the 15-minute job budget.
+when a notebook raises and uploads `runs/notebooks/summary.md` as an artifact.
 
 Run the same subset locally (no Docker, no GPU):
 
 ```bash
-python scripts/run_notebooks.py --only 'ml/basics/*' --skip 'ml/basics/tsne.ipynb' \
+python scripts/run_notebooks.py --only 'ml/basics/*' \
   --only 'rl/dqn/*' --only 'graph/gcn/*' --timeout 300 --fail-on partial
 ```
 

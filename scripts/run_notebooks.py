@@ -54,6 +54,7 @@ ORDER = [
     "nlp/lora/lora.ipynb",                  # 26
     "nlp/bert/bert.ipynb",                  # 27
     "ml/basics/gmm.ipynb",                  # 28
+    "ml/basics/tsne.ipynb",                 # 44
     "ml/basics/logistic_regression.ipynb",  # 50
     "nlp/lstm/lstm.ipynb",                  # 52
     "nlp/gpt/gpt.ipynb",                    # 69
@@ -66,7 +67,6 @@ ORDER = [
     "selfsup/mae/mae.ipynb",                # 310
     "cv/vit/vit.ipynb",                     # 322
     "nlp/seq2seq/seq2seq.ipynb",            # 339
-    "ml/basics/tsne.ipynb",                 # 471
     "gen/vae/vae.ipynb",                    # 614
     "selfsup/simclr/simclr.ipynb",          # 674
     "cv/yolo/yolo.ipynb",                   # 724

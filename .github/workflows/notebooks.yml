@@ -94,7 +94,6 @@ jobs:
         run: |
           python scripts/run_notebooks.py \
             --only 'ml/basics/*' \
-            --skip 'ml/basics/tsne.ipynb' \
             --only 'rl/dqn/*' \
             --only 'graph/gcn/*' \
             --timeout 300 \
