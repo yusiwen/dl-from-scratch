@@ -2,8 +2,9 @@
 #
 # Open the whole repository in JupyterLab, inside the GPU container.
 #
-#   scripts/jupyter.sh                  # http://127.0.0.1:8888/lab?token=<generated>
+#   scripts/jupyter.sh                  # all interfaces, http://<this-host>:8888/lab?token=...
 #   scripts/jupyter.sh --port 9000
+#   scripts/jupyter.sh --host 127.0.0.1 # loopback only
 #
 # The server runs in the same image the notebooks are tested in (GPU, gymnasium,
 # the repository mounted at /workspace, the Hugging Face cache mounted at
@@ -17,24 +18,27 @@
 set -euo pipefail
 
 port=8888
-host=127.0.0.1
+host=0.0.0.0
 
 usage() {
   cat >&2 <<'TXT'
-usage: scripts/jupyter.sh [--port <host-port>]
+usage: scripts/jupyter.sh [--port <host-port>] [--host <bind-address>]
 
 Starts JupyterLab in the notebook container with this repository as the root
-directory, and prints the URL (with token) to open.
+directory, and prints the URL (with token) to open. It listens on every
+interface by default, so another machine on the network can use it too.
 
 examples:
   scripts/jupyter.sh
   scripts/jupyter.sh --port 9000
+  scripts/jupyter.sh --host 127.0.0.1     # this machine only
 TXT
 }
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --port) port=${2:?--port needs a value}; shift 2 ;;
+    --host) host=${2:?--host needs a value}; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "error: unknown argument '$1'" >&2; usage; exit 2 ;;
   esac
@@ -51,18 +55,34 @@ if ! docker image inspect "$image" >/dev/null 2>&1; then
   exit 1
 fi
 
-# A token is generated per start: the port is published on the loopback
-# interface only, but a token keeps the kernel reachable from no one else.
+# A token is generated per start. The server listens on every interface by
+# default, so that token is the only thing between the LAN and a kernel that can
+# read the repository and use the GPU -- pass --host 127.0.0.1 to keep it local.
 token=${JUPYTER_TOKEN:-$(openssl rand -hex 16)}
 mkdir -p "$hf_cache"
 
+# Where the URL should point when the server listens on every interface: the
+# address of the default route (what another machine would type), not the
+# docker bridge or a loopback alias.
+lan_ip=""
+if [ "$host" = "0.0.0.0" ]; then
+  lan_ip=$(ip -4 route get 1.1.1.1 2>/dev/null | grep -oP 'src \K[\d.]+' || true)
+  [ -z "$lan_ip" ] && lan_ip=$(hostname -I 2>/dev/null | awk '{print $1}')
+fi
+
 cat <<TXT
-JupyterLab: http://$host:$port/lab?token=$token
+JupyterLab: http://127.0.0.1:$port/lab?token=$token
+TXT
+if [ -n "$lan_ip" ]; then
+  echo "            http://$lan_ip:$port/lab?token=$token   (from another machine)"
+fi
+cat <<TXT
 
   image      $image
   repository $repo_root  ->  /workspace
   HF cache   $hf_cache  ->  /hf-cache
   kernel     python3 (the container's interpreter, GPU visible)
+  bind       $host:$port$( [ "$host" = "0.0.0.0" ] && echo ' (all interfaces)' )
 
 Stop it with Ctrl-C.
 TXT
