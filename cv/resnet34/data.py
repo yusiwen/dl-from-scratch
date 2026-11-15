@@ -38,30 +38,29 @@ class CelebADataset(Dataset):
         else:
             raise ValueError(f"Unknown split: {split}")
 
-        # Read only the rows we need; the HF split syntax avoids materializing
-        # the whole 162K-image split (which would exhaust memory).
+        # ``num_samples`` bounds the length: the notebooks train on a 10K slice
+        # instead of the full 162,770-image split.
         if num_samples is not None:
             hf_split = f"{hf_split}[:{num_samples}]"
 
-        ds = load_dataset("eurecom-ds/celeba", split=hf_split)
-
-        self.samples = []
-        for item in ds:
-            labels = [1.0 if item["attributes"][idx] == 1 else 0.0 for idx in self.attr_indices]
-            self.samples.append((item["image"], torch.tensor(labels, dtype=torch.float32)))
-
-        del ds
+        # Keep the Arrow table and decode one row per __getitem__. Walking the
+        # split up front decodes a PIL image for every row -- 162,770 for train,
+        # ~19,900 for test -- and holds them all in RAM, which is what made
+        # `python -m cv.resnet50.train` unstartable on a 16 GB machine. The
+        # sliced split (``train[:N]``) bounds the length, not the footprint.
+        self.dataset = load_dataset("eurecom-ds/celeba", split=hf_split)
 
     def __getitem__(self, idx):
-        image_pil, labels = self.samples[idx]
-        if self.transform:
-            image = self.transform(image_pil)
-        else:
-            image = image_pil
-        return image, labels
+        item = self.dataset[idx]
+        labels = torch.tensor(
+            [1.0 if item["attributes"][i] == 1 else 0.0 for i in self.attr_indices],
+            dtype=torch.float32,
+        )
+        image_pil = item["image"]
+        return self.transform(image_pil) if self.transform else image_pil, labels
 
     def __len__(self):
-        return len(self.samples)
+        return len(self.dataset)
 
 
 def train_transform():
